@@ -163,31 +163,65 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 
 ## Revenue Model
 
-### Pricing: Free + Tips + Processing
+### Freemium Tiers
 
-**Platform:** 100% free to use. All features, unlimited members.
+| Feature | Free | Pro ($49/mo) | Enterprise ($149/mo) |
+|---------|------|--------------|---------------------|
+| **Members** | Unlimited | Unlimited | Unlimited |
+| **Membership & payments** | ✅ | ✅ | ✅ |
+| **Fundraising & donations** | ✅ | ✅ | ✅ |
+| **CEU tracking** | Basic | Advanced | Advanced |
+| **Member portal** | ✅ | ✅ | ✅ |
+| **Basic reporting** | ✅ | ✅ | ✅ |
+| **API access** | ✅ | ✅ | ✅ |
+| **Emails included** | 1,000/mo | 10,000/mo | 50,000/mo |
+| **SMS included** | 0 | 100/mo | 500/mo |
+| **VillageKeep branding** | Shown | **Removed** | Removed |
+| **Custom domain** | ❌ | **✅** | ✅ |
+| **Advanced analytics** | ❌ | **✅** | ✅ |
+| **Priority support** | ❌ | **✅** | ✅ |
+| **Zoom integration** | ❌ | ❌ | **✅** |
+| **Salesforce/CRM sync** | ❌ | ❌ | **✅** |
+| **SSO/SAML** | ❌ | ❌ | **✅** |
+| **SLA guarantee** | ❌ | ❌ | **✅** |
 
-**Tips (Optional):**
+**Why people upgrade:**
+- **Pro:** White-label (remove branding), custom domain, professional appearance
+- **Enterprise:** Integrations, SSO, compliance requirements, support guarantees
+
+### Usage-Based Pricing
+
+| Channel | Free Tier | Pro | Enterprise | Overage |
+|---------|-----------|-----|------------|---------|
+| **Email** | 1,000/mo | 10,000/mo | 50,000/mo | $0.001/email |
+| **SMS** | — | 100/mo | 500/mo | $0.02/SMS |
+
+SMS pricing covers Twilio costs (~$0.008) with healthy margin.
+
+### Payment Processing
+
+- Pass through Stripe fees: 2.9% + $0.30 per transaction
+- Organization is merchant of record (via Stripe Connect Express)
+- VillageKeep earns application fee (0.5%) on all transactions
+
+### Tips (Optional)
+
 - Donors/members can optionally add a tip at checkout
 - NOT pre-selected (unlike Givebutter's 15% default)
 - Clear, honest messaging: *"Help keep VillageKeep free"*
 - No guilt, no manipulation
 
-**Payment Processing:**
-- Pass through Stripe fees: 2.9% + $0.30 per transaction
-- Organization is merchant of record (via Stripe Connect Express)
-- VillageKeep earns application fee on transactions
-
 ### Competitive Pricing Comparison
 
-| Platform | Platform Fee | Processing | Tips |
-|----------|--------------|------------|------|
-| Wild Apricot | $60-420/mo | 2.9% + $0.30 | No |
-| Givebutter | Free | 2.9% + $0.30 | 15% pre-selected |
-| Zeffy | Free | Tips only | Optional |
-| **VillageKeep** | **Free** | **2.9% + $0.30** | **Optional (honest)** |
+| Platform | Platform Fee | Processing | Members |
+|----------|--------------|------------|---------|
+| Wild Apricot | $60-420/mo | 2.9% + $0.30 | Capped by tier |
+| Givebutter | Free | 2.9% + $0.30 | N/A (fundraising only) |
+| Zeffy | Free | Tips only | N/A (fundraising only) |
+| **VillageKeep Free** | **Free** | **2.9% + $0.30** | **Unlimited** |
+| **VillageKeep Pro** | **$49/mo** | **2.9% + $0.30** | **Unlimited** |
 
-### Premium Integrations (Extra Revenue)
+### Premium Integrations (Enterprise)
 
 | Integration | Extra Fee | Use Case |
 |-------------|-----------|----------|
@@ -231,10 +265,11 @@ Display a donation/payment widget during Zoom meetings:
 
 ### Revenue Streams Summary
 
-1. **Application fees** — Small % of each transaction via Stripe Connect
-2. **Tips** — Optional donor/member contributions to VillageKeep
-3. **Premium integrations** — Zoom (+1%), future integrations
-4. **Premium features** (future) — White-label, priority support, advanced analytics
+1. **Subscriptions** — Pro ($49/mo), Enterprise ($149/mo)
+2. **Application fees** — 0.5% of each transaction via Stripe Connect
+3. **Usage overage** — Email ($0.001) and SMS ($0.02) beyond included
+4. **Tips** — Optional donor/member contributions
+5. **Premium integrations** — Zoom (+1% on transactions, Enterprise only)
 
 ---
 
@@ -519,44 +554,47 @@ Aligned with existing LMS for code reuse and consistency.
 
 ## Financial Projections
 
-Revenue comes from tips + application fees + premium integration fees.
+Revenue from subscriptions + app fees + usage + tips.
 
 ### Revenue Model Assumptions
 
 | Source | Rate | Notes |
 |--------|------|-------|
-| Tips | ~5% of transactions | Conservative (Givebutter sees higher with pre-select) |
-| App fees | 0.5-1% of volume | Via Stripe Connect |
-| Zoom premium | +1% on Zoom transactions | Premium integration |
+| Pro subscriptions | $49/mo | ~20% of orgs convert |
+| Enterprise subscriptions | $149/mo | ~5% of orgs convert |
+| App fees | 0.5% of volume | All transactions |
+| Tips | ~2% of transactions | Conservative estimate |
+| SMS overage | $0.02/SMS | Above included |
+| Email overage | $0.001/email | Above included |
 
 ### Year 1 (Building + Early Orgs)
 
-| Quarter | Orgs | Monthly Volume | Monthly Revenue |
-|---------|------|----------------|-----------------|
-| Q1 | 1 | $5,000 | $0 (AALB free) |
-| Q2 | 10 | $25,000 | $500 |
-| Q3 | 25 | $75,000 | $1,500 |
-| Q4 | 50 | $150,000 | $3,000 |
+| Quarter | Total Orgs | Free | Pro | Enterprise | Subscriptions | App Fees | Total MRR |
+|---------|------------|------|-----|------------|---------------|----------|-----------|
+| Q1 | 1 | 1 | 0 | 0 | $0 | $0 | $0 |
+| Q2 | 15 | 12 | 3 | 0 | $147 | $125 | $272 |
+| Q3 | 30 | 23 | 6 | 1 | $443 | $375 | $818 |
+| Q4 | 50 | 38 | 10 | 2 | $788 | $750 | $1,538 |
 
-**Year 1 Total:** ~$20,000
+**Year 1 Total:** ~$10,000
 
 ### Year 2 (Growth)
 
-| Quarter | Orgs | Monthly Volume | Monthly Revenue |
-|---------|------|----------------|-----------------|
-| Q1 | 100 | $400,000 | $8,000 |
-| Q2 | 175 | $700,000 | $14,000 |
-| Q3 | 275 | $1,100,000 | $22,000 |
-| Q4 | 400 | $1,600,000 | $32,000 |
+| Quarter | Total Orgs | Free | Pro | Enterprise | Subscriptions | App Fees | Total MRR |
+|---------|------------|------|-----|------------|---------------|----------|-----------|
+| Q1 | 100 | 75 | 20 | 5 | $1,725 | $2,000 | $3,725 |
+| Q2 | 175 | 130 | 35 | 10 | $3,205 | $3,500 | $6,705 |
+| Q3 | 275 | 205 | 55 | 15 | $4,930 | $5,500 | $10,430 |
+| Q4 | 400 | 300 | 80 | 20 | $6,900 | $8,000 | $14,900 |
 
-**Year 2 Total:** ~$300,000
+**Year 2 Total:** ~$140,000
 
 ### Year 3 (Scale)
 
 - 1,000+ organizations
-- $5M+ monthly volume
-- $100K+ monthly revenue
-- $1.2M+ annual revenue
+- 200 Pro ($9,800/mo) + 50 Enterprise ($7,450/mo) = $17,250/mo subscriptions
+- $5M+ monthly volume = $25,000/mo app fees
+- **$42,000+ MRR / $500K+ ARR**
 
 ### Operating Costs
 
@@ -576,13 +614,14 @@ Revenue comes from tips + application fees + premium integration fees.
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Low tip rate | High | Don't rely on tips alone; app fees provide baseline |
+| Low conversion to paid | High | Free tier is genuinely valuable; white-label drives Pro upgrades |
 | Wild Apricot improves | Medium | Move fast, lock in CEU niche |
 | Givebutter adds membership | Medium | Already ahead on CEU; serve non-501(c)(3)s |
 | Slow org acquisition | High | AALB network, content marketing, low CAC |
 | Technical complexity | Medium | Leverage LMS codebase, proven patterns |
-| Churn | Medium | CEU is sticky; fundraising creates recurring need |
+| Churn | Medium | CEU is sticky; subscriptions create recurring need |
 | Stripe changes pricing | Low | Volume unlocks better rates over time |
+| SMS/email costs spike | Low | Usage-based pricing covers costs with margin |
 
 ---
 
@@ -596,10 +635,10 @@ Revenue comes from tips + application fees + premium integration fees.
 - Donations/fundraising volume
 
 ### Business Metrics
-- Monthly revenue (tips + app fees + premium)
+- **MRR** (subscriptions + app fees + usage)
 - Payment volume (leading indicator)
-- Org count
-- Tip rate (% of transactions with tips)
+- Org count (Free / Pro / Enterprise)
+- Paid conversion rate (target: 20% Pro, 5% Enterprise)
 - Org churn rate (target: <5% monthly)
 
 ### Milestones
@@ -648,11 +687,11 @@ Building bootstrapped, revenue-funded. AALB provides:
 | **Product** | Membership + Fundraising + CEU in one platform |
 | **Moat** | CEU tracking + LMS integration + serves all org types |
 | **Wedge** | Interpreter associations (AALB network) |
-| **Model** | Free platform + optional tips + processing fees + premium integrations |
+| **Model** | Freemium (Free/Pro $49/Enterprise $149) + app fees + usage |
 | **Payments** | Stripe Connect (Express) — orgs are merchant of record |
 | **Premium** | Zoom Live Giving (+1% fee) |
 | **Structure** | For-profit LLC |
-| **Goal** | $100K+ monthly revenue in 3 years, bootstrapped |
+| **Goal** | $40K+ MRR / $500K ARR in 3 years, bootstrapped |
 
 ---
 
