@@ -1,8 +1,13 @@
 # VillageKeep Roadmap
 
-Standalone membership management platform. Primary customer: Americans Against Language Barriers (dogfooding). Target market: nonprofits, professional associations, any org with members.
+All-in-one platform for membership management and fundraising. Combines what Wild Apricot does for memberships with what Givebutter does for fundraising—in one modern product.
 
-**Competitor:** Wild Apricot (dated UX, weak API, expensive at scale)
+**Primary customer:** Americans Against Language Barriers (dogfooding)
+**Target market:** Nonprofits, professional associations, trade groups, clubs
+**Competitors:** Wild Apricot (membership), Givebutter/Zeffy (fundraising)
+
+**Revenue model:** Free platform + optional tips + payment processing fees
+**Corporate structure:** For-profit LLC
 
 **Architecture:** Defined in learn repo's `MEMBERSHIP_STANDALONE_ARCHITECTURE.md`
 
@@ -13,7 +18,7 @@ Standalone membership management platform. Primary customer: Americans Against L
 - **Backend:** Node.js + Express
 - **Database:** PostgreSQL (raw SQL)
 - **Frontend:** Static HTML/JS (same pattern as LMS)
-- **Payments:** Stripe
+- **Payments:** Stripe Connect (Express) - orgs are merchant of record
 - **Email:** Nodemailer (already in LMS)
 - **Hosting:** Render
 
@@ -46,22 +51,28 @@ Standalone membership management platform. Primary customer: Americans Against L
 
 ---
 
-## Phase 2: Billing & Member Portal
+## Phase 2: Stripe Connect & Member Portal
 
-### Stripe Integration
-- [ ] Checkout session creation
+### Stripe Connect (Express)
+- [ ] Org onboarding to Stripe Connect (Express account creation)
+- [ ] Connected account verification flow
+- [ ] Application fee collection on transactions
+- [ ] Checkout session creation (on connected account)
 - [ ] Webhook handling (payment success/failure)
 - [ ] Subscription lifecycle (create, cancel, pause, resume)
-- [ ] Invoice generation
-- [ ] Customer portal link
+
+### Tips System
+- [ ] Optional tip at checkout (NOT pre-selected)
+- [ ] Tip goes to VillageKeep platform account
+- [ ] Clear, honest messaging
 
 ### Member-Facing UI
 - [ ] Pricing page (embeddable)
-- [ ] Checkout flow
+- [ ] Checkout flow with Stripe Connect
 - [ ] Account management (view subscription, update payment)
 - [ ] Access dashboard (what resources I have)
 
-**Goal:** End-to-end payment flow works. Members can self-serve.
+**Goal:** End-to-end payment flow works. Orgs are merchant of record. Tips and app fees flow to VillageKeep.
 
 ---
 
@@ -84,11 +95,41 @@ Standalone membership management platform. Primary customer: Americans Against L
 
 ---
 
-## Phase 4: Webhooks & Integration
+## Phase 4: Fundraising Module
+
+### Donation Pages
+- [ ] One-time donation forms
+- [ ] Recurring donation setup
+- [ ] Custom donation amounts
+- [ ] Suggested donation tiers
+- [ ] Embeddable widgets
+
+### Campaigns
+- [ ] Campaign creation with goals
+- [ ] Progress tracking
+- [ ] Campaign pages with branding
+- [ ] Social sharing
+
+### Peer-to-Peer (Future)
+- [ ] Supporter fundraising pages
+- [ ] Team fundraising
+- [ ] Leaderboards
+
+### Donor Management
+- [ ] Donor profiles
+- [ ] Giving history
+- [ ] Tax receipts
+- [ ] Thank you emails
+
+**Goal:** Orgs can run fundraising campaigns alongside membership. Competes with Givebutter.
+
+---
+
+## Phase 5: Webhooks & Integration
 
 ### Event System
 - [ ] Webhook registration per app
-- [ ] Event types: subscription.*, access.*, payment.*
+- [ ] Event types: subscription.*, access.*, payment.*, donation.*
 - [ ] Delivery with retries
 - [ ] Webhook logs
 
@@ -101,17 +142,19 @@ Standalone membership management platform. Primary customer: Americans Against L
 
 ---
 
-## Phase 5: Admin & Analytics
+## Phase 6: Admin & Analytics
 
 ### Admin Dashboard
 - [ ] Member management (search, filter, edit)
+- [ ] Donor management
 - [ ] Tier management UI
 - [ ] Resource assignment UI
 - [ ] Manual access grants/revokes
 
 ### Reporting
 - [ ] Membership growth/churn
-- [ ] Revenue (MRR, ARR)
+- [ ] Payment volume & revenue
+- [ ] Fundraising totals & campaigns
 - [ ] CEU compliance rates
 - [ ] Tier distribution
 
@@ -119,20 +162,20 @@ Standalone membership management platform. Primary customer: Americans Against L
 
 ---
 
-## Phase 6: Scale & SaaS
+## Phase 7: Scale & Growth
 
-### Multi-Org SaaS
+### Multi-Org Platform
 - [ ] Self-service org signup
-- [ ] Org billing (VillageKeep charges orgs)
-- [ ] Usage-based pricing
-- [ ] White-label options
+- [ ] Stripe Connect onboarding flow
+- [ ] Org settings & customization
+- [ ] White-label options (premium)
 
 ### Advanced Features
 - [ ] Teams/group memberships
 - [ ] Drip content (unlock over time)
 - [ ] Usage limits per tier
 - [ ] Public member directory
-- [ ] Events with registration
+- [ ] Events with registration & ticketing
 
 ---
 
@@ -141,7 +184,8 @@ Standalone membership management platform. Primary customer: Americans Against L
 1. **Scaffold project** - Express app, PostgreSQL connection, folder structure
 2. **Create database schema** - Tables from MEMBERSHIP_STANDALONE_ARCHITECTURE.md
 3. **Build `/api/v1/access/check`** - This is the most critical endpoint
-4. **Test with LMS** - Make one course gated by membership
+4. **Set up Stripe Connect** - Platform account, Express account creation flow
+5. **Test with AALB** - Membership + basic donation flow working
 
 ---
 

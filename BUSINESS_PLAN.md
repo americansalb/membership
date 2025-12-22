@@ -2,11 +2,13 @@
 
 ## Executive Summary
 
-VillageKeep is a membership management platform for nonprofits and professional associations. We differentiate through native CEU/continuing education tracking, modern UX, and tight LMS integration.
+VillageKeep is an all-in-one platform for membership management and fundraising. We combine what Wild Apricot does for memberships with what Givebutter does for fundraising—but in a single, modern product with honest pricing.
 
+**Revenue model:** Free platform + optional tips (user-controlled, no guilt) + payment processing pass-through
 **Primary customer:** Americans Against Language Barriers (dogfooding)
-**Target market:** Nonprofits, professional associations, trade organizations
-**Competitor:** Wild Apricot (~$60M ARR, 30k+ customers, dated product)
+**Target market:** Nonprofits, professional associations, trade organizations, clubs
+**Competitors:** Wild Apricot (membership), Givebutter/Zeffy (fundraising)
+**Corporate structure:** For-profit LLC
 
 ---
 
@@ -29,56 +31,74 @@ Nonprofits and professional associations struggle with:
 
 ## Solution
 
-All-in-one membership platform with:
+All-in-one platform with modular features:
 
-| Feature | Description |
-|---------|-------------|
-| Member Management | Database, profiles, custom fields, lifecycle tracking |
-| Billing | Stripe-powered subscriptions, invoices, member portal |
-| CEU Tracking | Credit types, requirements, auto-grant from LMS, compliance reports |
-| Access Control | Gate content/resources by membership tier |
-| LMS Integration | Native connection to your learning platform |
-| Modern UX | Clean design, dark mode, mobile-first |
-| API-First | Integrate with anything |
+| Module | Features |
+|--------|----------|
+| **Membership** | Member database, profiles, custom fields, lifecycle tracking, tiers |
+| **Fundraising** | Donation pages, campaigns, peer-to-peer, recurring giving |
+| **Billing** | Stripe-powered subscriptions, invoices, member portal |
+| **CEU Tracking** | Credit types, requirements, auto-grant from LMS, compliance reports |
+| **Events** | Registration, ticketing, check-in (future) |
+| **Access Control** | Gate content/resources by membership tier |
+| **LMS Integration** | Native connection to your learning platform |
+| **Modern UX** | Clean design, dark mode, mobile-first |
+| **API-First** | Integrate with anything |
+
+**Key differentiator:** One product handles both membership AND fundraising. Competitors force you to use separate tools.
 
 ---
 
 ## Target Market
 
-### Primary: Professional Associations with CEU Requirements
+### Primary: Organizations with Members (Not Just 501(c)(3)s)
 
+Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
+
+**Professional Associations (CEU requirements)**
 - Medical interpreters (AALB's market)
-- Healthcare professionals (nurses, therapists, etc.)
+- Healthcare professionals (nurses, therapists)
 - Legal professionals (paralegals, court reporters)
-- Real estate agents
-- Financial advisors
-- Teachers
+- Real estate agents, financial advisors, teachers
 
-**Why:** CEU tracking is painful, required, and underserved
+**Trade Associations**
+- Industry groups, chambers of commerce
+- Professional networks
 
-### Secondary: General Nonprofits
-
-- Member-based organizations
-- Trade associations
+**Member-Based Nonprofits**
+- Charities with donor/member programs
 - Alumni associations
-- Clubs and societies
+- Religious organizations
+
+**Clubs & Societies**
+- Hobbyist groups, sports clubs
+- Alumni groups, social organizations
+
+### Why This Market
+
+1. **CEU tracking** is painful, required, and underserved
+2. **Fundraising + membership** is usually two separate tools
+3. **Trade associations** are ignored by Givebutter's nonprofit-only model
 
 ### Market Size
 
 | Segment | US Count | Avg Members | Potential |
 |---------|----------|-------------|-----------|
 | Professional associations | ~7,500 | 5,000 | High |
-| Trade associations | ~15,000 | 1,000 | Medium |
-| Other nonprofits | ~1.5M | 500 | Low priority |
+| Trade associations | ~15,000 | 1,000 | High |
+| Nonprofits with members | ~500K | 500 | Medium |
+| Clubs & societies | ~100K | 200 | Medium |
 
-Wild Apricot has 30,000+ customers at ~$2,000/year avg = ~$60M ARR
-Even 1% market share = $600K ARR
+**Competitor benchmarks:**
+- Wild Apricot: 30,000+ customers, ~$60M ARR
+- Givebutter: 100,000+ nonprofits, venture-backed
+- Even 1% of Wild Apricot's market = $600K ARR
 
 ---
 
 ## Competitive Analysis
 
-### Wild Apricot (Main Competitor)
+### Wild Apricot (Membership)
 
 **Strengths:**
 - Established brand (since 2006)
@@ -93,16 +113,46 @@ Even 1% market share = $600K ARR
 - Poor mobile experience
 - Slow, clunky interface
 - Weak API
+- No fundraising features
+
+### Givebutter (Fundraising)
+
+**Strengths:**
+- Modern, beautiful UI
+- Free platform (tips model)
+- Strong fundraising features
+- Good social/peer-to-peer tools
+
+**Weaknesses:**
+- 501(c)(3) nonprofits only
+- No membership management
+- Pre-selected 15% tip (feels manipulative)
+- No CEU tracking
+- Limited member lifecycle features
+
+### Zeffy (Fundraising)
+
+**Strengths:**
+- 100% free, no platform fees
+- Tips only (optional)
+- Growing rapidly
+
+**Weaknesses:**
+- Very limited features
+- No membership management
+- Nonprofits only
+- No CEU tracking
 
 ### Our Positioning
 
 ```
                     Modern UX
                         │
-                        │    VillageKeep
-                        │    ★
+          Givebutter    │    VillageKeep
+              ★         │    ★
                         │
- Basic CEU ────────────┼──────────── Strong CEU
+ Fundraising ──────────┼──────────── Membership
+   Only                 │              + CEU
                         │
             Wild Apricot│
                    ★    │
@@ -110,37 +160,57 @@ Even 1% market share = $600K ARR
                     Dated UX
 ```
 
-**We win on:** CEU-first, modern UX, LMS integration, API quality, pricing
+**We win on:**
+- **vs Wild Apricot:** Modern UX, CEU-first, free pricing, fundraising included
+- **vs Givebutter:** Membership features, serves all orgs (not just 501(c)(3)s), honest tips (no pre-select)
+- **vs Zeffy:** Full feature set, CEU tracking, membership management
 
 ---
 
 ## Pricing Strategy
 
-### Model: Tiered by Members (not contacts)
+### Model: Free + Tips + Processing
 
-| Tier | Members | Price/mo | Price/yr | Savings |
-|------|---------|----------|----------|---------|
-| Starter | Up to 100 | $29 | $290 | 17% |
-| Growth | Up to 500 | $79 | $790 | 17% |
-| Professional | Up to 2,000 | $149 | $1,490 | 17% |
-| Enterprise | Unlimited | $299 | $2,990 | 17% |
+**Platform:** 100% free to use. All features, unlimited members.
 
-### vs Wild Apricot
+**Tips (Optional):**
+- Donors/members can optionally add a tip at checkout
+- NOT pre-selected (unlike Givebutter's 15% default)
+- Clear, honest messaging: "Help keep VillageKeep free"
+- No guilt, no manipulation
 
-| Members | Wild Apricot | VillageKeep | Savings |
-|---------|--------------|-------------|---------|
-| 100 | $60/mo | $29/mo | 52% |
-| 500 | $100/mo | $79/mo | 21% |
-| 2,000 | $240/mo | $149/mo | 38% |
-| 5,000 | $420/mo | $299/mo | 29% |
+**Payment Processing:**
+- Pass through Stripe fees: 2.9% + $0.30 per transaction
+- Organization is merchant of record (via Stripe Connect Express)
+- VillageKeep earns application fee on transactions
 
-**Strategy:** Undercut on price, win on features (CEU), keep them on modern UX
+### Why This Works
 
-### Revenue Model
+| Competitor | Platform Fee | Processing | Tips |
+|------------|--------------|------------|------|
+| Wild Apricot | $60-420/mo | 2.9% + $0.30 | No |
+| Givebutter | Free | 2.9% + $0.30 | 15% pre-selected |
+| Zeffy | Free | Tips only | Optional |
+| **VillageKeep** | **Free** | **2.9% + $0.30** | **Optional (honest)** |
 
-1. **Subscription revenue** - Monthly/annual SaaS fees
-2. **Payment processing** - Pass through Stripe fees + small margin (optional)
-3. **Add-ons** (future) - White-label, extra storage, premium support
+**Our advantage:**
+- Free like Givebutter, but more honest about tips
+- Full features like Wild Apricot, but no monthly fee
+- Serves everyone (not just 501(c)(3)s)
+
+### Payment Architecture: Stripe Connect (Express)
+
+- Each organization has their own Stripe account (Express)
+- VillageKeep never holds funds—they're merchant of record
+- We collect application fee per transaction
+- Organizations handle their own disputes/refunds
+- Enables instant payouts to orgs
+
+### Revenue Streams
+
+1. **Application fees** - Small % of each transaction via Stripe Connect
+2. **Tips** - Optional donor/member contributions to VillageKeep
+3. **Premium features** (future) - White-label, priority support, advanced analytics
 
 ---
 
@@ -148,76 +218,92 @@ Even 1% market share = $600K ARR
 
 ### Phase 1: Dogfooding (Now)
 
-- Build for AALB
+- Build for AALB (membership + fundraising + CEU)
 - Use daily, find pain points
 - Get it production-ready
 
-### Phase 2: Interpreter Market (3-6 months)
+### Phase 2: Interpreter Market
 
 - Target medical/legal interpreter associations
 - AALB network and referrals
 - Content marketing: "CEU tracking for interpreters"
-- 10-20 customers
+- 10-20 organizations
 
-### Phase 3: Adjacent Professions (6-12 months)
+### Phase 3: Professional Associations
 
 - Expand to other CEU-required professions
 - Healthcare, legal, education
 - SEO: "membership software for [profession]"
 - Partnerships with certification bodies
-- 100+ customers
+- 100+ organizations
 
-### Phase 4: General Market (12+ months)
+### Phase 4: Broader Nonprofits + Fundraising
 
-- Compete directly with Wild Apricot
-- Full feature parity + better UX
-- Aggressive content marketing
-- 500+ customers
+- Market fundraising features to nonprofits
+- Position as "Givebutter alternative with membership"
+- Target orgs frustrated by Givebutter's 501(c)(3) requirement
+- 500+ organizations
+
+### Phase 5: Trade Associations + Clubs
+
+- Expand beyond nonprofits
+- Trade groups, chambers, hobbyist clubs
+- Position as "membership software for everyone"
+- 1000+ organizations
 
 ---
 
 ## Financial Projections
 
-### Year 1 (Building + Early Customers)
+Revenue comes from tips + application fees on payment processing.
 
-| Quarter | Customers | MRR | Notes |
-|---------|-----------|-----|-------|
-| Q1 | 1 | $0 | AALB (free) |
-| Q2 | 5 | $200 | Beta customers |
-| Q3 | 15 | $800 | Interpreter market |
-| Q4 | 30 | $2,000 | Word of mouth |
+### Revenue Model Assumptions
 
-**Year 1 ARR:** ~$24,000
+| Source | Rate | Notes |
+|--------|------|-------|
+| Tips | ~5% of transactions | Conservative (Givebutter sees higher with pre-select) |
+| App fees | 0.5-1% of volume | Via Stripe Connect |
+
+### Year 1 (Building + Early Orgs)
+
+| Quarter | Orgs | Monthly Volume | Monthly Revenue |
+|---------|------|----------------|-----------------|
+| Q1 | 1 | $5,000 | $0 (AALB free) |
+| Q2 | 10 | $25,000 | $500 |
+| Q3 | 25 | $75,000 | $1,500 |
+| Q4 | 50 | $150,000 | $3,000 |
+
+**Year 1:** ~$20,000 revenue
 
 ### Year 2 (Growth)
 
-| Quarter | Customers | MRR |
-|---------|-----------|-----|
-| Q1 | 50 | $4,000 |
-| Q2 | 80 | $7,000 |
-| Q3 | 120 | $11,000 |
-| Q4 | 175 | $16,000 |
+| Quarter | Orgs | Monthly Volume | Monthly Revenue |
+|---------|------|----------------|-----------------|
+| Q1 | 100 | $400,000 | $8,000 |
+| Q2 | 175 | $700,000 | $14,000 |
+| Q3 | 275 | $1,100,000 | $22,000 |
+| Q4 | 400 | $1,600,000 | $32,000 |
 
-**Year 2 ARR:** ~$192,000
+**Year 2:** ~$300,000 revenue
 
 ### Year 3 (Scale)
 
-- 500+ customers
-- $50,000+ MRR
-- $600,000+ ARR
+- 1,000+ organizations
+- $5M+ monthly volume
+- $100K+ monthly revenue
+- $1.2M+ annual revenue
 
-### Costs
+### Operating Costs
 
 | Item | Monthly | Notes |
 |------|---------|-------|
 | Hosting (Render) | $50-200 | Scales with usage |
 | Database (Render) | $20-100 | PostgreSQL |
 | Email (Resend) | $20-50 | Transactional + marketing |
-| Stripe fees | 2.9% + 30¢ | Pass to customer |
 | Domain/SSL | $2 | villagekeep.com |
-| **Total** | ~$100-400 | Before revenue share |
+| **Total** | ~$100-400 | Extremely lean |
 
-**Margins:** 80%+ at scale (SaaS typical)
+**Key insight:** Costs stay flat at ~$100-400/mo regardless of volume. Once past break-even, margins are 90%+.
 
 ---
 
@@ -225,11 +311,13 @@ Even 1% market share = $600K ARR
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
+| Low tip rate | High | Don't rely on tips alone; app fees provide baseline |
 | Wild Apricot improves | Medium | Move fast, lock in CEU niche |
-| Slow customer acquisition | High | AALB network, content marketing, low CAC |
+| Givebutter adds membership | Medium | Already ahead on CEU; serve non-501(c)(3)s |
+| Slow org acquisition | High | AALB network, content marketing, low CAC |
 | Technical complexity | Medium | Leverage LMS codebase, proven patterns |
-| Churn | High | Focus on CEU sticky feature, great support |
-| Competitor copies CEU | Medium | LMS integration moat, execution speed |
+| Churn | Medium | CEU is sticky; fundraising creates recurring need |
+| Stripe changes pricing | Low | Volume unlocks better rates over time |
 
 ---
 
@@ -238,26 +326,27 @@ Even 1% market share = $600K ARR
 ### Product Metrics
 - Monthly Active Orgs
 - Members managed (total across all orgs)
+- Total payment volume processed
 - CEU credits tracked
-- API calls (integration health)
+- Donations/fundraising volume
 
 ### Business Metrics
-- MRR / ARR
-- Customer count
-- Churn rate (target: <5% monthly)
-- Net Revenue Retention (target: >100%)
-- CAC / LTV ratio
+- Monthly revenue (tips + app fees)
+- Payment volume (leading indicator)
+- Org count
+- Tip rate (% of transactions with tips)
+- Org churn rate (target: <5% monthly)
 
 ### Milestones
 
 | Milestone | Target |
 |-----------|--------|
 | AALB live | Month 2 |
-| 10 paying customers | Month 6 |
-| $1K MRR | Month 8 |
-| 50 customers | Month 12 |
-| $10K MRR | Month 18 |
-| 200 customers | Month 24 |
+| 10 organizations | Month 6 |
+| $100K monthly volume | Month 8 |
+| 50 organizations | Month 12 |
+| $1M monthly volume | Month 18 |
+| 200 organizations | Month 24 |
 
 ---
 
@@ -286,9 +375,12 @@ Building bootstrapped, revenue-funded. AALB provides:
 
 ## Summary
 
-VillageKeep = Wild Apricot killer for professional associations
+VillageKeep = Wild Apricot + Givebutter combined, with honest pricing
 
-**Moat:** CEU tracking + LMS integration
+**Product:** Membership + Fundraising + CEU in one platform
+**Moat:** CEU tracking + LMS integration + serves all org types
 **Wedge:** Interpreter associations (AALB network)
-**Model:** SaaS subscriptions, undercut incumbent
-**Goal:** $50K MRR in 3 years, bootstrapped
+**Model:** Free platform + optional tips + payment processing fees
+**Payments:** Stripe Connect (Express) - orgs are merchant of record
+**Structure:** For-profit LLC
+**Goal:** $100K+ monthly revenue in 3 years, bootstrapped
