@@ -278,7 +278,9 @@ We use Stripe Connect with Express accounts:
 
 ## Tech Stack
 
-Aligned with existing LMS for code reuse and consistency:
+Aligned with existing LMS for code reuse and consistency.
+
+**Architecture docs:** See `/home/user/learn/MEMBERSHIP_STANDALONE_ARCHITECTURE.md` for detailed API design.
 
 | Component | Technology |
 |-----------|------------|
@@ -661,6 +663,20 @@ Building bootstrapped, revenue-funded. AALB provides:
 3. **Build `/api/v1/access/check`** — Most critical endpoint
 4. **Set up Stripe Connect** — Platform account, Express account creation flow
 5. **Test with AALB** — Membership + basic donation flow working
+
+---
+
+## Files to Reference
+
+**In this repo:**
+- `DESIGN_PLAN.md` — UI/UX specs, brand colors, component library, page layouts
+
+**Architecture docs in the LMS repo:**
+
+- `/home/user/learn/MEMBERSHIP_STANDALONE_ARCHITECTURE.md` — Full API design
+- `/home/user/learn/MEMBERSHIP_SYSTEM_DESIGN.md` — System design
+- `/home/user/learn/MEMBERSHIP_SYSTEM_SPECIFICATION.md` — Detailed spec
+- `/home/user/learn/db/queries-membership.js` — Existing membership queries in LMS
 
 ---
 
