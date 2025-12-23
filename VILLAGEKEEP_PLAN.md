@@ -176,6 +176,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 | **API access** | ✅ | ✅ | ✅ |
 | **Emails included** | 1,000/mo | 10,000/mo | 50,000/mo |
 | **SMS included** | 0 | 100/mo | 500/mo |
+| **Storage** | 1 GB | 10 GB | 100 GB |
 | **VillageKeep branding** | Shown | **Removed** | Removed |
 | **Custom domain** | ❌ | **✅** | ✅ |
 | **Advanced analytics** | ❌ | **✅** | ✅ |
@@ -195,14 +196,17 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 |---------|-----------|-----|------------|---------|
 | **Email** | 1,000/mo | 10,000/mo | 50,000/mo | $0.001/email |
 | **SMS** | — | 100/mo | 500/mo | $0.02/SMS |
+| **Storage** | 1 GB | 10 GB | 100 GB | $0.50/GB (Pro), $0.25/GB (Ent) |
 
-SMS pricing covers Twilio costs (~$0.008) with healthy margin.
+- SMS pricing covers Twilio costs (~$0.008) with healthy margin
+- Storage covers Cloudinary/S3 costs (~$0.02/GB) with healthy margin
+- Free tier cannot exceed storage limit (must upgrade)
 
 ### Payment Processing
 
-- Pass through Stripe fees: 2.9% + $0.30 per transaction
+- Pass through Stripe fees only: 2.9% + $0.30 per transaction
 - Organization is merchant of record (via Stripe Connect Express)
-- VillageKeep earns application fee (0.5%) on all transactions
+- **No VillageKeep fee** — payment processing is free
 
 ### Tips (Optional)
 
@@ -266,10 +270,9 @@ Display a donation/payment widget during Zoom meetings:
 ### Revenue Streams Summary
 
 1. **Subscriptions** — Pro ($49/mo), Enterprise ($149/mo)
-2. **Application fees** — 0.5% of each transaction via Stripe Connect
-3. **Usage overage** — Email ($0.001) and SMS ($0.02) beyond included
-4. **Tips** — Optional donor/member contributions
-5. **Premium integrations** — Zoom (+1% on transactions, Enterprise only)
+2. **Usage overage** — Email, SMS, and storage beyond included limits
+3. **Tips** — Optional donor/member contributions
+4. **Premium integrations** — Zoom (+1% on transactions, Enterprise only)
 
 ---
 
@@ -554,7 +557,7 @@ Aligned with existing LMS for code reuse and consistency.
 
 ## Financial Projections
 
-Revenue from subscriptions + app fees + usage + tips.
+Revenue from subscriptions + usage overage + tips.
 
 ### Revenue Model Assumptions
 
@@ -562,39 +565,39 @@ Revenue from subscriptions + app fees + usage + tips.
 |--------|------|-------|
 | Pro subscriptions | $49/mo | ~20% of orgs convert |
 | Enterprise subscriptions | $149/mo | ~5% of orgs convert |
-| App fees | 0.5% of volume | All transactions |
 | Tips | ~2% of transactions | Conservative estimate |
 | SMS overage | $0.02/SMS | Above included |
 | Email overage | $0.001/email | Above included |
+| Storage overage | $0.25-0.50/GB | Above included |
 
 ### Year 1 (Building + Early Orgs)
 
-| Quarter | Total Orgs | Free | Pro | Enterprise | Subscriptions | App Fees | Total MRR |
-|---------|------------|------|-----|------------|---------------|----------|-----------|
-| Q1 | 1 | 1 | 0 | 0 | $0 | $0 | $0 |
-| Q2 | 15 | 12 | 3 | 0 | $147 | $125 | $272 |
-| Q3 | 30 | 23 | 6 | 1 | $443 | $375 | $818 |
-| Q4 | 50 | 38 | 10 | 2 | $788 | $750 | $1,538 |
+| Quarter | Total Orgs | Free | Pro | Enterprise | MRR |
+|---------|------------|------|-----|------------|-----|
+| Q1 | 1 | 1 | 0 | 0 | $0 |
+| Q2 | 15 | 12 | 3 | 0 | $147 |
+| Q3 | 30 | 23 | 6 | 1 | $443 |
+| Q4 | 50 | 38 | 10 | 2 | $788 |
 
-**Year 1 Total:** ~$10,000
+**Year 1 Total:** ~$5,500
 
 ### Year 2 (Growth)
 
-| Quarter | Total Orgs | Free | Pro | Enterprise | Subscriptions | App Fees | Total MRR |
-|---------|------------|------|-----|------------|---------------|----------|-----------|
-| Q1 | 100 | 75 | 20 | 5 | $1,725 | $2,000 | $3,725 |
-| Q2 | 175 | 130 | 35 | 10 | $3,205 | $3,500 | $6,705 |
-| Q3 | 275 | 205 | 55 | 15 | $4,930 | $5,500 | $10,430 |
-| Q4 | 400 | 300 | 80 | 20 | $6,900 | $8,000 | $14,900 |
+| Quarter | Total Orgs | Free | Pro | Enterprise | MRR |
+|---------|------------|------|-----|------------|-----|
+| Q1 | 100 | 75 | 20 | 5 | $1,725 |
+| Q2 | 175 | 130 | 35 | 10 | $3,205 |
+| Q3 | 275 | 205 | 55 | 15 | $4,930 |
+| Q4 | 400 | 300 | 80 | 20 | $6,900 |
 
-**Year 2 Total:** ~$140,000
+**Year 2 Total:** ~$65,000
 
 ### Year 3 (Scale)
 
 - 1,000+ organizations
-- 200 Pro ($9,800/mo) + 50 Enterprise ($7,450/mo) = $17,250/mo subscriptions
-- $5M+ monthly volume = $25,000/mo app fees
-- **$42,000+ MRR / $500K+ ARR**
+- 200 Pro ($9,800/mo) + 50 Enterprise ($7,450/mo) = **$17,250/mo MRR**
+- Plus usage overage (SMS, email, storage) ~$2,000/mo
+- **~$20,000 MRR / $240K ARR**
 
 ### Operating Costs
 
@@ -635,7 +638,7 @@ Revenue from subscriptions + app fees + usage + tips.
 - Donations/fundraising volume
 
 ### Business Metrics
-- **MRR** (subscriptions + app fees + usage)
+- **MRR** (subscriptions + usage overage)
 - Payment volume (leading indicator)
 - Org count (Free / Pro / Enterprise)
 - Paid conversion rate (target: 20% Pro, 5% Enterprise)
@@ -687,11 +690,11 @@ Building bootstrapped, revenue-funded. AALB provides:
 | **Product** | Membership + Fundraising + CEU in one platform |
 | **Moat** | CEU tracking + LMS integration + serves all org types |
 | **Wedge** | Interpreter associations (AALB network) |
-| **Model** | Freemium (Free/Pro $49/Enterprise $149) + app fees + usage |
-| **Payments** | Stripe Connect (Express) — orgs are merchant of record |
-| **Premium** | Zoom Live Giving (+1% fee) |
+| **Model** | Freemium (Free/Pro $49/Enterprise $149) + usage overage |
+| **Payments** | Free (just Stripe 2.9% + $0.30) — orgs are merchant of record |
+| **Premium** | Zoom Live Giving (+1% fee, Enterprise only) |
 | **Structure** | For-profit LLC |
-| **Goal** | $40K+ MRR / $500K ARR in 3 years, bootstrapped |
+| **Goal** | $20K MRR / $240K ARR in 3 years, bootstrapped |
 
 ---
 
