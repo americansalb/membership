@@ -392,6 +392,130 @@ Aligned with existing LMS for code reuse and consistency.
 
 ---
 
+## UI Foundation (Build First)
+
+> **Rule: No feature code until the foundation exists.**
+> Every screen should assemble existing components, not create new styles.
+
+### Build Order
+
+```
+1. CSS Variables     →  Colors, typography, spacing
+2. Base Components   →  Button, Input, Card, Table, Modal
+3. Layout Templates  →  Admin, Portal, Public
+4. Feature Screens   →  Now you can build features
+```
+
+### 1. CSS Foundation (Day 1)
+
+Create `variables.css` with everything from DESIGN_PLAN.md:
+
+```css
+:root {
+  /* Colors */
+  --navy-900: #102a43;
+  --navy-800: #243b53;
+  --orange-500: #c45a2c;
+  /* ... all colors ... */
+
+  /* Typography */
+  --font-sans: 'Inter', sans-serif;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  /* ... all sizes ... */
+
+  /* Spacing (4px grid) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  /* ... */
+
+  /* Shadows, radii, etc. */
+}
+
+/* Dark mode ready from day 1 */
+.dark {
+  --bg-primary: #0f172a;
+  --text-primary: #f1f5f9;
+}
+```
+
+### 2. Core Components (Before Any Features)
+
+Build and test these FIRST:
+
+| Component | Priority | Why |
+|-----------|----------|-----|
+| Button | P0 | Every action uses it |
+| Input/Form | P0 | Every form needs it |
+| Card | P0 | Content containers everywhere |
+| Table | P0 | Member lists, transactions, reports |
+| Modal | P0 | Confirmations, quick forms |
+| Toast/Alert | P0 | User feedback |
+| Loading/Skeleton | P0 | Async states |
+| Sidebar Nav | P1 | Admin layout |
+| Top Nav | P1 | Public/portal layout |
+| Empty State | P1 | No data yet messaging |
+| Pagination | P1 | Long lists |
+
+### 3. Layout Templates
+
+```
+layouts/
+├── base.html         # Head, scripts, shared elements
+├── public.html       # Marketing: header + content + footer
+├── admin.html        # Sidebar + topbar + content area
+└── portal.html       # Member-facing: nav + content
+```
+
+### 4. Accessibility From Day 1
+
+| Requirement | How |
+|-------------|-----|
+| Keyboard navigation | All interactive elements focusable |
+| Focus indicators | Visible focus rings (don't remove outlines) |
+| Color contrast | 4.5:1 minimum (WCAG AA) |
+| Form labels | Every input has a label |
+| Alt text | Every image has alt attribute |
+| Semantic HTML | Use button, nav, main, header, not just divs |
+| Screen reader | Test with VoiceOver/NVDA |
+
+### 5. File Structure
+
+```
+public/
+├── css/
+│   ├── variables.css      # Foundation
+│   ├── reset.css          # Normalize
+│   ├── typography.css     # Font styles
+│   ├── components.css     # All components
+│   └── utilities.css      # Helper classes
+├── js/
+│   ├── components/
+│   │   ├── modal.js
+│   │   ├── toast.js
+│   │   └── dropdown.js
+│   ├── api.js             # API client
+│   └── app.js             # Shared utilities
+├── admin/                 # Admin pages
+├── portal/                # Member pages
+└── index.html             # Public landing
+```
+
+### 6. Component Documentation
+
+Create a `/styleguide` page that shows:
+- All buttons (states: default, hover, disabled, loading)
+- All form inputs (states: empty, filled, error, disabled)
+- All cards
+- All table variations
+- Color palette
+- Typography scale
+
+This becomes your reference and ensures consistency.
+
+---
+
 ## Product Roadmap
 
 ### Phase 1: Core API & Database
