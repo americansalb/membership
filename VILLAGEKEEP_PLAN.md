@@ -169,6 +169,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 |---------|------|-------------------------|-----------------------------------|
 | **Contacts** | Unlimited | Unlimited | Unlimited |
 | **Members** | Unlimited | Unlimited | Unlimited |
+| **Admin/Staff seats** | 1 (owner only) | 6 (1 owner + 2 admin + 3 staff) | Unlimited |
 | **Membership & payments** | ✅ | ✅ | ✅ |
 | **Fundraising & donations** | ✅ | ✅ | ✅ |
 | **CEU tracking** | Basic | Advanced | Advanced |

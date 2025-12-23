@@ -5,6 +5,25 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
+-- DEVELOPERS (PLATFORM-LEVEL ACCESS)
+-- ============================================
+
+CREATE TABLE developers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+
+  is_active BOOLEAN DEFAULT true,
+  last_login_at TIMESTAMPTZ,
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_developers_email ON developers(email);
+
+-- ============================================
 -- ORGANIZATIONS (MULTI-TENANT)
 -- ============================================
 
@@ -31,6 +50,10 @@ CREATE TABLE organizations (
   plan_status VARCHAR(50) DEFAULT 'active', -- active, past_due, canceled
   plan_started_at TIMESTAMPTZ,
   plan_expires_at TIMESTAMPTZ,
+
+  -- Seat limits (based on plan)
+  admin_seat_limit INT DEFAULT 0,  -- Free=0, Pro=2, Enterprise=unlimited(-1)
+  staff_seat_limit INT DEFAULT 0,  -- Free=0, Pro=3, Enterprise=unlimited(-1)
 
   -- Usage tracking
   storage_used_bytes BIGINT DEFAULT 0,
@@ -384,6 +407,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply to tables with updated_at
+CREATE TRIGGER update_developers_updated_at
+  BEFORE UPDATE ON developers
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
 CREATE TRIGGER update_organizations_updated_at
   BEFORE UPDATE ON organizations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
