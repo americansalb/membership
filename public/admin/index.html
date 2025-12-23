@@ -143,11 +143,11 @@
     <main class="admin-main">
       <header class="admin-header">
         <div>
-          <span class="text-sm text-muted">Organization Name</span>
+          <span id="org-name" class="text-sm text-muted">Loading...</span>
         </div>
         <div class="flex items-center gap-4">
-          <button class="btn btn-ghost btn-sm">Help</button>
-          <button class="btn btn-secondary btn-sm">Account</button>
+          <span id="user-name" class="text-sm"></span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
         </div>
       </header>
 
@@ -216,5 +216,39 @@
   </div>
 
   <script src="/js/app.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    // Check authentication
+    let currentUser = null;
+    let currentOrg = null;
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = '/login';
+          return;
+        }
+        const data = await res.json();
+        currentUser = data;
+        currentOrg = data.org;
+
+        // Update UI with org name
+        document.getElementById('org-name').textContent = currentOrg?.name || 'Your Organization';
+        document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || 'Account';
+
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/login';
+    }
+
+    // Run on load
+    checkAuth();
+  </script>
 </body>
 </html>

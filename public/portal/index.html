@@ -166,14 +166,14 @@
       <!-- Welcome -->
       <div class="welcome-section">
         <div class="member-info">
-          <div class="member-avatar">JD</div>
+          <div id="member-initials" class="member-avatar">--</div>
           <div>
-            <h2 style="margin-bottom: var(--space-1);">Welcome back, Jane!</h2>
-            <span class="badge badge-navy">Professional Member</span>
+            <h2 id="member-name" style="margin-bottom: var(--space-1);">Loading...</h2>
+            <span class="badge badge-navy">Member</span>
           </div>
         </div>
         <div>
-          <span class="text-sm text-muted">Member since January 2024</span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
         </div>
       </div>
 
@@ -282,5 +282,40 @@
   </div>
 
   <script src="/js/app.js"></script>
+  <script>
+    // Check member authentication
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = '/portal/login';
+          return;
+        }
+        const data = await res.json();
+        if (data.type !== 'member') {
+          window.location.href = '/portal/login';
+          return;
+        }
+
+        // Update UI with member info
+        document.getElementById('member-name').textContent = data.name || 'Member';
+        document.getElementById('member-initials').textContent = getInitials(data.name || data.email);
+
+      } catch (err) {
+        window.location.href = '/portal/login';
+      }
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/portal/login';
+    }
+
+    checkAuth();
+  </script>
 </body>
 </html>

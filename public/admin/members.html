@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members - VillageKeep Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-6); background-color: var(--bg-primary); border-bottom: 1px solid var(--border-color); }
+    .admin-content { padding: var(--space-6); }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4); }
+    .search-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+    .search-bar .input { max-width: 300px; }
+    .member-table { width: 100%; }
+    .member-row { cursor: pointer; }
+    .member-row:hover { background-color: var(--bg-secondary); }
+    .status-active { color: var(--success); }
+    .status-expired { color: var(--error); }
+    .status-pending { color: var(--warning); }
+    .empty-message { text-align: center; padding: var(--space-12); color: var(--text-tertiary); }
+
+    /* Mobile card view */
+    .member-cards { display: none; }
+    @media (max-width: 768px) {
+      .table-container { display: none; }
+      .member-cards { display: flex; flex-direction: column; gap: var(--space-4); }
+      .member-card { cursor: pointer; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageKeep</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Dashboard
+        </a>
+        <a href="/admin/members.html" class="sidebar-link active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Tiers
+        </a>
+        <div class="sidebar-section">Settings</div>
+        <a href="/admin/settings.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <div><span id="org-name" class="text-sm text-muted">Loading...</span></div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm"></span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="page-header">
+          <h1>Members</h1>
+          <button onclick="openAddModal()" class="btn btn-primary">Add Member</button>
+        </div>
+
+        <!-- Search/Filter -->
+        <div class="search-bar">
+          <input type="text" id="search" class="input" placeholder="Search by name or email..." onkeyup="debounceSearch()">
+          <select id="status-filter" class="input" onchange="loadMembers()" style="max-width: 150px;">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="pending">Pending</option>
+            <option value="canceled">Canceled</option>
+          </select>
+          <select id="tier-filter" class="input" onchange="loadMembers()" style="max-width: 150px;">
+            <option value="">All Tiers</option>
+          </select>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="card card-shadow table-container">
+          <table class="table member-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Tier</th>
+                <th>Status</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody id="members-tbody">
+              <tr><td colspan="5" class="empty-message">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div id="member-cards" class="member-cards"></div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination mt-6"></div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="/admin/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        Home
+      </a>
+      <a href="/admin/members.html" class="bottom-nav-link active">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        Members
+      </a>
+      <a href="/admin/tiers.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+        Tiers
+      </a>
+      <a href="/admin/settings.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </nav>
+  </div>
+
+  <!-- Add/Edit Member Modal -->
+  <div id="member-modal-backdrop" class="modal-backdrop" onclick="closeModal('member-modal')"></div>
+  <div id="member-modal" class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title" class="modal-title">Add Member</h3>
+      <button class="modal-close" onclick="closeModal('member-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form id="member-form" onsubmit="saveMember(event)">
+      <div class="modal-body">
+        <input type="hidden" id="member-id">
+
+        <div class="form-group">
+          <label class="label" for="member-email">Email *</label>
+          <input type="email" id="member-email" class="input" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+          <div class="form-group">
+            <label class="label" for="member-first-name">First Name</label>
+            <input type="text" id="member-first-name" class="input">
+          </div>
+          <div class="form-group">
+            <label class="label" for="member-last-name">Last Name</label>
+            <input type="text" id="member-last-name" class="input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="member-tier">Tier</label>
+          <select id="member-tier" class="input">
+            <option value="">No Tier</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="member-status">Status</label>
+          <select id="member-status" class="input">
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="expired">Expired</option>
+            <option value="canceled">Canceled</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="member-phone">Phone</label>
+          <input type="tel" id="member-phone" class="input">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="member-password">Portal Password</label>
+          <input type="password" id="member-password" class="input" placeholder="Leave blank to keep unchanged">
+          <p class="helper-text">Set a password so member can log in to the portal</p>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="member-notes">Notes</label>
+          <textarea id="member-notes" class="input" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('member-modal')">Cancel</button>
+        <button type="submit" id="save-btn" class="btn btn-primary">Save Member</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal-backdrop" class="modal-backdrop" onclick="closeModal('delete-modal')"></div>
+  <div id="delete-modal" class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Delete Member</h3>
+      <button class="modal-close" onclick="closeModal('delete-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="delete-member-name"></strong>?</p>
+      <p class="text-sm text-muted mt-4">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('delete-modal')">Cancel</button>
+      <button id="confirm-delete-btn" class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let members = [];
+    let tiers = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let searchTimeout = null;
+    let memberToDelete = null;
+
+    // Auth check
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        currentUser = data;
+        currentOrg = data.org;
+        document.getElementById('org-name').textContent = currentOrg?.name || 'Organization';
+        document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || '';
+
+        await loadTiers();
+        await loadMembers();
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/login';
+    }
+
+    // Load tiers for dropdowns
+    async function loadTiers() {
+      try {
+        const res = await fetch('/api/v1/tiers', { credentials: 'include' });
+        const data = await res.json();
+        tiers = data.tiers || [];
+
+        // Populate tier filter
+        const tierFilter = document.getElementById('tier-filter');
+        const memberTier = document.getElementById('member-tier');
+        tiers.forEach(tier => {
+          tierFilter.innerHTML += `<option value="${tier.id}">${tier.name}</option>`;
+          memberTier.innerHTML += `<option value="${tier.id}">${tier.name}</option>`;
+        });
+      } catch (err) {
+        console.error('Failed to load tiers:', err);
+      }
+    }
+
+    // Load members
+    async function loadMembers() {
+      const search = document.getElementById('search').value;
+      const status = document.getElementById('status-filter').value;
+      const tierId = document.getElementById('tier-filter').value;
+
+      const params = new URLSearchParams({ page: currentPage, limit: 20 });
+      if (search) params.append('search', search);
+      if (status) params.append('status', status);
+      if (tierId) params.append('tier_id', tierId);
+
+      try {
+        const res = await fetch(`/api/v1/members?${params}`, { credentials: 'include' });
+        const data = await res.json();
+        members = data.members || [];
+        totalPages = data.pagination?.pages || 1;
+        renderMembers();
+        renderPagination();
+      } catch (err) {
+        console.error('Failed to load members:', err);
+        document.getElementById('members-tbody').innerHTML =
+          '<tr><td colspan="5" class="empty-message">Failed to load members</td></tr>';
+      }
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadMembers();
+      }, 300);
+    }
+
+    function renderMembers() {
+      const tbody = document.getElementById('members-tbody');
+      const cards = document.getElementById('member-cards');
+
+      if (members.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-message">No members found</td></tr>';
+        cards.innerHTML = '<div class="empty-message">No members found</div>';
+        return;
+      }
+
+      // Table rows
+      tbody.innerHTML = members.map(m => `
+        <tr class="member-row" onclick="editMember('${m.id}')">
+          <td>${m.first_name || ''} ${m.last_name || ''}</td>
+          <td>${m.email}</td>
+          <td>${m.tier_name || '—'}</td>
+          <td><span class="status-${m.status}">${m.status}</span></td>
+          <td>${new Date(m.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join('');
+
+      // Mobile cards
+      cards.innerHTML = members.map(m => `
+        <div class="card card-shadow card-interactive member-card" onclick="editMember('${m.id}')">
+          <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+              <strong>${m.first_name || ''} ${m.last_name || ''}</strong>
+              <span class="badge badge-${m.status === 'active' ? 'success' : 'default'}">${m.status}</span>
+            </div>
+            <p class="text-sm text-muted">${m.email}</p>
+            <p class="text-sm text-muted mt-4">${m.tier_name || 'No tier'}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPagination() {
+      const container = document.getElementById('pagination');
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&laquo;</button>`;
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+          html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+          html += `<span class="pagination-btn">...</span>`;
+        }
+      }
+
+      html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>&raquo;</button>`;
+      container.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      loadMembers();
+    }
+
+    // Modal functions
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = 'Add Member';
+      document.getElementById('member-form').reset();
+      document.getElementById('member-id').value = '';
+      openModal('member-modal');
+    }
+
+    async function editMember(id) {
+      const member = members.find(m => m.id === id);
+      if (!member) return;
+
+      document.getElementById('modal-title').textContent = 'Edit Member';
+      document.getElementById('member-id').value = member.id;
+      document.getElementById('member-email').value = member.email;
+      document.getElementById('member-first-name').value = member.first_name || '';
+      document.getElementById('member-last-name').value = member.last_name || '';
+      document.getElementById('member-tier').value = member.tier_id || '';
+      document.getElementById('member-status').value = member.status;
+      document.getElementById('member-phone').value = member.phone || '';
+      document.getElementById('member-password').value = '';
+      document.getElementById('member-notes').value = member.notes || '';
+
+      openModal('member-modal');
+    }
+
+    async function saveMember(e) {
+      e.preventDefault();
+      const id = document.getElementById('member-id').value;
+      const saveBtn = document.getElementById('save-btn');
+
+      const data = {
+        email: document.getElementById('member-email').value,
+        first_name: document.getElementById('member-first-name').value || null,
+        last_name: document.getElementById('member-last-name').value || null,
+        tier_id: document.getElementById('member-tier').value || null,
+        status: document.getElementById('member-status').value,
+        phone: document.getElementById('member-phone').value || null,
+        notes: document.getElementById('member-notes').value || null
+      };
+
+      const password = document.getElementById('member-password').value;
+      if (password) data.password = password;
+
+      setLoading(saveBtn, true);
+
+      try {
+        const url = id ? `/api/v1/members/${id}` : '/api/v1/members';
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to save member');
+        }
+
+        closeModal('member-modal');
+        toast.success(id ? 'Member updated' : 'Member added');
+        loadMembers();
+
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLoading(saveBtn, false);
+      }
+    }
+
+    function openDeleteModal(id, name) {
+      memberToDelete = id;
+      document.getElementById('delete-member-name').textContent = name;
+      openModal('delete-modal');
+    }
+
+    async function confirmDelete() {
+      if (!memberToDelete) return;
+
+      const btn = document.getElementById('confirm-delete-btn');
+      setLoading(btn, true);
+
+      try {
+        const res = await fetch(`/api/v1/members/${memberToDelete}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to delete member');
+        }
+
+        closeModal('delete-modal');
+        toast.success('Member deleted');
+        loadMembers();
+
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLoading(btn, false);
+        memberToDelete = null;
+      }
+    }
+
+    // Initialize
+    checkAuth();
+  </script>
+</body>
+</html>

@@ -57,7 +57,7 @@ async function runMigrations() {
   }
 
   const files = fs.readdirSync(migrationsDir)
-    .filter(f => f.endsWith('.sql'))
+    .filter(f => f.endsWith('.sql') || f.endsWith('.js'))
     .sort();
 
   for (const file of files) {
@@ -66,11 +66,19 @@ async function runMigrations() {
     }
 
     console.log(`Running migration: ${file}`);
-    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+    const filePath = path.join(migrationsDir, file);
 
-    await db.query(sql);
+    if (file.endsWith('.sql')) {
+      // SQL migration
+      const sql = fs.readFileSync(filePath, 'utf8');
+      await db.query(sql);
+    } else if (file.endsWith('.js')) {
+      // JS migration (for complex logic like password hashing)
+      const migration = require(filePath);
+      await migration(db);
+    }
+
     await db.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
-
     console.log(`Completed: ${file}`);
   }
 }
