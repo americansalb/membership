@@ -4,9 +4,13 @@ const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
 const db = require('./db');
+const migrate = require('./db/migrate');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Run migrations on startup
+migrate().catch(console.error);
 
 // Security middleware
 app.use(helmet({
