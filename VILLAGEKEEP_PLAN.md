@@ -181,7 +181,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 | **SMS included** | 0 | 100/mo | 500/mo |
 | **Storage** | 500 MB | 10 GB | 100 GB |
 | **VillageKeep branding** | Shown | **Removed** | Removed |
-| **Custom domain** | ❌ | **✅** | ✅ |
+| **Member portal URL** | `/p/orgslug` | **`orgslug.villagekeep.com`** | Custom domain |
 | **Priority support** | ❌ | **✅** | ✅ |
 | **Zoom integration** | ❌ | ❌ | **✅** |
 | **Salesforce/CRM sync** | ❌ | ❌ | **✅** |
@@ -216,8 +216,27 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 | Export reports (PDF/CSV) | ❌ | ✅ |
 
 **Why people upgrade:**
-- **Pro:** CEU automation, compliance reports, white-label, advanced analytics
-- **Enterprise:** Integrations, SSO, compliance requirements, SLA guarantees
+- **Pro:** CEU automation, compliance reports, white-label subdomain, advanced analytics
+- **Enterprise:** Integrations, SSO, custom domain, SLA guarantees
+
+#### Member Portal URLs (White-Label)
+
+| Tier | Portal URL | Implementation |
+|------|------------|----------------|
+| **Free** | `villagekeep.com/p/aalb` | Path-based routing, VillageKeep branding shown |
+| **Pro** | `aalb.villagekeep.com` | Wildcard subdomain, no VillageKeep branding |
+| **Enterprise** | `members.aalb.org` | Custom domain with CNAME setup |
+
+**Technical Details:**
+
+- **Free tier:** Path-based URLs (`/p/:orgSlug`) - simplest, requires no DNS config from org
+- **Pro tier:** Wildcard SSL certificate (`*.villagekeep.com`) enables automatic subdomain provisioning - no manual setup needed
+- **Enterprise tier:** Custom domains via Render API - org configures CNAME to `villagekeep.com`, we verify and provision SSL
+
+**Member Experience:**
+- Free: Members visit `villagekeep.com/p/aalb` to login - org must share this URL
+- Pro: Members visit `aalb.villagekeep.com` - looks professional, easy to remember
+- Enterprise: Members visit `members.aalb.org` - fully branded, org owns the relationship
 
 ### Usage-Based Pricing
 

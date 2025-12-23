@@ -71,6 +71,20 @@ app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });
 
+// Organization-specific portal routes (/p/orgslug)
+app.get('/p/:orgSlug/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal', 'login.html'));
+});
+
+app.get('/p/:orgSlug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal', 'index.html'));
+});
+
+app.get('/p/:orgSlug/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal', 'index.html'));
+});
+
+// Generic portal routes (redirect to org-specific if known)
 app.get('/portal/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'portal', 'login.html'));
 });

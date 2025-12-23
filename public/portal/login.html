@@ -108,12 +108,26 @@
     const form = document.getElementById('login-form');
     const errorBanner = document.getElementById('error-banner');
     const submitBtn = document.getElementById('submit-btn');
+    const orgSlugInput = document.getElementById('orgSlug');
+    const orgFormGroup = orgSlugInput.closest('.form-group');
 
-    // Check for org slug in URL params
+    // Check for org slug in URL path (e.g., /p/aalb/login)
+    const pathMatch = window.location.pathname.match(/^\/p\/([^\/]+)/);
+    let orgSlugFromPath = pathMatch ? pathMatch[1] : null;
+
+    // Also check URL params as fallback
     const urlParams = new URLSearchParams(window.location.search);
-    const orgSlug = urlParams.get('org');
+    const orgSlugFromParams = urlParams.get('org');
+
+    // Use path first, then params
+    const orgSlug = orgSlugFromPath || orgSlugFromParams;
+
     if (orgSlug) {
-      document.getElementById('orgSlug').value = orgSlug;
+      orgSlugInput.value = orgSlug;
+      // If from path, hide the org field entirely
+      if (orgSlugFromPath) {
+        orgFormGroup.style.display = 'none';
+      }
     }
 
     form.addEventListener('submit', async (e) => {
@@ -140,8 +154,12 @@
           throw new Error(data.error || 'Login failed');
         }
 
-        // Redirect to member portal
-        window.location.href = '/portal/';
+        // Redirect to member portal (preserve org path if used)
+        if (orgSlugFromPath) {
+          window.location.href = `/p/${orgSlugFromPath}/`;
+        } else {
+          window.location.href = '/portal/';
+        }
 
       } catch (err) {
         errorBanner.textContent = err.message;
