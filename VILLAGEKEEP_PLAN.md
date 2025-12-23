@@ -177,7 +177,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 | **API access** | ✅ | ✅ | ✅ |
 | **Emails included** | 1,000/mo | 10,000/mo | 50,000/mo |
 | **SMS included** | 0 | 100/mo | 500/mo |
-| **Storage** | 1 GB | 10 GB | 100 GB |
+| **Storage** | 500 MB | 10 GB | 100 GB |
 | **VillageKeep branding** | Shown | **Removed** | Removed |
 | **Custom domain** | ❌ | **✅** | ✅ |
 | **Advanced analytics** | ❌ | **✅** | ✅ |
@@ -197,7 +197,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 |---------|-----------|-----|------------|---------|
 | **Email** | 1,000/mo | 10,000/mo | 50,000/mo | $0.001/email |
 | **SMS** | — | 100/mo | 500/mo | $0.02/SMS |
-| **Storage** | 1 GB | 10 GB | 100 GB | $0.50/GB (Pro), $0.25/GB (Ent) |
+| **Storage** | 500 MB | 10 GB | 100 GB | $0.50/GB (Pro), $0.25/GB (Ent) |
 
 - SMS pricing covers Twilio costs (~$0.008) with healthy margin
 - Storage covers Cloudinary/S3 costs (~$0.02/GB) with healthy margin
@@ -209,12 +209,23 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 - Organization is merchant of record (via Stripe Connect Express)
 - **No VillageKeep fee** — payment processing is free
 
-### Tips (Optional)
+### Tips & Platform Fee
 
-- Donors/members can optionally add a tip at checkout
-- NOT pre-selected (unlike Givebutter's 15% default)
-- Clear, honest messaging: *"Help keep VillageKeep free"*
-- No guilt, no manipulation
+**Option A: Tips Enabled (default)**
+- Org tip prompt at payout: *"You just received $5,000. Consider tipping to keep VillageKeep free."*
+- Suggested amounts: $25 / $50 / $100 / Skip
+- No donor-facing tip prompt (unlike Givebutter)
+- Org sees value first, then asked—more honest
+
+**Option B: Tips Disabled**
+- Org can disable tip prompts entirely
+- 0.5% platform fee on transactions instead
+- Clear trade-off: no prompts, but small fee
+
+This ensures:
+- We have revenue from free tier (tips or 0.5% fee)
+- Orgs have control over their experience
+- No guilt-tripping donors at checkout
 
 ### Competitive Pricing Comparison
 
@@ -272,7 +283,7 @@ Display a donation/payment widget during Zoom meetings:
 
 1. **Subscriptions** — Pro ($49/mo), Enterprise ($149/mo)
 2. **Usage overage** — Email, SMS, and storage beyond included limits
-3. **Tips** — Optional donor/member contributions
+3. **Tips or Platform Fee** — Org tips at payout, or 0.5% fee if tips disabled
 4. **Premium integrations** — Zoom (+1% on transactions, Enterprise only)
 
 ---
