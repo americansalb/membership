@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Portal - VillageKeep</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .portal-layout {
+      min-height: 100vh;
+      background-color: var(--bg-secondary);
+    }
+
+    .portal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .portal-logo {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--navy-800);
+    }
+
+    .portal-nav {
+      display: flex;
+      gap: var(--space-6);
+    }
+
+    .portal-nav a {
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--text-secondary);
+      padding: var(--space-2) 0;
+      border-bottom: 2px solid transparent;
+    }
+
+    .portal-nav a:hover,
+    .portal-nav a.active {
+      color: var(--navy-700);
+      border-bottom-color: var(--orange-500);
+    }
+
+    .portal-content {
+      max-width: var(--max-content-width);
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .welcome-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .member-avatar {
+      width: 3rem;
+      height: 3rem;
+      background-color: var(--navy-200);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-semibold);
+      color: var(--navy-700);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-6);
+    }
+
+    .ceu-progress {
+      margin-bottom: var(--space-4);
+    }
+
+    .progress-bar {
+      height: 0.5rem;
+      background-color: var(--bg-tertiary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--success);
+      border-radius: var(--radius-full);
+      transition: width var(--transition-slow);
+    }
+
+    .activity-item {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      width: 2rem;
+      height: 2rem;
+      background-color: var(--success-light);
+      color: var(--success);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      .portal-nav {
+        display: none;
+      }
+
+      .portal-content {
+        padding-bottom: 5rem; /* Space for bottom nav */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-layout">
+    <!-- Header -->
+    <header class="portal-header">
+      <a href="/portal/" class="portal-logo">VillageKeep</a>
+      <nav class="portal-nav">
+        <a href="/portal/" class="active">Dashboard</a>
+        <a href="/portal/ceu.html">CEU</a>
+        <a href="/portal/resources.html">Resources</a>
+        <a href="/portal/account.html">Account</a>
+      </nav>
+      <button class="btn btn-ghost btn-sm">Logout</button>
+    </header>
+
+    <!-- Content -->
+    <main class="portal-content">
+      <!-- Welcome -->
+      <div class="welcome-section">
+        <div class="member-info">
+          <div class="member-avatar">JD</div>
+          <div>
+            <h2 style="margin-bottom: var(--space-1);">Welcome back, Jane!</h2>
+            <span class="badge badge-navy">Professional Member</span>
+          </div>
+        </div>
+        <div>
+          <span class="text-sm text-muted">Member since January 2024</span>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- CEU Progress -->
+        <div class="card card-shadow">
+          <div class="card-header">
+            <h4>CEU Progress</h4>
+          </div>
+          <div class="card-body">
+            <div class="ceu-progress">
+              <div class="flex justify-between mb-4">
+                <span class="font-semibold">12.5 / 20 credits</span>
+                <span class="text-muted">62.5%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 62.5%;"></div>
+              </div>
+            </div>
+            <p class="text-sm text-muted">7.5 credits needed by December 2024</p>
+            <a href="/portal/ceu.html" class="btn btn-secondary btn-sm mt-4">View CEU Details</a>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card card-shadow">
+          <div class="card-header">
+            <h4>Recent Activity</h4>
+          </div>
+          <div class="card-body">
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <div>
+                <p class="font-medium">Completed "Ethics in Interpreting"</p>
+                <p class="text-sm text-muted">Earned 2.0 CEU credits - Dec 15</p>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background-color: var(--info-light); color: var(--info);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              </div>
+              <div>
+                <p class="font-medium">Certificate issued</p>
+                <p class="text-sm text-muted">Medical Terminology Course - Dec 10</p>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background-color: var(--orange-100); color: var(--orange-600);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <div>
+                <p class="font-medium">Membership renewed</p>
+                <p class="text-sm text-muted">Annual - $150.00 - Dec 1</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card card-shadow">
+          <div class="card-header">
+            <h4>Quick Links</h4>
+          </div>
+          <div class="card-body">
+            <div class="flex flex-col gap-2">
+              <a href="/portal/resources.html" class="btn btn-secondary" style="justify-content: flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Browse Resources
+              </a>
+              <a href="/portal/ceu.html" class="btn btn-secondary" style="justify-content: flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Download Certificates
+              </a>
+              <a href="/portal/account.html" class="btn btn-secondary" style="justify-content: flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Manage Account
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="/portal/" class="bottom-nav-link active">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+      </a>
+      <a href="/portal/ceu.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        CEU
+      </a>
+      <a href="/portal/resources.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        Resources
+      </a>
+      <a href="/portal/account.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Account
+      </a>
+    </nav>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found - VillageKeep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .error-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-6);
+    }
+    .error-code {
+      font-size: 6rem;
+      font-weight: var(--font-bold);
+      color: var(--navy-200);
+      line-height: 1;
+    }
+    .error-title {
+      margin: var(--space-4) 0;
+    }
+    .error-text {
+      max-width: 30rem;
+      margin: 0 auto var(--space-6);
+    }
+  </style>
+</head>
+<body>
+  <div class="error-page">
+    <div>
+      <div class="error-code">404</div>
+      <h1 class="error-title">Page Not Found</h1>
+      <p class="error-text">The page you're looking for doesn't exist or has been moved.</p>
+      <a href="/" class="btn btn-primary">Go Home</a>
+    </div>
+  </div>
+</body>
+</html>
