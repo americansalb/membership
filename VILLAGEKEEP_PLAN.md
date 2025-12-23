@@ -165,31 +165,58 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 
 ### Freemium Tiers
 
-| Feature | Free | Pro ($49/mo) | Enterprise ($149/mo) |
-|---------|------|--------------|---------------------|
+| Feature | Free | Pro ($49/mo or $490/yr) | Enterprise ($149/mo or $1,490/yr) |
+|---------|------|-------------------------|-----------------------------------|
 | **Contacts** | Unlimited | Unlimited | Unlimited |
 | **Members** | Unlimited | Unlimited | Unlimited |
 | **Membership & payments** | ✅ | ✅ | ✅ |
 | **Fundraising & donations** | ✅ | ✅ | ✅ |
 | **CEU tracking** | Basic | Advanced | Advanced |
 | **Member portal** | ✅ | ✅ | ✅ |
-| **Basic reporting** | ✅ | ✅ | ✅ |
+| **Reporting** | Basic | Advanced | Advanced |
 | **API access** | ✅ | ✅ | ✅ |
+| **Data export** | CSV | CSV + PDF | CSV + PDF + API |
 | **Emails included** | 1,000/mo | 10,000/mo | 50,000/mo |
 | **SMS included** | 0 | 100/mo | 500/mo |
 | **Storage** | 500 MB | 10 GB | 100 GB |
 | **VillageKeep branding** | Shown | **Removed** | Removed |
 | **Custom domain** | ❌ | **✅** | ✅ |
-| **Advanced analytics** | ❌ | **✅** | ✅ |
 | **Priority support** | ❌ | **✅** | ✅ |
 | **Zoom integration** | ❌ | ❌ | **✅** |
 | **Salesforce/CRM sync** | ❌ | ❌ | **✅** |
 | **SSO/SAML** | ❌ | ❌ | **✅** |
 | **SLA guarantee** | ❌ | ❌ | **✅** |
 
+**Annual pricing:** 2 months free (17% discount)
+
+#### CEU Tracking: Basic vs Advanced
+
+| Feature | Basic (Free) | Advanced (Pro+) |
+|---------|--------------|-----------------|
+| Manual credit entry | ✅ | ✅ |
+| Member CEU dashboard | ✅ | ✅ |
+| Export to CSV | ✅ | ✅ |
+| Auto-grant from LMS | ❌ | ✅ |
+| Compliance reports | ❌ | ✅ |
+| Certificate generation (PDF) | ❌ | ✅ |
+| Expiration email reminders | ❌ | ✅ |
+| Bulk credit operations | ❌ | ✅ |
+
+#### Reporting: Basic vs Advanced
+
+| Feature | Basic (Free) | Advanced (Pro+) |
+|---------|--------------|-----------------|
+| Member count & totals | ✅ | ✅ |
+| Revenue summary | ✅ | ✅ |
+| Growth trends over time | ❌ | ✅ |
+| Churn analysis | ❌ | ✅ |
+| Donation & campaign reports | ❌ | ✅ |
+| CEU compliance % | ❌ | ✅ |
+| Export reports (PDF/CSV) | ❌ | ✅ |
+
 **Why people upgrade:**
-- **Pro:** White-label (remove branding), custom domain, professional appearance
-- **Enterprise:** Integrations, SSO, compliance requirements, support guarantees
+- **Pro:** CEU automation, compliance reports, white-label, advanced analytics
+- **Enterprise:** Integrations, SSO, compliance requirements, SLA guarantees
 
 ### Usage-Based Pricing
 
@@ -209,23 +236,38 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 - Organization is merchant of record (via Stripe Connect Express)
 - **No VillageKeep fee** — payment processing is free
 
-### Tips & Platform Fee
+### Tips & Platform Fee (Free Tier Only)
 
-**Option A: Tips Enabled (default)**
-- Org tip prompt at payout: *"You just received $5,000. Consider tipping to keep VillageKeep free."*
-- Suggested amounts: $25 / $50 / $100 / Skip
-- No donor-facing tip prompt (unlike Givebutter)
-- Org sees value first, then asked—more honest
+**Free tier has two options:**
 
-**Option B: Tips Disabled**
-- Org can disable tip prompts entirely
-- 0.5% platform fee on transactions instead
-- Clear trade-off: no prompts, but small fee
+| Option | What Happens |
+|--------|--------------|
+| **Tips Enabled** (default) | Tip prompt at payout: *"You received $5,000. Consider tipping to keep VillageKeep free."* [$25] [$50] [$100] [Skip] |
+| **Tips Disabled** | No prompts, but 0.5% platform fee on transactions |
 
-This ensures:
-- We have revenue from free tier (tips or 0.5% fee)
-- Orgs have control over their experience
-- No guilt-tripping donors at checkout
+**Pro & Enterprise:** No tips, no platform fee. Subscription covers it.
+
+**Key differences from Givebutter:**
+- We ask the *org* at payout, not donors at checkout
+- Org sees the value first (just got paid!)
+- Skip is always easy—no guilt
+
+### Payout Schedule
+
+- **Standard payouts:** Free (2-day to org's bank)
+- **Instant payouts:** 1% fee (Stripe charges this, not us)
+
+### Downgrade Policy
+
+If org downgrades from Pro/Enterprise to Free:
+
+| Item | What Happens |
+|------|--------------|
+| **Data** | Preserved for 90 days (read-only) |
+| **Access** | Can view but not edit until upgrade |
+| **Storage over limit** | Oldest files auto-deleted after 90 days |
+| **CEU/Analytics** | Reverts to Basic features |
+| **Notification** | Banner: "Upgrade to edit. Data deletes in X days."
 
 ### Competitive Pricing Comparison
 
@@ -575,41 +617,41 @@ Revenue from subscriptions + usage overage + tips.
 
 | Source | Rate | Notes |
 |--------|------|-------|
-| Pro subscriptions | $49/mo | ~20% of orgs convert |
-| Enterprise subscriptions | $149/mo | ~5% of orgs convert |
-| Tips | ~2% of transactions | Conservative estimate |
+| Pro subscriptions | $49/mo | ~10% of orgs convert (industry avg 2-5%) |
+| Enterprise subscriptions | $149/mo | ~3% of orgs convert |
+| Tips/Platform fee | Variable | Free tier only |
 | SMS overage | $0.02/SMS | Above included |
 | Email overage | $0.001/email | Above included |
 | Storage overage | $0.25-0.50/GB | Above included |
 
 ### Year 1 (Building + Early Orgs)
 
-| Quarter | Total Orgs | Free | Pro | Enterprise | MRR |
-|---------|------------|------|-----|------------|-----|
+| Quarter | Total Orgs | Free | Pro (10%) | Ent (3%) | MRR |
+|---------|------------|------|-----------|----------|-----|
 | Q1 | 1 | 1 | 0 | 0 | $0 |
-| Q2 | 15 | 12 | 3 | 0 | $147 |
-| Q3 | 30 | 23 | 6 | 1 | $443 |
-| Q4 | 50 | 38 | 10 | 2 | $788 |
+| Q2 | 15 | 13 | 2 | 0 | $98 |
+| Q3 | 30 | 26 | 3 | 1 | $296 |
+| Q4 | 50 | 43 | 5 | 2 | $543 |
 
-**Year 1 Total:** ~$5,500
+**Year 1 Total:** ~$3,500
 
 ### Year 2 (Growth)
 
-| Quarter | Total Orgs | Free | Pro | Enterprise | MRR |
-|---------|------------|------|-----|------------|-----|
-| Q1 | 100 | 75 | 20 | 5 | $1,725 |
-| Q2 | 175 | 130 | 35 | 10 | $3,205 |
-| Q3 | 275 | 205 | 55 | 15 | $4,930 |
-| Q4 | 400 | 300 | 80 | 20 | $6,900 |
+| Quarter | Total Orgs | Free | Pro (10%) | Ent (3%) | MRR |
+|---------|------------|------|-----------|----------|-----|
+| Q1 | 100 | 87 | 10 | 3 | $937 |
+| Q2 | 175 | 152 | 18 | 5 | $1,627 |
+| Q3 | 275 | 239 | 28 | 8 | $2,564 |
+| Q4 | 400 | 348 | 40 | 12 | $3,748 |
 
-**Year 2 Total:** ~$65,000
+**Year 2 Total:** ~$35,000
 
 ### Year 3 (Scale)
 
 - 1,000+ organizations
-- 200 Pro ($9,800/mo) + 50 Enterprise ($7,450/mo) = **$17,250/mo MRR**
-- Plus usage overage (SMS, email, storage) ~$2,000/mo
-- **~$20,000 MRR / $240K ARR**
+- 100 Pro ($4,900/mo) + 30 Enterprise ($4,470/mo) = **~$9,400/mo MRR**
+- Plus usage overage (SMS, email, storage) ~$1,000/mo
+- **~$10,000 MRR / $120K ARR**
 
 ### Operating Costs
 
@@ -640,6 +682,32 @@ Revenue from subscriptions + usage overage + tips.
 
 ---
 
+## Legal & Compliance
+
+### Required Documents
+- **Privacy Policy** — How we handle org and member data
+- **Terms of Service** — Usage rules, liability limits, refund policy
+- **DPA (Data Processing Agreement)** — Required for EU customers (GDPR)
+- **Cookie Policy** — For web tracking consent
+
+### GDPR Requirements
+- Data export on request (already in product as CSV/PDF)
+- Right to deletion (must implement)
+- Cookie consent banner
+- Clear data retention policies
+
+### Terms Highlights
+- **Refunds:** No refunds on subscriptions (standard SaaS)
+- **Data ownership:** Orgs own their data, we're a processor
+- **Acceptable use:** No illegal activity, spam, or abuse
+- **Termination:** We can terminate for ToS violations
+
+### Tax Handling
+- **Stripe Tax** handles VAT/sales tax on subscriptions
+- Donations/membership fees: Org's responsibility (they're merchant of record)
+
+---
+
 ## Success Metrics
 
 ### Product Metrics
@@ -653,7 +721,7 @@ Revenue from subscriptions + usage overage + tips.
 - **MRR** (subscriptions + usage overage)
 - Payment volume (leading indicator)
 - Org count (Free / Pro / Enterprise)
-- Paid conversion rate (target: 20% Pro, 5% Enterprise)
+- Paid conversion rate (target: 10% Pro, 3% Enterprise)
 - Org churn rate (target: <5% monthly)
 
 ### Milestones
@@ -706,7 +774,7 @@ Building bootstrapped, revenue-funded. AALB provides:
 | **Payments** | Free (just Stripe 2.9% + $0.30) — orgs are merchant of record |
 | **Premium** | Zoom Live Giving (+1% fee, Enterprise only) |
 | **Structure** | For-profit LLC |
-| **Goal** | $20K MRR / $240K ARR in 3 years, bootstrapped |
+| **Goal** | $10K MRR / $120K ARR in 3 years, bootstrapped |
 
 ---
 
