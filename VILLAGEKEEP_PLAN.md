@@ -708,6 +708,64 @@ Revenue from subscriptions + usage overage + tips.
 
 ---
 
+## Operations & Reliability
+
+### Monitoring (Set Up Day 1)
+
+| Tool | Purpose | Cost |
+|------|---------|------|
+| **UptimeRobot** | Ping site every 5 min, alert if down | Free |
+| **Sentry** | Error tracking, crash alerts | Free tier |
+| **Render Dashboard** | Server metrics, logs | Included |
+
+**Alerts go to:** Email + SMS (for critical)
+
+### Health Checks
+
+Build these endpoints from the start:
+```
+GET /health         → 200 OK (app running)
+GET /health/db      → 200 OK (database connected)
+GET /health/stripe  → 200 OK (Stripe API reachable)
+```
+
+UptimeRobot pings `/health` every 5 minutes.
+
+### Status Page
+
+Set up `status.villagekeep.com` (Better Uptime free tier):
+- Shows current status
+- Post updates during incidents
+- Builds trust with orgs
+
+### What Render Handles
+
+| Feature | Benefit |
+|---------|---------|
+| Auto-restart | If app crashes, it restarts automatically |
+| Daily backups | Database backed up, 7-day retention |
+| Zero-downtime deploys | Updates don't cause outages |
+| SSL certificates | HTTPS handled automatically |
+
+### Support Model (No Time Guarantees)
+
+| Tier | Support Level |
+|------|---------------|
+| **Free** | Email + help docs (best effort) |
+| **Pro** | Priority email (answered before Free) |
+| **Enterprise** | Dedicated contact + SLA |
+
+**Only Enterprise gets time guarantees** — they pay for it.
+
+### Reduce Support Load
+
+1. **Help docs** — Answer common questions before they're asked
+2. **In-app tooltips** — Explain features inline
+3. **Onboarding flow** — Reduce confusion upfront
+4. **Status page** — Orgs check status before emailing
+
+---
+
 ## Success Metrics
 
 ### Product Metrics
