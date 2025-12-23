@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - VillageKeep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-secondary);
+      padding: var(--space-4);
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+    .auth-logo a {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      color: var(--navy-800);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+    .auth-header h1 {
+      margin-bottom: var(--space-2);
+    }
+    .auth-footer {
+      text-align: center;
+      margin-top: var(--space-6);
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      margin: var(--space-6) 0;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .auth-divider span {
+      padding: 0 var(--space-4);
+      color: var(--text-tertiary);
+      font-size: var(--text-sm);
+    }
+    .error-banner {
+      background-color: var(--error-light);
+      color: var(--error);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      font-size: var(--text-sm);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <a href="/">VillageKeep</a>
+      </div>
+
+      <div class="card card-shadow">
+        <div class="card-body">
+          <div class="auth-header">
+            <h1>Welcome back</h1>
+            <p class="text-muted">Sign in to your admin account</p>
+          </div>
+
+          <div id="error-banner" class="error-banner"></div>
+
+          <form id="login-form">
+            <div class="form-group">
+              <label class="label" for="email">Email</label>
+              <input type="email" id="email" name="email" class="input" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="password">Password</label>
+              <input type="password" id="password" name="password" class="input" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%;">
+              Sign In
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <p class="text-sm text-muted">
+              Don't have an account? <a href="/signup.html">Create one</a>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-divider">
+        <span>or</span>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="/portal/login.html" class="btn btn-secondary">Member Portal Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const form = document.getElementById('login-form');
+    const errorBanner = document.getElementById('error-banner');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBanner.style.display = 'none';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      setLoading(submitBtn, true);
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+          credentials: 'include'
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Login failed');
+        }
+
+        // Redirect to admin dashboard
+        window.location.href = '/admin/';
+
+      } catch (err) {
+        errorBanner.textContent = err.message;
+        errorBanner.style.display = 'block';
+        setLoading(submitBtn, false);
+      }
+    });
+  </script>
+</body>
+</html>

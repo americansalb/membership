@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const db = require('./db');
 const migrate = require('./db/migrate');
@@ -16,7 +17,11 @@ migrate().catch(console.error);
 app.use(helmet({
   contentSecurityPolicy: false // Adjust for development
 }));
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+app.use(cookieParser());
 
 // Parse JSON and URL-encoded bodies
 app.use(express.json());
@@ -39,7 +44,10 @@ app.get('/health/db', async (req, res) => {
   }
 });
 
-// API routes (to be added)
+// Auth routes
+app.use('/auth', require('./routes/auth'));
+
+// API routes
 app.use('/api/v1', require('./routes/api'));
 
 // Page routes
@@ -47,8 +55,28 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
+});
+
 app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
+});
+
+app.get('/portal/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal', 'login.html'));
+});
+
+app.get('/portal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal', 'index.html'));
 });
 
 app.get('/portal/*', (req, res) => {

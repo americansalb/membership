@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - VillageKeep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-secondary);
+      padding: var(--space-4);
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+    .auth-logo a {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      color: var(--navy-800);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+    .auth-header h1 {
+      margin-bottom: var(--space-2);
+    }
+    .auth-footer {
+      text-align: center;
+      margin-top: var(--space-6);
+    }
+    .error-banner {
+      background-color: var(--error-light);
+      color: var(--error);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      font-size: var(--text-sm);
+      display: none;
+    }
+    .password-requirements {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      margin-top: var(--space-1);
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <a href="/">VillageKeep</a>
+      </div>
+
+      <div class="card card-shadow">
+        <div class="card-body">
+          <div class="auth-header">
+            <h1>Create your account</h1>
+            <p class="text-muted">Start managing your organization for free</p>
+          </div>
+
+          <div id="error-banner" class="error-banner"></div>
+
+          <form id="signup-form">
+            <div class="form-group">
+              <label class="label" for="orgName">Organization Name</label>
+              <input type="text" id="orgName" name="orgName" class="input" required placeholder="AALB, Chess Club, etc.">
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="name">Your Name</label>
+              <input type="text" id="name" name="name" class="input" placeholder="Jane Doe">
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="email">Email</label>
+              <input type="email" id="email" name="email" class="input" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="password">Password</label>
+              <input type="password" id="password" name="password" class="input" required autocomplete="new-password" minlength="8">
+              <p class="password-requirements">At least 8 characters</p>
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%;">
+              Create Account
+            </button>
+
+            <p class="text-xs text-muted" style="margin-top: var(--space-4); text-align: center;">
+              By signing up, you agree to our Terms of Service and Privacy Policy.
+            </p>
+          </form>
+
+          <div class="auth-footer">
+            <p class="text-sm text-muted">
+              Already have an account? <a href="/login.html">Sign in</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const form = document.getElementById('signup-form');
+    const errorBanner = document.getElementById('error-banner');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBanner.style.display = 'none';
+
+      const orgName = document.getElementById('orgName').value;
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (password.length < 8) {
+        errorBanner.textContent = 'Password must be at least 8 characters';
+        errorBanner.style.display = 'block';
+        return;
+      }
+
+      setLoading(submitBtn, true);
+
+      try {
+        const res = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orgName, name, email, password }),
+          credentials: 'include'
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Signup failed');
+        }
+
+        // Redirect to admin dashboard
+        window.location.href = '/admin/';
+
+      } catch (err) {
+        errorBanner.textContent = err.message;
+        errorBanner.style.display = 'block';
+        setLoading(submitBtn, false);
+      }
+    });
+  </script>
+</body>
+</html>
