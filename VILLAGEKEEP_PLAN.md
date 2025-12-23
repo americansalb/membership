@@ -227,7 +227,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 | **Storage** | 500 MB | 10 GB | 100 GB | $0.50/GB (Pro), $0.25/GB (Ent) |
 
 - SMS pricing covers Twilio costs (~$0.008) with healthy margin
-- Storage covers Cloudinary/S3 costs (~$0.02/GB) with healthy margin
+- Storage covers Bunny.net costs (~$0.01/GB) with healthy margin
 - Free tier cannot exceed storage limit (must upgrade)
 
 ### Payment Processing
@@ -381,7 +381,7 @@ Aligned with existing LMS for code reuse and consistency.
 | Frontend | Static HTML/JS/CSS |
 | Payments | Stripe Connect (Express) |
 | Email | Nodemailer |
-| File Storage | Cloudinary (if needed) |
+| File Storage | Bunny.net (storage + CDN) |
 | Hosting | Render |
 
 **Why this stack:**
@@ -568,6 +568,105 @@ Create a `/styleguide` page that shows:
 - Typography scale
 
 This becomes your reference and ensures consistency.
+
+### 8. Component States
+
+Every component needs these states built from the start:
+
+| Component | States |
+|-----------|--------|
+| **Button** | default → hover → active → disabled → loading |
+| **Input** | empty → filled → focused → error → disabled |
+| **Card** | default → loading (skeleton) → error |
+| **Table** | loading → empty → data → error |
+| **Modal** | closed → opening → open → closing |
+| **Toast** | appearing → visible → dismissing |
+
+**Loading states:** Use skeleton loaders (gray shapes), not spinners, for content areas. Spinners only for button actions.
+
+### 9. Error Handling Patterns
+
+| Error Type | UI Pattern | Example |
+|------------|------------|---------|
+| **Form validation** | Inline under field | "Email is required" |
+| **Action failed** | Toast notification | "Save failed. Try again." |
+| **Network error** | Toast + retry button | "Connection lost. [Retry]" |
+| **Page load failed** | Full-page error | "Something went wrong. [Refresh]" |
+| **Not found** | Full-page 404 | "This page doesn't exist" |
+| **Unauthorized** | Redirect to login | — |
+
+**Toast rules:**
+- Success: Auto-dismiss after 3 seconds
+- Error: Stays until dismissed (user needs to read it)
+- Position: Top-right on desktop, top-center on mobile
+
+### 10. Image & Storage (Bunny.net)
+
+Using Bunny.net for file storage + CDN.
+
+#### Upload Limits
+
+| File Type | Max Size | Formats |
+|-----------|----------|---------|
+| Profile photos | 2 MB | JPG, PNG, WebP |
+| Documents | 10 MB | PDF, DOC, DOCX |
+| General uploads | 25 MB | Any |
+
+#### Image Processing
+
+```
+Upload flow:
+1. User uploads → Bunny Storage Zone
+2. Serve via Bunny CDN: cdn.villagekeep.com/[org-id]/[file]
+3. Resize on-the-fly with Bunny Optimizer (if enabled)
+```
+
+**Transformations:**
+- Thumbnails: 150x150
+- Profile: 300x300
+- Full: max 1200px wide
+- Auto WebP conversion
+
+#### Storage Organization
+
+```
+/[org-id]/
+├── profiles/       # Member photos
+├── documents/      # PDFs, certificates
+├── logos/          # Org branding
+└── uploads/        # General files
+```
+
+### 11. Testing Strategy
+
+#### What We Test
+
+| Type | Tool | When |
+|------|------|------|
+| **Manual QA** | Checklist | Before every release |
+| **Accessibility** | axe DevTools | During development |
+| **Visual** | Screenshots | Major UI changes |
+| **API** | Postman/curl | Endpoint changes |
+
+#### Manual QA Checklist (Every Release)
+
+- [ ] Login/logout works
+- [ ] Can create/edit/delete members
+- [ ] Payments process correctly (test mode)
+- [ ] Emails send
+- [ ] Mobile layout works
+- [ ] Dark mode doesn't break
+- [ ] Forms show validation errors
+- [ ] Empty states display correctly
+
+#### Accessibility Audit (Monthly)
+
+- [ ] Run axe DevTools on all pages
+- [ ] Keyboard-navigate entire app
+- [ ] Check color contrast
+- [ ] Test with screen reader
+
+**No automated test suite initially** — manual QA is enough for MVP. Add unit tests when the codebase stabilizes.
 
 ---
 
