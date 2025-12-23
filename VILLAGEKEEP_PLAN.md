@@ -167,6 +167,7 @@ Unlike Givebutter (nonprofits only), VillageKeep serves anyone with members:
 
 | Feature | Free | Pro ($49/mo) | Enterprise ($149/mo) |
 |---------|------|--------------|---------------------|
+| **Contacts** | Unlimited | Unlimited | Unlimited |
 | **Members** | Unlimited | Unlimited | Unlimited |
 | **Membership & payments** | ✅ | ✅ | ✅ |
 | **Fundraising & donations** | ✅ | ✅ | ✅ |
