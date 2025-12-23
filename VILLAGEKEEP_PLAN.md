@@ -468,7 +468,62 @@ layouts/
 └── portal.html       # Member-facing: nav + content
 ```
 
-### 4. Accessibility From Day 1
+### 4. Responsive Strategy (Different Layouts, Not Just CSS)
+
+> **Rule: Mobile and desktop can be completely different.**
+> Don't force desktop layouts into mobile. Build separate experiences where needed.
+
+#### Approach by Section
+
+| Section | Desktop | Mobile | Strategy |
+|---------|---------|--------|----------|
+| **Admin** | Sidebar nav + data tables | Bottom nav + card lists | **Separate components** |
+| **Member Portal** | Horizontal nav + grid | Bottom nav + stacked | **Separate components** |
+| **Public/Marketing** | Full hero + multi-column | Stacked single column | **CSS-only** (simpler) |
+
+#### How to Implement
+
+```html
+<!-- Option 1: CSS show/hide (simple layouts) -->
+<div class="hidden md:block">Desktop version</div>
+<div class="md:hidden">Mobile version</div>
+
+<!-- Option 2: Separate components (complex layouts) -->
+<!-- admin/members.html loads: -->
+<script>
+  if (window.innerWidth < 768) {
+    loadComponent('member-card-list');   // Cards for mobile
+  } else {
+    loadComponent('member-data-table');  // Table for desktop
+  }
+</script>
+```
+
+#### Key Transformations
+
+| Desktop | → | Mobile |
+|---------|---|--------|
+| Data table | → | Card list |
+| Sidebar nav | → | Bottom nav |
+| Multi-column grid | → | Single column stack |
+| Hover actions | → | Swipe/tap actions |
+| Dropdown menus | → | Full-screen menus |
+| Modal dialogs | → | Full-screen pages |
+
+#### Breakpoint Strategy
+
+```css
+/* Mobile first */
+/* Base: 0-639px (phones) */
+/* sm: 640px (large phones) */
+/* md: 768px (tablets - MAJOR LAYOUT CHANGE) */
+/* lg: 1024px (laptops) */
+/* xl: 1280px (desktops) */
+```
+
+**Main breakpoint: 768px** — This is where layouts fundamentally change (mobile → desktop).
+
+### 5. Accessibility From Day 1
 
 | Requirement | How |
 |-------------|-----|
@@ -480,7 +535,7 @@ layouts/
 | Semantic HTML | Use button, nav, main, header, not just divs |
 | Screen reader | Test with VoiceOver/NVDA |
 
-### 5. File Structure
+### 6. File Structure
 
 ```
 public/
@@ -502,7 +557,7 @@ public/
 └── index.html             # Public landing
 ```
 
-### 6. Component Documentation
+### 7. Component Documentation
 
 Create a `/styleguide` page that shows:
 - All buttons (states: default, hover, disabled, loading)
