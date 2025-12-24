@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Admin - VillageKeep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .dev-layout { min-height: 100vh; background-color: var(--bg-secondary); }
+    .dev-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-6); background-color: var(--navy-900); color: white; }
+    .dev-header h1 { font-size: var(--text-lg); }
+    .dev-content { max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+    .section { margin-bottom: var(--space-8); }
+
+    /* Platform Plans Grid */
+    .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); }
+    .plan-card { position: relative; }
+    .plan-card.current { border: 2px solid var(--orange-500); }
+    .plan-price { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--navy-800); }
+    .plan-period { font-size: var(--text-sm); color: var(--text-muted); }
+    .plan-features { margin-top: var(--space-4); }
+    .plan-features li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+    .plan-features .check { color: var(--success); }
+    .plan-features .x { color: var(--text-tertiary); }
+
+    /* Orgs Table */
+    .org-plan-badge { font-size: var(--text-xs); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+    .stat-card { text-align: center; }
+    .stat-value { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--navy-800); }
+    .stat-label { font-size: var(--text-sm); color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="dev-layout">
+    <header class="dev-header">
+      <h1>VillageKeep Developer Admin</h1>
+      <div class="flex items-center gap-4">
+        <span id="dev-email" class="text-sm" style="opacity: 0.8;"></span>
+        <button onclick="logout()" class="btn btn-ghost btn-sm" style="color: white; border-color: rgba(255,255,255,0.3);">Logout</button>
+      </div>
+    </header>
+
+    <div class="dev-content">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="card card-shadow stat-card">
+          <div class="card-body">
+            <div id="stat-orgs" class="stat-value">-</div>
+            <div class="stat-label">Organizations</div>
+          </div>
+        </div>
+        <div class="card card-shadow stat-card">
+          <div class="card-body">
+            <div id="stat-members" class="stat-value">-</div>
+            <div class="stat-label">Total Members</div>
+          </div>
+        </div>
+        <div class="card card-shadow stat-card">
+          <div class="card-body">
+            <div id="stat-pro" class="stat-value">-</div>
+            <div class="stat-label">Pro Orgs</div>
+          </div>
+        </div>
+        <div class="card card-shadow stat-card">
+          <div class="card-body">
+            <div id="stat-mrr" class="stat-value">-</div>
+            <div class="stat-label">MRR</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Plans -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Platform Plans</h2>
+        </div>
+        <div id="plans-container" class="plans-grid">
+          <div class="card card-shadow"><div class="card-body">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Organizations -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Organizations</h2>
+        </div>
+        <div class="card card-shadow">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Organization</th>
+                <th>Slug</th>
+                <th>Plan</th>
+                <th>Members</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="orgs-tbody">
+              <tr><td colspan="6" style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let currentDev = null;
+    let plans = [];
+    let orgs = [];
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/dev/login.html'; return; }
+        const data = await res.json();
+        if (data.type !== 'developer') {
+          window.location.href = '/dev/login.html';
+          return;
+        }
+        currentDev = data;
+        document.getElementById('dev-email').textContent = currentDev.email;
+        await Promise.all([loadPlans(), loadOrgs(), loadStats()]);
+      } catch (err) {
+        window.location.href = '/dev/login.html';
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/dev/login.html';
+    }
+
+    async function loadPlans() {
+      try {
+        const res = await fetch('/api/v1/dev/plans', { credentials: 'include' });
+        const data = await res.json();
+        plans = data.plans || [];
+        renderPlans();
+      } catch (err) {
+        console.error('Failed to load plans:', err);
+      }
+    }
+
+    async function loadOrgs() {
+      try {
+        const res = await fetch('/api/v1/dev/orgs', { credentials: 'include' });
+        const data = await res.json();
+        orgs = data.orgs || [];
+        renderOrgs();
+      } catch (err) {
+        console.error('Failed to load orgs:', err);
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/v1/dev/stats', { credentials: 'include' });
+        const data = await res.json();
+        document.getElementById('stat-orgs').textContent = data.totalOrgs || 0;
+        document.getElementById('stat-members').textContent = data.totalMembers || 0;
+        document.getElementById('stat-pro').textContent = data.proOrgs || 0;
+        document.getElementById('stat-mrr').textContent = '$' + ((data.mrr || 0) / 100).toLocaleString();
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+      }
+    }
+
+    function formatPrice(cents) {
+      if (cents === 0) return 'Free';
+      return '$' + (cents / 100).toLocaleString();
+    }
+
+    function renderPlans() {
+      const container = document.getElementById('plans-container');
+      if (plans.length === 0) {
+        container.innerHTML = '<div class="card card-shadow"><div class="card-body">No plans found</div></div>';
+        return;
+      }
+
+      container.innerHTML = plans.map(plan => `
+        <div class="card card-shadow plan-card">
+          <div class="card-body">
+            <h3 style="margin-bottom: var(--space-2);">${plan.name}</h3>
+            <div class="plan-price">
+              ${formatPrice(plan.price_cents_monthly)}
+              ${plan.price_cents_monthly > 0 ? '<span class="plan-period">/month</span>' : ''}
+            </div>
+            ${plan.price_cents_annual > 0 ? `<p class="text-sm text-muted">${formatPrice(plan.price_cents_annual)}/year (2 months free)</p>` : ''}
+
+            <ul class="plan-features">
+              <li><span class="${plan.admin_seat_limit === 0 ? 'x' : 'check'}">${plan.admin_seat_limit === 0 ? '✗' : '✓'}</span> ${plan.admin_seat_limit === -1 ? 'Unlimited' : plan.admin_seat_limit} admin seats</li>
+              <li><span class="${plan.staff_seat_limit === 0 ? 'x' : 'check'}">${plan.staff_seat_limit === 0 ? '✗' : '✓'}</span> ${plan.staff_seat_limit === -1 ? 'Unlimited' : plan.staff_seat_limit} staff seats</li>
+              <li><span class="check">✓</span> ${plan.emails_per_month.toLocaleString()} emails/mo</li>
+              <li><span class="${plan.sms_per_month === 0 ? 'x' : 'check'}">${plan.sms_per_month === 0 ? '✗' : '✓'}</span> ${plan.sms_per_month || 'No'} SMS/mo</li>
+              <li><span class="check">✓</span> ${plan.storage_mb >= 1024 ? (plan.storage_mb / 1024) + ' GB' : plan.storage_mb + ' MB'} storage</li>
+              <li><span class="${plan.ceu_advanced ? 'check' : 'x'}">${plan.ceu_advanced ? '✓' : '✗'}</span> Advanced CEU</li>
+              <li><span class="${plan.branding_removed ? 'check' : 'x'}">${plan.branding_removed ? '✓' : '✗'}</span> Remove branding</li>
+              <li><span class="${plan.custom_subdomain ? 'check' : 'x'}">${plan.custom_subdomain ? '✓' : '✗'}</span> Custom subdomain</li>
+              <li><span class="${plan.custom_domain ? 'check' : 'x'}">${plan.custom_domain ? '✓' : '✗'}</span> Custom domain</li>
+              <li><span class="${plan.priority_support ? 'check' : 'x'}">${plan.priority_support ? '✓' : '✗'}</span> Priority support</li>
+              <li><span class="${plan.sso_saml ? 'check' : 'x'}">${plan.sso_saml ? '✓' : '✗'}</span> SSO/SAML</li>
+            </ul>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderOrgs() {
+      const tbody = document.getElementById('orgs-tbody');
+      if (orgs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">No organizations yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orgs.map(org => `
+        <tr>
+          <td><strong>${org.name}</strong></td>
+          <td><code>${org.slug}</code></td>
+          <td><span class="badge badge-${org.plan === 'enterprise' ? 'success' : org.plan === 'pro' ? 'warning' : 'default'}">${org.plan}</span></td>
+          <td>${org.member_count || 0}</td>
+          <td>${new Date(org.created_at).toLocaleDateString()}</td>
+          <td>
+            <select onchange="changePlan('${org.id}', this.value)" class="input" style="padding: var(--space-1) var(--space-2); font-size: var(--text-sm);">
+              <option value="free" ${org.plan === 'free' ? 'selected' : ''}>Free</option>
+              <option value="pro" ${org.plan === 'pro' ? 'selected' : ''}>Pro</option>
+              <option value="enterprise" ${org.plan === 'enterprise' ? 'selected' : ''}>Enterprise</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function changePlan(orgId, newPlan) {
+      try {
+        const res = await fetch(`/api/v1/dev/orgs/${orgId}/plan`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: newPlan }),
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to update plan');
+        toast.success('Plan updated');
+        loadOrgs();
+        loadStats();
+      } catch (err) {
+        toast.error(err.message);
+      }
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

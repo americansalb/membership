@@ -50,6 +50,9 @@ app.use('/auth', require('./routes/auth'));
 // API routes
 app.use('/api/v1', require('./routes/api'));
 
+// Dev API routes (platform admin)
+app.use('/api/v1/dev', require('./routes/dev'));
+
 // Page routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -69,6 +72,19 @@ app.get('/admin', (req, res) => {
 
 app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
+});
+
+// Developer admin routes
+app.get('/dev', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dev', 'index.html'));
+});
+
+app.get('/dev/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dev', 'login.html'));
+});
+
+app.get('/dev/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dev', 'index.html'));
 });
 
 // Organization-specific portal routes (/p/orgslug)
