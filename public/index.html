@@ -110,6 +110,78 @@
       margin: 0 auto;
     }
 
+    /* Pricing */
+    .pricing {
+      padding: var(--space-20) var(--space-4);
+      background-color: var(--bg-secondary);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-6);
+      max-width: 1000px;
+      margin: var(--space-12) auto 0;
+    }
+
+    .pricing-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border: 2px solid var(--orange-500);
+    }
+
+    .pricing-card.featured::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--orange-500);
+      color: white;
+      padding: var(--space-1) var(--space-4);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+    }
+
+    .pricing-price {
+      font-size: var(--text-4xl);
+      font-weight: var(--font-bold);
+      color: var(--navy-800);
+    }
+
+    .pricing-period {
+      font-size: var(--text-base);
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .pricing-features {
+      list-style: none;
+      padding: 0;
+      margin: var(--space-6) 0;
+    }
+
+    .pricing-features li {
+      padding: var(--space-2) 0;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+    }
+
+    .pricing-features li svg {
+      flex-shrink: 0;
+    }
+
+    .pricing-features .check { color: var(--success); }
+    .pricing-features .x { color: var(--text-tertiary); }
+
     .footer {
       padding: var(--space-12) var(--space-4);
       background-color: var(--navy-900);
@@ -202,6 +274,70 @@
         </div>
         <h4>Simple Payments</h4>
         <p>Stripe-powered. You keep more. Just 2.9% + $0.30 per transaction.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="section-header">
+      <h2>Simple, Honest Pricing</h2>
+      <p>Unlimited members on every plan. No per-contact fees. Just Stripe's 2.9% + $0.30.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card card-shadow">
+        <h3>Free</h3>
+        <div class="pricing-price">$0</div>
+        <p class="text-muted">Perfect for getting started</p>
+        <ul class="pricing-features">
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Unlimited members</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Membership & payments</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Fundraising & donations</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Basic CEU tracking</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Member portal</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 1,000 emails/month</li>
+          <li><svg class="x" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Admin/staff seats</li>
+          <li><svg class="x" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Remove branding</li>
+        </ul>
+        <a href="/signup" class="btn btn-secondary" style="width: 100%;">Get Started</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card card-shadow featured">
+        <h3>Pro</h3>
+        <div class="pricing-price">$49<span class="pricing-period">/month</span></div>
+        <p class="text-muted">$490/year (2 months free)</p>
+        <ul class="pricing-features">
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Everything in Free</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 2 admin + 3 staff seats</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Advanced CEU & reports</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Remove VillageKeep branding</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom subdomain</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 10,000 emails + 100 SMS/month</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Priority support</li>
+          <li><svg class="x" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> SSO/SAML</li>
+        </ul>
+        <a href="/signup?plan=pro" class="btn btn-primary" style="width: 100%;">Start Pro Trial</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card card-shadow">
+        <h3>Enterprise</h3>
+        <div class="pricing-price">$149<span class="pricing-period">/month</span></div>
+        <p class="text-muted">$1,490/year (2 months free)</p>
+        <ul class="pricing-features">
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Everything in Pro</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Unlimited admin & staff</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom domain</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> SSO/SAML</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Salesforce/CRM sync</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 50,000 emails + 500 SMS/month</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Zoom integration</li>
+          <li><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> SLA guarantee</li>
+        </ul>
+        <a href="/signup?plan=enterprise" class="btn btn-secondary" style="width: 100%;">Contact Sales</a>
       </div>
     </div>
   </section>
