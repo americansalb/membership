@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiers - VillageKeep Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-6); background-color: var(--bg-primary); border-bottom: 1px solid var(--border-color); }
+    .admin-content { padding: var(--space-6); }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4); }
+
+    .tiers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-6); }
+    .tier-card { position: relative; }
+    .tier-card.inactive { opacity: 0.6; }
+    .tier-badge { position: absolute; top: var(--space-3); right: var(--space-3); }
+    .tier-price { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--navy-800); }
+    .tier-period { font-size: var(--text-sm); color: var(--text-muted); font-weight: normal; }
+    .tier-members { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-2); }
+    .tier-benefits { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-color); }
+    .tier-benefits ul { list-style: none; padding: 0; margin: 0; }
+    .tier-benefits li { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
+    .tier-benefits li svg { flex-shrink: 0; color: var(--success); margin-top: 2px; }
+    .tier-actions { display: flex; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-color); }
+    .empty-state { text-align: center; padding: var(--space-12); color: var(--text-tertiary); }
+
+    /* Benefits input */
+    .benefits-list { margin-bottom: var(--space-2); }
+    .benefit-item { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
+    .benefit-item input { flex: 1; }
+    .add-benefit-btn { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageKeep</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Dashboard
+        </a>
+        <a href="/admin/members.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="sidebar-link active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Tiers
+        </a>
+        <div class="sidebar-section">Settings</div>
+        <a href="/admin/settings.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <div><span id="org-name" class="text-sm text-muted">Loading...</span></div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm"></span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="page-header">
+          <div>
+            <h1>Membership Tiers</h1>
+            <p class="text-sm text-muted mt-4">Define pricing and benefits for your membership levels</p>
+          </div>
+          <button onclick="openAddModal()" class="btn btn-primary">Add Tier</button>
+        </div>
+
+        <!-- Tiers Grid -->
+        <div id="tiers-container" class="tiers-grid">
+          <div class="empty-state">Loading...</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="/admin/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        Home
+      </a>
+      <a href="/admin/members.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        Members
+      </a>
+      <a href="/admin/tiers.html" class="bottom-nav-link active">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+        Tiers
+      </a>
+      <a href="/admin/settings.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </nav>
+  </div>
+
+  <!-- Add/Edit Tier Modal -->
+  <div id="tier-modal-backdrop" class="modal-backdrop" onclick="closeModal('tier-modal')"></div>
+  <div id="tier-modal" class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 id="modal-title" class="modal-title">Add Tier</h3>
+      <button class="modal-close" onclick="closeModal('tier-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form id="tier-form" onsubmit="saveTier(event)">
+      <div class="modal-body">
+        <input type="hidden" id="tier-id">
+
+        <div class="form-group">
+          <label class="label" for="tier-name">Name *</label>
+          <input type="text" id="tier-name" class="input" required placeholder="e.g., Basic, Professional, Premium">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="tier-description">Description</label>
+          <textarea id="tier-description" class="input" rows="2" placeholder="Brief description of this tier"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+          <div class="form-group">
+            <label class="label" for="tier-price">Price ($)</label>
+            <input type="number" id="tier-price" class="input" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="label" for="tier-period">Billing Period</label>
+            <select id="tier-period" class="input">
+              <option value="annual">Annual</option>
+              <option value="monthly">Monthly</option>
+              <option value="one_time">One-time</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+          <div class="form-group">
+            <label class="label" for="tier-public">Visibility</label>
+            <select id="tier-public" class="input">
+              <option value="true">Public (visible on pricing page)</option>
+              <option value="false">Private (invite only)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="label" for="tier-active">Status</label>
+            <select id="tier-active" class="input">
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="tier-sort">Sort Order</label>
+          <input type="number" id="tier-sort" class="input" min="0" value="0" placeholder="0">
+          <p class="helper-text">Lower numbers appear first</p>
+        </div>
+
+        <div class="form-group">
+          <label class="label">Benefits</label>
+          <div id="benefits-list" class="benefits-list"></div>
+          <button type="button" class="btn btn-secondary btn-sm add-benefit-btn" onclick="addBenefitInput()">
+            + Add Benefit
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('tier-modal')">Cancel</button>
+        <button type="submit" id="save-btn" class="btn btn-primary">Save Tier</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal-backdrop" class="modal-backdrop" onclick="closeModal('delete-modal')"></div>
+  <div id="delete-modal" class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Delete Tier</h3>
+      <button class="modal-close" onclick="closeModal('delete-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="delete-tier-name"></strong>?</p>
+      <p class="text-sm text-muted mt-4">This action cannot be undone. Tiers with members cannot be deleted.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('delete-modal')">Cancel</button>
+      <button id="confirm-delete-btn" class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let tiers = [];
+    let tierToDelete = null;
+
+    // Auth check
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        currentUser = data;
+        currentOrg = data.org;
+        document.getElementById('org-name').textContent = currentOrg?.name || 'Organization';
+        document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || '';
+
+        await loadTiers();
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/login';
+    }
+
+    // Load tiers
+    async function loadTiers() {
+      try {
+        const res = await fetch('/api/v1/tiers', { credentials: 'include' });
+        const data = await res.json();
+        tiers = data.tiers || [];
+        renderTiers();
+      } catch (err) {
+        console.error('Failed to load tiers:', err);
+        document.getElementById('tiers-container').innerHTML =
+          '<div class="empty-state">Failed to load tiers</div>';
+      }
+    }
+
+    function formatPrice(cents) {
+      return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    function formatPeriod(period) {
+      const labels = {
+        'monthly': '/month',
+        'annual': '/year',
+        'one_time': 'one-time',
+        'lifetime': 'lifetime'
+      };
+      return labels[period] || period;
+    }
+
+    function renderTiers() {
+      const container = document.getElementById('tiers-container');
+
+      if (tiers.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto var(--space-4);">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            <h3>No tiers yet</h3>
+            <p class="text-sm mt-4">Create membership tiers to organize your members and set pricing.</p>
+            <button onclick="openAddModal()" class="btn btn-primary mt-6">Create Your First Tier</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = tiers.map(tier => {
+        const benefits = Array.isArray(tier.benefits) ? tier.benefits :
+                         (typeof tier.benefits === 'string' ? JSON.parse(tier.benefits || '[]') : []);
+
+        return `
+          <div class="card card-shadow tier-card ${tier.is_active ? '' : 'inactive'}">
+            ${!tier.is_active ? '<span class="badge badge-default tier-badge">Inactive</span>' : ''}
+            ${!tier.is_public ? '<span class="badge badge-warning tier-badge">Private</span>' : ''}
+            <div class="card-body">
+              <h3 style="margin-bottom: var(--space-2);">${escapeHtml(tier.name)}</h3>
+              ${tier.description ? `<p class="text-sm text-muted">${escapeHtml(tier.description)}</p>` : ''}
+
+              <div class="tier-price mt-4">
+                ${tier.price_cents === 0 ? 'Free' : formatPrice(tier.price_cents)}
+                ${tier.price_cents > 0 ? `<span class="tier-period">${formatPeriod(tier.billing_period)}</span>` : ''}
+              </div>
+
+              <p class="tier-members">${tier.member_count || 0} member${tier.member_count === 1 ? '' : 's'}</p>
+
+              ${benefits.length > 0 ? `
+                <div class="tier-benefits">
+                  <ul>
+                    ${benefits.map(b => `
+                      <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        ${escapeHtml(b)}
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+
+              <div class="tier-actions">
+                <button class="btn btn-secondary btn-sm" onclick="editTier('${tier.id}')">Edit</button>
+                <button class="btn btn-ghost btn-sm" onclick="openDeleteModal('${tier.id}', '${escapeHtml(tier.name)}')"
+                        ${tier.member_count > 0 ? 'disabled title="Cannot delete tier with members"' : ''}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Benefits management
+    function addBenefitInput(value = '') {
+      const list = document.getElementById('benefits-list');
+      const div = document.createElement('div');
+      div.className = 'benefit-item';
+      div.innerHTML = `
+        <input type="text" class="input benefit-input" value="${escapeHtml(value)}" placeholder="e.g., Access to all courses">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      `;
+      list.appendChild(div);
+    }
+
+    function getBenefits() {
+      const inputs = document.querySelectorAll('.benefit-input');
+      return Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+    }
+
+    function setBenefits(benefits) {
+      const list = document.getElementById('benefits-list');
+      list.innerHTML = '';
+      if (benefits && benefits.length > 0) {
+        benefits.forEach(b => addBenefitInput(b));
+      }
+    }
+
+    // Modal functions
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = 'Add Tier';
+      document.getElementById('tier-form').reset();
+      document.getElementById('tier-id').value = '';
+      document.getElementById('tier-price').value = '0';
+      document.getElementById('tier-sort').value = '0';
+      setBenefits([]);
+      openModal('tier-modal');
+    }
+
+    function editTier(id) {
+      const tier = tiers.find(t => t.id === id);
+      if (!tier) return;
+
+      document.getElementById('modal-title').textContent = 'Edit Tier';
+      document.getElementById('tier-id').value = tier.id;
+      document.getElementById('tier-name').value = tier.name;
+      document.getElementById('tier-description').value = tier.description || '';
+      document.getElementById('tier-price').value = (tier.price_cents / 100).toFixed(2);
+      document.getElementById('tier-period').value = tier.billing_period || 'annual';
+      document.getElementById('tier-public').value = tier.is_public ? 'true' : 'false';
+      document.getElementById('tier-active').value = tier.is_active ? 'true' : 'false';
+      document.getElementById('tier-sort').value = tier.sort_order || 0;
+
+      const benefits = Array.isArray(tier.benefits) ? tier.benefits :
+                       (typeof tier.benefits === 'string' ? JSON.parse(tier.benefits || '[]') : []);
+      setBenefits(benefits);
+
+      openModal('tier-modal');
+    }
+
+    async function saveTier(e) {
+      e.preventDefault();
+      const id = document.getElementById('tier-id').value;
+      const saveBtn = document.getElementById('save-btn');
+
+      const priceValue = parseFloat(document.getElementById('tier-price').value) || 0;
+
+      const data = {
+        name: document.getElementById('tier-name').value,
+        description: document.getElementById('tier-description').value || null,
+        price_cents: Math.round(priceValue * 100),
+        billing_period: document.getElementById('tier-period').value,
+        is_public: document.getElementById('tier-public').value === 'true',
+        is_active: document.getElementById('tier-active').value === 'true',
+        sort_order: parseInt(document.getElementById('tier-sort').value) || 0,
+        benefits: getBenefits()
+      };
+
+      setLoading(saveBtn, true);
+
+      try {
+        const url = id ? `/api/v1/tiers/${id}` : '/api/v1/tiers';
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to save tier');
+        }
+
+        closeModal('tier-modal');
+        toast.success(id ? 'Tier updated' : 'Tier created');
+        loadTiers();
+
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLoading(saveBtn, false);
+      }
+    }
+
+    function openDeleteModal(id, name) {
+      tierToDelete = id;
+      document.getElementById('delete-tier-name').textContent = name;
+      openModal('delete-modal');
+    }
+
+    async function confirmDelete() {
+      if (!tierToDelete) return;
+
+      const btn = document.getElementById('confirm-delete-btn');
+      setLoading(btn, true);
+
+      try {
+        const res = await fetch(`/api/v1/tiers/${tierToDelete}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to delete tier');
+        }
+
+        closeModal('delete-modal');
+        toast.success('Tier deleted');
+        loadTiers();
+
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLoading(btn, false);
+        tierToDelete = null;
+      }
+    }
+
+    // Initialize
+    checkAuth();
+  </script>
+</body>
+</html>
