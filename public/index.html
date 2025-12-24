@@ -285,6 +285,144 @@
     .compare-grid .check { color: var(--success); }
     .compare-grid .x { color: var(--text-muted); }
 
+    /* Why Upgrade Section */
+    .upgrade-reasons {
+      max-width: 900px;
+      margin: var(--space-12) auto 0;
+      text-align: center;
+    }
+
+    .upgrade-reasons h3 {
+      font-size: var(--text-xl);
+      color: var(--navy-800);
+      margin-bottom: var(--space-6);
+    }
+
+    .reason-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+
+    @media (max-width: 768px) {
+      .reason-cards { grid-template-columns: 1fr; }
+    }
+
+    .reason-card {
+      background: white;
+      padding: var(--space-6);
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+
+    .reason-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto var(--space-3);
+      background: var(--orange-100);
+      color: var(--orange-600);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reason-card h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-semibold);
+      color: var(--navy-800);
+      margin-bottom: var(--space-2);
+    }
+
+    .reason-card p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Competitor Comparison */
+    .competitor-compare {
+      max-width: 600px;
+      margin: var(--space-12) auto 0;
+    }
+
+    .competitor-box {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      text-align: center;
+      box-shadow: var(--shadow-md);
+    }
+
+    .vs-label {
+      display: inline-block;
+      background: var(--navy-100);
+      color: var(--navy-700);
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-4);
+    }
+
+    .comparison-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .comparison-row .them,
+    .comparison-row .us {
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .comparison-row .them {
+      text-align: right;
+    }
+
+    .comparison-row .us {
+      text-align: left;
+    }
+
+    .comparison-row .vs {
+      color: var(--text-muted);
+      font-weight: var(--font-semibold);
+    }
+
+    .comparison-row .price-tag {
+      display: block;
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--navy-800);
+    }
+
+    .comparison-row .them .price-tag {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .comparison-row .us .price-tag {
+      color: var(--success);
+    }
+
+    .comparison-row .detail {
+      display: block;
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .savings {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--success);
+      margin: 0;
+    }
+
     .footer {
       padding: var(--space-12) var(--space-4);
       background-color: var(--navy-900);
@@ -384,8 +522,9 @@
   <!-- Pricing -->
   <section class="pricing" id="pricing">
     <div class="section-header">
-      <h2>Simple, Honest Pricing</h2>
-      <p>Unlimited members on every plan. No per-contact fees. We don't take a cut of your payments—just Stripe's 2.9% + $0.30.</p>
+      <h2>Stop Overpaying for Membership Software</h2>
+      <p>Wild Apricot charges $60–420/mo and caps your members. We don't.<br>
+      <strong>Unlimited members on every plan. $0 platform fees. Forever.</strong></p>
     </div>
 
     <div class="pricing-cards">
@@ -394,124 +533,136 @@
         <h3>Free</h3>
         <div class="price">$0</div>
         <div class="price-note">forever — not a trial</div>
-        <div class="tagline">More than most paid plans</div>
+        <div class="tagline">Everything you need to start</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>Unlimited members</strong> — no per-contact fees</span>
+            <span><strong>Unlimited members</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>$0 platform fee</strong> — keep every dollar</span>
+            <span>Memberships, renewals & payments</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Membership tiers, renewals & payments</span>
+            <span>Fundraising & donation pages</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Fundraising, donations & campaigns</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Member portal with custom fields</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>1,000 emails/mo · 500 MB storage</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Full API access</span>
+            <span>Member portal & directory</span>
           </li>
         </ul>
         <a href="/signup" class="btn btn-secondary">Start Free Forever</a>
-        <div class="trial-note">Tip what you want at payout — or don't</div>
+        <div class="trial-note">No credit card required</div>
       </div>
 
       <!-- Pro -->
       <div class="pricing-card featured">
         <h3>Pro</h3>
         <div class="price">$49<span class="price-period">/mo</span></div>
-        <div class="price-note">$490/yr (save 2 months)</div>
-        <div class="tagline">Your brand. Your team. No limits.</div>
+        <div class="price-note">Less than $2/day · Save $118 annually</div>
+        <div class="tagline">Look professional. Grow faster.</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Everything in Free, plus:</span>
+            <span><strong>yourorg.villagekeep.com</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>you.villagekeep.com</strong> — no "Powered by"</span>
+            <span><strong>6 team seats</strong> for your staff</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>6 team seats</strong> — collaborate with staff</span>
+            <span><strong>SMS messaging</strong> + 10K emails</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>20x more capacity</strong> — 10 GB, 10K emails, SMS</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>Auto-issue certificates</strong> from courses</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Growth analytics & churn tracking</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Priority support</span>
+            <span>Auto-issue certificates & analytics</span>
           </li>
         </ul>
         <a href="/signup?plan=pro" class="btn btn-primary">Try Free for 7 Days</a>
-        <div class="trial-note">Card required. Cancel anytime.</div>
+        <div class="trial-note">Then $49/mo · Cancel anytime</div>
       </div>
 
       <!-- Enterprise -->
       <div class="pricing-card">
         <h3>Enterprise</h3>
         <div class="price">$149<span class="price-period">/mo</span></div>
-        <div class="price-note">$1,490/yr (save 2 months)</div>
-        <div class="tagline">Your domain. Enterprise security.</div>
+        <div class="price-note">For large organizations</div>
+        <div class="tagline">Your platform. Your rules.</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Everything in Pro, plus:</span>
+            <span><strong>Your own domain</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>Your own domain</strong> — members.yourorg.com</span>
+            <span><strong>Unlimited team seats</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>Unlimited team</strong> — admins, staff, everyone</span>
+            <span><strong>SSO/SAML</strong> single sign-on</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>SSO/SAML</strong> — secure single sign-on</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>100 GB</strong> · 50K emails · 500 SMS/mo</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Salesforce & Zoom integrations</span>
-          </li>
-          <li>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>99.9% uptime SLA guarantee</span>
+            <span>Salesforce, Zoom & 99.9% SLA</span>
           </li>
         </ul>
         <a href="/signup?plan=enterprise" class="btn btn-secondary">Try Free for 7 Days</a>
-        <div class="trial-note">Card required. Cancel anytime.</div>
+        <div class="trial-note">Then $149/mo · Cancel anytime</div>
       </div>
     </div>
 
+    <!-- Why Upgrade Section -->
+    <div class="upgrade-reasons">
+      <h3>Why organizations upgrade to Pro</h3>
+      <div class="reason-cards">
+        <div class="reason-card">
+          <div class="reason-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+          </div>
+          <h4>Your Brand</h4>
+          <p>Get yourorg.villagekeep.com instead of a generic URL. No "Powered by" badge.</p>
+        </div>
+        <div class="reason-card">
+          <div class="reason-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h4>Your Team</h4>
+          <p>Add 6 staff members. Delegate tasks. No more sharing one login.</p>
+        </div>
+        <div class="reason-card">
+          <div class="reason-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h4>More Power</h4>
+          <p>SMS messaging, 10GB storage, 10K emails, growth analytics, auto-certificates.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Competitor Comparison -->
+    <div class="competitor-compare">
+      <div class="competitor-box">
+        <span class="vs-label">vs Wild Apricot</span>
+        <div class="comparison-row">
+          <div class="them">
+            <span class="price-tag">$60–420/mo</span>
+            <span class="detail">Members capped by tier</span>
+          </div>
+          <div class="vs">vs</div>
+          <div class="us">
+            <span class="price-tag">$49/mo</span>
+            <span class="detail">Unlimited members always</span>
+          </div>
+        </div>
+        <p class="savings">Save up to $4,000/year with VillageKeep</p>
+      </div>
+    </div>
+
+    <!-- All Features Link -->
     <div class="compare-link">
-      <a onclick="document.getElementById('compare-details').classList.toggle('show')">Compare all features</a>
+      <a onclick="document.getElementById('compare-details').classList.toggle('show')">See all features by plan</a>
     </div>
 
     <div id="compare-details" class="compare-details">
@@ -521,50 +672,35 @@
         <div class="header">Pro</div>
         <div class="header">Enterprise</div>
 
-        <div class="feature">Team seats</div>
-        <div class="value">Just you</div>
-        <div class="value"><strong>6 people</strong></div>
+        <div class="feature">Members</div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
         <div class="value"><strong>Unlimited</strong></div>
 
-        <div class="feature">Your portal URL</div>
-        <div class="value">villagekeep.com/p/you</div>
-        <div class="value"><strong>you.villagekeep.com</strong></div>
-        <div class="value"><strong>members.yoursite.com</strong></div>
+        <div class="feature">Team seats</div>
+        <div class="value">1</div>
+        <div class="value"><strong>6</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
 
-        <div class="feature">"Powered by VillageKeep"</div>
-        <div class="value">Shown</div>
-        <div class="value"><strong>Hidden</strong></div>
-        <div class="value"><strong>Hidden</strong></div>
+        <div class="feature">Portal URL</div>
+        <div class="value">/p/yourorg</div>
+        <div class="value"><strong>yourorg.villagekeep.com</strong></div>
+        <div class="value"><strong>members.yourorg.com</strong></div>
 
-        <div class="feature">Storage</div>
-        <div class="value">500 MB</div>
-        <div class="value"><strong>10 GB</strong></div>
-        <div class="value"><strong>100 GB</strong></div>
+        <div class="feature">Storage / Emails / SMS</div>
+        <div class="value">500MB · 1K · —</div>
+        <div class="value"><strong>10GB · 10K · 100</strong></div>
+        <div class="value"><strong>100GB · 50K · 500</strong></div>
 
-        <div class="feature">Emails / SMS per month</div>
-        <div class="value">1,000 / 0</div>
-        <div class="value"><strong>10,000 / 100</strong></div>
-        <div class="value"><strong>50,000 / 500</strong></div>
+        <div class="feature">Certificates & analytics</div>
+        <div class="value">—</div>
+        <div class="value check">Included</div>
+        <div class="value check">Included</div>
 
-        <div class="feature">Auto-issue certificates</div>
-        <div class="value">-</div>
-        <div class="value check">Yes</div>
-        <div class="value check">Yes</div>
-
-        <div class="feature">Growth & churn analytics</div>
-        <div class="value">-</div>
-        <div class="value check">Yes</div>
-        <div class="value check">Yes</div>
-
-        <div class="feature">SSO / Salesforce / Zoom</div>
-        <div class="value">-</div>
-        <div class="value">-</div>
-        <div class="value check">Yes</div>
-
-        <div class="feature">Support</div>
-        <div class="value">Email</div>
-        <div class="value"><strong>Priority</strong></div>
-        <div class="value"><strong>Dedicated + SLA</strong></div>
+        <div class="feature">SSO / Integrations</div>
+        <div class="value">—</div>
+        <div class="value">—</div>
+        <div class="value check">Included</div>
       </div>
     </div>
   </section>
