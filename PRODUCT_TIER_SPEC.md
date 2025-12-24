@@ -28,7 +28,7 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 | Tier | Monthly | Annual (2 mo free) | Annual Effective |
 |------|---------|-------------------|------------------|
 | **Free** | $0 | $0 | $0 |
-| **Starter** | $29 | $290 | $24.17/mo |
+| **Starter** | $19 | $190 | $15.83/mo |
 | **Pro** | $89 | $890 | $74.17/mo |
 | **Enterprise** | $179 | $1,790 | $149.17/mo |
 
@@ -73,13 +73,13 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 
 ### Contact & CRM Features
 
-| Feature | Free | Starter ($29) | Pro ($89) | Enterprise ($179) |
+| Feature | Free | Starter ($19) | Pro ($89) | Enterprise ($179) |
 |---------|------|---------------|-----------|-------------------|
 | **Contact records** | Yes | Yes | Yes | Yes |
 | **Basic fields** (name, email, phone, address) | Yes | Yes | Yes | Yes |
 | **Membership status** | Active/Expired only | Active/Expired | Full lifecycle | Full lifecycle |
-| **Activity timeline** | Last payment only | Full history | Full history | Full history |
-| **Tags** | No | Yes | Yes | Yes |
+| **Activity timeline** | Full history | Full history | Full history | Full history |
+| **Tags** | Basic (up to 10) | Unlimited | Unlimited | Unlimited |
 | **Basic search/filters** | Yes | Yes | Yes | Yes |
 | **Advanced filters** | No | Yes | Yes | Yes |
 | **Saved segments/views** | No | No | Yes | Yes |
@@ -97,10 +97,10 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 
 ### Communication Features
 
-| Feature | Free | Starter ($29) | Pro ($89) | Enterprise ($179) |
+| Feature | Free | Starter ($19) | Pro ($89) | Enterprise ($179) |
 |---------|------|---------------|-----------|-------------------|
-| **Email sending** | Pay-per-use | Included + overage | Included + overage | Included + overage |
-| **SMS sending** | Pay-per-use | Included + overage | Included + overage | Included + overage |
+| **Email sending** | Pay-per-use | 5,000/mo + overage | 10,000/mo + overage | 50,000/mo + overage |
+| **SMS sending** | Pay-per-use | 100/mo + overage | 200/mo + overage | 1,000/mo + overage |
 | **Email templates** | Yes | Yes | Yes | Yes |
 | **Merge fields** | Yes | Yes | Yes | Yes |
 | **Scheduled sends** | Yes | Yes | Yes | Yes |
@@ -109,11 +109,11 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 
 ### Platform & Branding
 
-| Feature | Free | Starter ($29) | Pro ($89) | Enterprise ($179) |
+| Feature | Free | Starter ($19) | Pro ($89) | Enterprise ($179) |
 |---------|------|---------------|-----------|-------------------|
 | **Member portal** | Yes | Yes | Yes | Yes |
 | **Portal URL** | /p/orgname | /p/orgname | orgname.villagekeep.com | Custom domain |
-| **Member directory** | No | No | Yes | Yes |
+| **Member directory** | Yes | Yes | Yes | Yes |
 | **Certificates** | No | No | Yes | Yes |
 | **Branding** | "Powered by VillageKeep" footer | Clean (no watermark) | Clean | Full white-label |
 | **Storage** | 0 | 1 GB | 10 GB | 100 GB |
@@ -121,7 +121,7 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 
 ### Analytics & Reporting
 
-| Feature | Free | Starter ($29) | Pro ($89) | Enterprise ($179) |
+| Feature | Free | Starter ($19) | Pro ($89) | Enterprise ($179) |
 |---------|------|---------------|-----------|-------------------|
 | **Member counts** | Yes | Yes | Yes | Yes |
 | **Revenue totals** | Yes | Yes | Yes | Yes |
@@ -133,7 +133,7 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 
 ### Support & Integrations
 
-| Feature | Free | Starter ($29) | Pro ($89) | Enterprise ($179) |
+| Feature | Free | Starter ($19) | Pro ($89) | Enterprise ($179) |
 |---------|------|---------------|-----------|-------------------|
 | **Support** | Docs only | Email (48hr) | Priority email (24hr) | Dedicated rep |
 | **Stripe** | Yes | Yes | Yes | Yes |
@@ -154,8 +154,8 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 
 | Tier | Included/Month | Overage per 1,000 | Our Cost per 1,000 | Margin |
 |------|----------------|-------------------|-------------------|--------|
-| **Free** | 0 | $5.00 | $0.10 | 4900% |
-| **Starter** | 2,000 | $3.00 | $0.10 | 2900% |
+| **Free** | 0 | $8.00 | $0.10 | 7900% |
+| **Starter** | 5,000 | $3.00 | $0.10 | 2900% |
 | **Pro** | 10,000 | $1.50 | $0.10 | 1400% |
 | **Enterprise** | 50,000 | $0.75 | $0.10 | 650% |
 
@@ -164,11 +164,20 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 | Tier | Included/Month | Overage per 100 | Our Cost per 100 | Margin |
 |------|----------------|-----------------|------------------|--------|
 | **Free** | 0 | $4.00 | $1.00 | 300% |
-| **Starter** | 50 | $2.50 | $1.00 | 150% |
+| **Starter** | 100 | $2.50 | $1.00 | 150% |
 | **Pro** | 200 | $1.50 | $1.00 | 50% |
 | **Enterprise** | 1,000 | $1.00 | $1.00 | 0% |
 
 > **Note:** Enterprise SMS is at-cost. The value is in the subscription, not SMS margin.
+
+### Starter Value Calculation
+
+At Free tier rates, Starter's included allowances are worth:
+- 5,000 emails × $8/1K = **$40/month**
+- 100 SMS × $4/100 = **$4/month**
+- **Total: $44/month** in sends alone
+
+At $19/month subscription, orgs effectively get sends at 57% off plus no branding, storage, analytics, and support.
 
 ### Competitive Positioning
 
@@ -176,7 +185,7 @@ VillageKeep uses a **freemium + usage-based hybrid model**:
 |----------|-----------------|-------|
 | Mailchimp | $2.60-4.00 | Plus $13-20/mo subscription |
 | Brevo | $1.25 | Plus $25/mo subscription |
-| **VillageKeep Free** | $5.00 | No subscription required |
+| **VillageKeep Free** | $8.00 | No subscription required |
 | **VillageKeep Pro** | $1.50 | With $89/mo subscription |
 
 **Our advantage:** Integrated with member data. No sync required. Automations tied to membership events.
@@ -451,26 +460,26 @@ INSERT INTO platform_plans (id, name, price_cents_monthly, price_cents_annual,
   sort_order)
 VALUES
 
--- FREE
+-- FREE (updated: $8/1K email, has timeline + tags + directory)
 ('free', 'Free', 0, 0,
   1, 0, 0, 0,
-  500, 400, 200,
+  800, 400, 200,
+  TRUE, TRUE, FALSE, FALSE,
   FALSE, FALSE, FALSE, FALSE,
-  FALSE, FALSE, FALSE, FALSE,
-  FALSE, FALSE, FALSE, FALSE,
+  TRUE, FALSE, FALSE, FALSE,
   FALSE, FALSE, FALSE,
   FALSE, FALSE, FALSE, FALSE,
   FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
   FALSE, FALSE, TRUE, 'docs', NULL,
   0),
 
--- STARTER
-('starter', 'Starter', 2900, 29000,
-  2, 1024, 2000, 50,
+-- STARTER (updated: $19/mo, 5K emails, 100 SMS, has directory)
+('starter', 'Starter', 1900, 19000,
+  2, 1024, 5000, 100,
   300, 250, 200,
   TRUE, TRUE, TRUE, FALSE,
   FALSE, FALSE, FALSE, FALSE,
-  FALSE, FALSE, TRUE, FALSE,
+  TRUE, FALSE, TRUE, FALSE,
   FALSE, FALSE, FALSE,
   FALSE, FALSE, FALSE, FALSE,
   TRUE, FALSE, FALSE, FALSE, FALSE, FALSE,
