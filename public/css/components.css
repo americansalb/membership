@@ -18,6 +18,8 @@
   transition: all var(--transition-fast);
   cursor: pointer;
   white-space: nowrap;
+  border: none;
+  text-decoration: none;
 }
 
 .btn:disabled {
