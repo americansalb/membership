@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="VillageKeep - Membership management and fundraising for organizations of all sizes">
-  <title>VillageKeep - Membership + Fundraising</title>
+  <meta name="description" content="VillageMembers - Membership management and fundraising for organizations of all sizes">
+  <title>VillageMembers - Membership + Fundraising</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,24 +18,109 @@
   <link rel="stylesheet" href="/css/components.css">
 
   <style>
-    /* Page-specific styles */
-    .hero {
-      padding: var(--space-20) var(--space-4);
-      text-align: center;
-      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 100%);
+    /* Landing Page Styles */
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-8);
+      background-color: var(--bg-primary);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--green-700);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--green-600);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: white;
+      font-weight: bold;
+      font-size: var(--text-sm);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+    }
+
+    .header-nav a {
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .header-nav a:hover {
+      color: var(--green-700);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .header-actions .btn-ghost {
+      color: var(--text-secondary);
+    }
+
+    /* Hero */
+    .hero {
+      padding: var(--space-20) var(--space-8) var(--space-16);
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, var(--green-50) 100%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-1) var(--space-4);
+      background: var(--green-100);
+      color: var(--green-700);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-6);
     }
 
     .hero h1 {
-      color: white;
-      margin-bottom: var(--space-4);
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: var(--font-bold);
+      color: var(--gray-900);
+      line-height: 1.1;
+      margin-bottom: var(--space-6);
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .hero p {
-      color: var(--navy-200);
       font-size: var(--text-xl);
-      max-width: 40rem;
+      color: var(--text-secondary);
+      max-width: 600px;
       margin: 0 auto var(--space-8);
+      line-height: 1.6;
     }
 
     .hero-cta {
@@ -43,60 +128,133 @@
       gap: var(--space-4);
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: var(--space-6);
     }
 
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: var(--space-4) var(--space-6);
-      background-color: var(--bg-primary);
+    .hero-cta .btn-primary {
+      background: var(--green-600);
+      color: white;
+      padding: var(--space-3) var(--space-8);
+      font-size: var(--text-base);
+    }
+
+    .hero-cta .btn-primary:hover {
+      background: var(--green-700);
+    }
+
+    .hero-cta .btn-secondary {
+      background: white;
+      color: var(--green-700);
+      border: 2px solid var(--green-200);
+      padding: var(--space-3) var(--space-8);
+      font-size: var(--text-base);
+    }
+
+    .hero-cta .btn-secondary:hover {
+      border-color: var(--green-400);
+      background: var(--green-50);
+    }
+
+    .hero-note {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    /* Social proof */
+    .social-proof {
+      padding: var(--space-12) var(--space-8);
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
       border-bottom: 1px solid var(--border-color);
     }
 
-    .header-logo {
-      font-size: var(--text-xl);
-      font-weight: var(--font-bold);
-      color: var(--navy-800);
-    }
-
-    .header-nav {
-      display: flex;
-      gap: var(--space-6);
-    }
-
-    .header-nav a {
-      font-size: var(--text-sm);
-      font-weight: var(--font-medium);
-      color: var(--text-secondary);
-    }
-
-    .header-nav a:hover {
-      color: var(--text-primary);
-    }
-
-    .features {
-      padding: var(--space-20) var(--space-4);
-      max-width: var(--max-content-width);
+    .social-proof-content {
+      max-width: 900px;
       margin: 0 auto;
+      text-align: center;
+    }
+
+    .social-proof p {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: var(--space-6);
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-16);
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      color: var(--green-700);
+    }
+
+    .stat-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-top: var(--space-1);
+    }
+
+    /* Features */
+    .features {
+      padding: var(--space-20) var(--space-8);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto var(--space-16);
+    }
+
+    .section-header h2 {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      color: var(--gray-900);
+      margin-bottom: var(--space-4);
+    }
+
+    .section-header p {
+      font-size: var(--text-lg);
+      color: var(--text-secondary);
+      line-height: 1.6;
     }
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: var(--space-8);
-      margin-top: var(--space-12);
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-6);
     }
 
     .feature-card {
-      padding: var(--space-6);
+      padding: var(--space-8);
+      border-radius: var(--radius-xl);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      transition: all var(--transition-normal);
+    }
+
+    .feature-card:hover {
+      border-color: var(--green-200);
+      box-shadow: var(--shadow-md);
     }
 
     .feature-icon {
-      width: 3rem;
-      height: 3rem;
-      background-color: var(--orange-100);
-      color: var(--orange-600);
+      width: 48px;
+      height: 48px;
+      background: var(--green-100);
+      color: var(--green-600);
       border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
@@ -104,34 +262,42 @@
       margin-bottom: var(--space-4);
     }
 
-    .section-header {
-      text-align: center;
-      max-width: 40rem;
-      margin: 0 auto;
+    .feature-card h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      color: var(--gray-900);
+      margin-bottom: var(--space-2);
+    }
+
+    .feature-card p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.6;
     }
 
     /* Pricing */
     .pricing {
-      padding: var(--space-20) var(--space-4);
-      background-color: var(--bg-secondary);
+      padding: var(--space-20) var(--space-8);
+      background: var(--bg-secondary);
     }
 
     .pricing-toggle {
       display: flex;
       justify-content: center;
-      gap: var(--space-2);
-      margin-top: var(--space-8);
+      gap: var(--space-3);
+      margin-bottom: var(--space-12);
       align-items: center;
     }
 
     .pricing-toggle label {
       font-size: var(--text-sm);
-      color: var(--text-secondary);
+      color: var(--text-muted);
       cursor: pointer;
+      transition: color var(--transition-fast);
     }
 
     .pricing-toggle label.active {
-      color: var(--navy-800);
+      color: var(--gray-900);
       font-weight: var(--font-semibold);
     }
 
@@ -141,8 +307,8 @@
 
     .toggle-switch {
       width: 48px;
-      height: 24px;
-      background: var(--navy-200);
+      height: 26px;
+      background: var(--gray-300);
       border-radius: var(--radius-full);
       position: relative;
       cursor: pointer;
@@ -152,38 +318,39 @@
     .toggle-switch::after {
       content: '';
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       background: white;
       border-radius: 50%;
       top: 2px;
       left: 2px;
       transition: transform 0.2s;
+      box-shadow: var(--shadow-sm);
     }
 
     .pricing-toggle input:checked + .toggle-switch {
-      background: var(--orange-500);
+      background: var(--green-500);
     }
 
     .pricing-toggle input:checked + .toggle-switch::after {
-      transform: translateX(24px);
+      transform: translateX(22px);
     }
 
     .save-badge {
-      background: var(--success);
+      background: var(--terra-500);
       color: white;
       font-size: var(--text-xs);
       padding: 2px 8px;
       border-radius: var(--radius-full);
-      margin-left: var(--space-2);
+      font-weight: var(--font-medium);
     }
 
     .pricing-cards {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: var(--space-4);
-      max-width: 1200px;
-      margin: var(--space-8) auto 0;
+      max-width: 1100px;
+      margin: 0 auto;
     }
 
     @media (max-width: 1100px) {
@@ -191,23 +358,21 @@
     }
 
     @media (max-width: 600px) {
-      .pricing-cards { grid-template-columns: 1fr; max-width: 380px; }
+      .pricing-cards { grid-template-columns: 1fr; max-width: 400px; }
     }
 
     .pricing-card {
       background: white;
       border-radius: var(--radius-xl);
       padding: var(--space-8);
-      box-shadow: var(--shadow-md);
       display: flex;
       flex-direction: column;
-      text-align: center;
       position: relative;
+      border: 1px solid var(--border-color);
     }
 
     .pricing-card.featured {
-      border: 2px solid var(--orange-500);
-      transform: scale(1.02);
+      border: 2px solid var(--green-500);
       box-shadow: var(--shadow-lg);
     }
 
@@ -217,28 +382,31 @@
       top: -12px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--orange-500);
+      background: var(--green-600);
       color: white;
       padding: var(--space-1) var(--space-4);
       border-radius: var(--radius-full);
       font-size: var(--text-xs);
-      font-weight: var(--font-bold);
+      font-weight: var(--font-semibold);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .pricing-card h3 {
-      font-size: var(--text-lg);
+      font-size: var(--text-sm);
       font-weight: var(--font-semibold);
-      color: var(--text-secondary);
-      margin-bottom: var(--space-3);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-4);
     }
 
     .pricing-card .price {
-      font-size: var(--text-5xl);
+      font-size: var(--text-4xl);
       font-weight: var(--font-bold);
-      color: var(--navy-800);
+      color: var(--gray-900);
       line-height: 1;
+      margin-bottom: var(--space-1);
     }
 
     .pricing-card .price-period {
@@ -248,18 +416,19 @@
     }
 
     .pricing-card .price-note {
-      font-size: var(--text-sm);
+      font-size: var(--text-xs);
       color: var(--text-muted);
-      margin-top: var(--space-1);
-      min-height: 1.5em;
+      margin-bottom: var(--space-6);
+      min-height: 1.2em;
     }
 
     .pricing-card .tagline {
-      font-size: var(--text-base);
-      color: var(--navy-700);
+      font-size: var(--text-sm);
+      color: var(--green-700);
       font-weight: var(--font-medium);
-      margin: var(--space-6) 0 var(--space-4);
-      padding-bottom: var(--space-4);
+      padding: var(--space-3) 0;
+      margin-bottom: var(--space-4);
+      border-top: 1px solid var(--border-color);
       border-bottom: 1px solid var(--border-color);
     }
 
@@ -268,7 +437,6 @@
       padding: 0;
       margin: 0 0 var(--space-6) 0;
       flex: 1;
-      text-align: left;
     }
 
     .pricing-card li {
@@ -283,35 +451,66 @@
     .pricing-card li svg {
       flex-shrink: 0;
       margin-top: 2px;
-      color: var(--success);
+      color: var(--green-500);
     }
 
     .pricing-card li strong {
-      color: var(--navy-800);
+      color: var(--gray-900);
     }
 
-    .pricing-card .btn { width: 100%; }
+    .pricing-card .btn {
+      width: 100%;
+    }
+
+    .pricing-card .btn-primary {
+      background: var(--green-600);
+      color: white;
+    }
+
+    .pricing-card .btn-primary:hover {
+      background: var(--green-700);
+    }
+
+    .pricing-card .btn-secondary {
+      background: white;
+      color: var(--green-700);
+      border: 1px solid var(--green-300);
+    }
+
+    .pricing-card .btn-secondary:hover {
+      background: var(--green-50);
+      border-color: var(--green-400);
+    }
 
     .pricing-card .trial-note {
       font-size: var(--text-xs);
       color: var(--text-muted);
-      margin-top: var(--space-2);
+      margin-top: var(--space-3);
+      text-align: center;
     }
 
+    /* Compare features link */
     .compare-link {
       text-align: center;
-      margin-top: var(--space-8);
+      margin-top: var(--space-12);
     }
 
     .compare-link a {
       font-size: var(--text-sm);
-      color: var(--text-secondary);
-      text-decoration: underline;
+      color: var(--green-700);
+      text-decoration: none;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .compare-link a:hover {
+      text-decoration: underline;
     }
 
     .compare-details {
-      max-width: 900px;
+      max-width: 1000px;
       margin: var(--space-8) auto 0;
       display: none;
     }
@@ -339,9 +538,9 @@
     }
 
     .compare-grid .header {
-      background: var(--navy-50);
+      background: var(--green-50);
       font-weight: var(--font-semibold);
-      color: var(--navy-800);
+      color: var(--green-800);
     }
 
     .compare-grid .feature {
@@ -353,33 +552,33 @@
       color: var(--text-secondary);
     }
 
-    .compare-grid .check { color: var(--success); }
-    .compare-grid .x { color: var(--text-muted); }
+    .compare-grid .check { color: var(--green-600); }
 
-    /* Usage Pricing Table */
+    /* Usage Pricing */
     .usage-pricing {
       max-width: 800px;
-      margin: var(--space-8) auto 0;
+      margin: var(--space-12) auto 0;
       text-align: center;
     }
 
     .usage-pricing h4 {
       font-size: var(--text-lg);
-      color: var(--navy-800);
+      font-weight: var(--font-semibold);
+      color: var(--gray-900);
       margin-bottom: var(--space-2);
     }
 
     .usage-pricing > p {
       font-size: var(--text-sm);
       color: var(--text-secondary);
-      margin-bottom: var(--space-4);
+      margin-bottom: var(--space-6);
     }
 
     .usage-table {
       background: white;
       border-radius: var(--radius-lg);
       overflow: hidden;
-      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
     }
 
     .usage-row {
@@ -395,9 +594,9 @@
     }
 
     .usage-row.header {
-      background: var(--navy-50);
+      background: var(--green-50);
       font-weight: var(--font-semibold);
-      color: var(--navy-800);
+      color: var(--green-800);
     }
 
     .usage-row span:first-child {
@@ -409,158 +608,148 @@
       text-align: center;
     }
 
-    /* Why Upgrade Section */
-    .upgrade-reasons {
-      max-width: 900px;
-      margin: var(--space-12) auto 0;
+    /* CTA Section */
+    .cta-section {
+      padding: var(--space-20) var(--space-8);
+      background: linear-gradient(135deg, var(--green-700) 0%, var(--green-800) 100%);
       text-align: center;
     }
 
-    .upgrade-reasons h3 {
-      font-size: var(--text-xl);
-      color: var(--navy-800);
-      margin-bottom: var(--space-6);
+    .cta-section h2 {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      color: white;
+      margin-bottom: var(--space-4);
     }
 
-    .reason-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-6);
+    .cta-section p {
+      font-size: var(--text-lg);
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: var(--space-8);
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    @media (max-width: 768px) {
-      .reason-cards { grid-template-columns: 1fr; }
-    }
-
-    .reason-card {
+    .cta-section .btn {
       background: white;
-      padding: var(--space-6);
-      border-radius: var(--radius-lg);
-      text-align: center;
-    }
-
-    .reason-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto var(--space-3);
-      background: var(--orange-100);
-      color: var(--orange-600);
-      border-radius: var(--radius-full);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .reason-card h4 {
+      color: var(--green-700);
+      padding: var(--space-3) var(--space-8);
       font-size: var(--text-base);
       font-weight: var(--font-semibold);
-      color: var(--navy-800);
-      margin-bottom: var(--space-2);
     }
 
-    .reason-card p {
-      font-size: var(--text-sm);
-      color: var(--text-secondary);
-      line-height: 1.5;
+    .cta-section .btn:hover {
+      background: var(--green-50);
     }
 
-    /* Competitor Comparison */
-    .competitor-compare {
-      max-width: 600px;
-      margin: var(--space-12) auto 0;
-    }
-
-    .competitor-box {
-      background: white;
-      border-radius: var(--radius-xl);
-      padding: var(--space-6);
-      text-align: center;
-      box-shadow: var(--shadow-md);
-    }
-
-    .vs-label {
-      display: inline-block;
-      background: var(--navy-100);
-      color: var(--navy-700);
-      font-size: var(--text-xs);
-      font-weight: var(--font-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: var(--space-1) var(--space-3);
-      border-radius: var(--radius-full);
-      margin-bottom: var(--space-4);
-    }
-
-    .comparison-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-4);
-      margin-bottom: var(--space-4);
-    }
-
-    .comparison-row .them,
-    .comparison-row .us {
-      flex: 1;
-      max-width: 200px;
-    }
-
-    .comparison-row .them {
-      text-align: right;
-    }
-
-    .comparison-row .us {
-      text-align: left;
-    }
-
-    .comparison-row .vs {
-      color: var(--text-muted);
-      font-weight: var(--font-semibold);
-    }
-
-    .comparison-row .price-tag {
-      display: block;
-      font-size: var(--text-xl);
-      font-weight: var(--font-bold);
-      color: var(--navy-800);
-    }
-
-    .comparison-row .them .price-tag {
-      color: var(--text-muted);
-      text-decoration: line-through;
-    }
-
-    .comparison-row .us .price-tag {
-      color: var(--success);
-    }
-
-    .comparison-row .detail {
-      display: block;
-      font-size: var(--text-sm);
-      color: var(--text-secondary);
-    }
-
-    .savings {
-      font-size: var(--text-sm);
-      font-weight: var(--font-semibold);
-      color: var(--success);
-      margin: 0;
-    }
-
+    /* Footer */
     .footer {
-      padding: var(--space-12) var(--space-4);
-      background-color: var(--navy-900);
-      color: var(--navy-300);
-      text-align: center;
+      padding: var(--space-16) var(--space-8) var(--space-8);
+      background: var(--gray-900);
+      color: var(--gray-400);
     }
 
-    .footer a {
-      color: var(--navy-200);
+    .footer-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--space-12);
     }
 
     @media (max-width: 768px) {
+      .footer-content {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-8);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-brand {
+      font-size: var(--text-lg);
+      font-weight: var(--font-bold);
+      color: white;
+      margin-bottom: var(--space-4);
+    }
+
+    .footer-tagline {
+      font-size: var(--text-sm);
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+
+    .footer-column h4 {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: white;
+      margin-bottom: var(--space-4);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .footer-column a {
+      display: block;
+      font-size: var(--text-sm);
+      color: var(--gray-400);
+      text-decoration: none;
+      padding: var(--space-1) 0;
+      transition: color var(--transition-fast);
+    }
+
+    .footer-column a:hover {
+      color: white;
+    }
+
+    .footer-bottom {
+      max-width: 1100px;
+      margin: var(--space-12) auto 0;
+      padding-top: var(--space-8);
+      border-top: 1px solid var(--gray-800);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: var(--text-sm);
+    }
+
+    @media (max-width: 600px) {
+      .footer-bottom {
+        flex-direction: column;
+        gap: var(--space-4);
+        text-align: center;
+      }
+    }
+
+    .footer-bottom a {
+      color: var(--gray-500);
+      text-decoration: none;
+    }
+
+    .footer-bottom a:hover {
+      color: white;
+    }
+
+    /* Mobile nav */
+    @media (max-width: 768px) {
+      .header {
+        padding: var(--space-4);
+      }
+
       .header-nav {
         display: none;
+      }
+
+      .hero {
+        padding: var(--space-12) var(--space-4);
+      }
+
+      .features, .pricing {
+        padding: var(--space-12) var(--space-4);
       }
     }
   </style>
@@ -568,34 +757,66 @@
 <body>
   <!-- Header -->
   <header class="header">
-    <a href="/" class="header-logo">VillageKeep</a>
+    <a href="/" class="header-logo">
+      <span class="logo-icon">V</span>
+      VillageMembers
+    </a>
     <nav class="header-nav">
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
-      <a href="/login">Sign In</a>
+      <a href="/docs">Docs</a>
     </nav>
-    <a href="/signup" class="btn btn-primary">Get Started</a>
+    <div class="header-actions">
+      <a href="/login" class="btn btn-ghost">Sign In</a>
+      <a href="/signup" class="btn btn-primary">Get Started</a>
+    </div>
   </header>
 
   <!-- Hero -->
   <section class="hero">
-    <h1>Membership + Fundraising<br>in One Platform</h1>
-    <p>Manage members, collect dues, issue certificates, and run fundraising campaigns. Built for associations, nonprofits, and clubs.</p>
+    <span class="hero-badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Membership + Fundraising in One Platform
+    </span>
+    <h1>Manage your community,<br>grow your mission</h1>
+    <p>The modern platform for associations, nonprofits, and clubs. Unlimited members, full fundraising, no platform fees.</p>
     <div class="hero-cta">
-      <a href="/signup" class="btn btn-accent btn-lg">Start Free</a>
-      <a href="#features" class="btn btn-secondary btn-lg">See Features</a>
+      <a href="/signup" class="btn btn-primary">Start Free</a>
+      <a href="#features" class="btn btn-secondary">See How It Works</a>
+    </div>
+    <p class="hero-note">Free forever plan available. No credit card required.</p>
+  </section>
+
+  <!-- Social Proof -->
+  <section class="social-proof">
+    <div class="social-proof-content">
+      <p>Trusted by organizations of all sizes</p>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-value">$0</div>
+          <div class="stat-label">Platform fees</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Unlimited</div>
+          <div class="stat-label">Members on every plan</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">2.9%</div>
+          <div class="stat-label">Payment processing</div>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- Features -->
   <section class="features" id="features">
     <div class="section-header">
-      <h2>Everything You Need</h2>
-      <p>Wild Apricot + Givebutter features combined, without the complexity or hidden fees.</p>
+      <h2>Everything you need to run your organization</h2>
+      <p>Membership management and fundraising together. Simple pricing. No surprises.</p>
     </div>
 
     <div class="features-grid">
-      <div class="card card-shadow feature-card">
+      <div class="feature-card">
         <div class="feature-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -604,41 +825,67 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
         </div>
-        <h4>Membership Management</h4>
-        <p>Unlimited members. Tiered access. Automatic renewals. Member directory.</p>
+        <h3>Membership Management</h3>
+        <p>Unlimited members. Tiered levels. Automatic renewals. Searchable member directory with custom fields.</p>
       </div>
 
-      <div class="card card-shadow feature-card">
+      <div class="feature-card">
         <div class="feature-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="1" x2="12" y2="23"></line>
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
           </svg>
         </div>
-        <h4>Fundraising</h4>
-        <p>Donation pages. Campaigns. Peer-to-peer. Works for all org types.</p>
+        <h3>Fundraising & Donations</h3>
+        <p>Donation pages, campaigns, peer-to-peer fundraising. Embeddable widgets. Optional tip jar.</p>
       </div>
 
-      <div class="card card-shadow feature-card">
+      <div class="feature-card">
         <div class="feature-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <line x1="19" y1="8" x2="19" y2="14"></line>
+            <line x1="22" y1="11" x2="16" y2="11"></line>
           </svg>
         </div>
-        <h4>Credentials & Certificates</h4>
-        <p>Track credits and requirements. Issue PDF certificates. Automatic reminders.</p>
+        <h3>CRM & Contacts</h3>
+        <p>Activity timeline. Custom tags. Lifecycle stages. Engagement scoring. Full interaction history.</p>
       </div>
 
-      <div class="card card-shadow feature-card">
+      <div class="feature-card">
         <div class="feature-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
         </div>
-        <h4>Simple Payments</h4>
-        <p>Stripe-powered. You keep more. Just 2.9% + $0.30 per transaction.</p>
+        <h3>Events & Registration</h3>
+        <p>Create events. Collect registrations and payments. Send reminders. Track attendance.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+        </div>
+        <h3>Email & SMS</h3>
+        <p>Send announcements, newsletters, and reminders. Automated renewal notices. Pay only for what you send.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </div>
+        <h3>Automations</h3>
+        <p>Welcome sequences. Renewal workflows. Event triggers. Set up once, let it run.</p>
       </div>
     </div>
   </section>
@@ -646,9 +893,8 @@
   <!-- Pricing -->
   <section class="pricing" id="pricing">
     <div class="section-header">
-      <h2>Stop Overpaying for Membership Software</h2>
-      <p>Wild Apricot charges $60–420/mo and caps your members. We don't.<br>
-      <strong>Unlimited members on every plan. Full fundraising. $0 platform fees.</strong></p>
+      <h2>Pricing that makes sense</h2>
+      <p>Unlimited members. Unlimited automations. Full CRM. All on the free plan.<br>Upgrade when you need more volume, team seats, or your own branding.</p>
     </div>
 
     <!-- Billing Toggle -->
@@ -665,7 +911,7 @@
         <h3>Free</h3>
         <div class="price">$0</div>
         <div class="price-note">forever — not a trial</div>
-        <div class="tagline">Test the waters</div>
+        <div class="tagline">Everything you need to start</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -673,15 +919,23 @@
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Memberships & payments</span>
+            <span><strong>Unlimited automations</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Full fundraising features</span>
+            <span>Full CRM & fundraising</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Pay-per-use email & SMS</span>
+            <span>Member portal & events</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Pay-per-use email</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Add your own SMS # for $1/mo</span>
           </li>
         </ul>
         <a href="/signup" class="btn btn-secondary">Start Free Forever</a>
@@ -692,137 +946,117 @@
       <div class="pricing-card">
         <h3>Starter</h3>
         <div class="price" data-monthly="19" data-annual="16">$19<span class="price-period">/mo</span></div>
-        <div class="price-note" data-monthly="$190/yr billed annually" data-annual="$190 billed annually">$190/yr billed annually</div>
+        <div class="price-note" data-monthly="billed monthly" data-annual="$190/year">billed monthly</div>
         <div class="tagline">Look professional</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>No VillageKeep branding</strong></span>
+            <span>Everything in Free, plus:</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>5,000 emails + 100 SMS/mo</span>
+            <span><strong>Remove "Powered by" branding</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>1 GB storage · 2 seats</span>
+            <span>2,000 emails/mo</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Tags & member timeline</span>
+            <span><strong>1 SMS # included</strong> + 50 SMS/mo</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>1 GB storage · 2 team seats</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Email support</span>
           </li>
         </ul>
-        <a href="/signup?plan=starter" class="btn btn-secondary">Try Free for 7 Days</a>
-        <div class="trial-note">Then $19/mo · Cancel anytime</div>
+        <a href="/signup?plan=starter" class="btn btn-secondary">Start Free Trial</a>
+        <div class="trial-note">7 days free · Then $19/mo</div>
       </div>
 
       <!-- Pro -->
       <div class="pricing-card featured">
         <h3>Pro</h3>
         <div class="price" data-monthly="89" data-annual="74">$89<span class="price-period">/mo</span></div>
-        <div class="price-note" data-monthly="$890/yr billed annually" data-annual="$890 billed annually">$890/yr billed annually</div>
-        <div class="tagline">Full CRM power</div>
+        <div class="price-note" data-monthly="billed monthly" data-annual="$890/year">billed monthly</div>
+        <div class="tagline">Scale your organization</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>yourorg.villagekeep.com</strong></span>
+            <span>Everything in Starter, plus:</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>10K emails + 200 SMS/mo</span>
+            <span><strong>Custom subdomain</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>10 GB storage · 6 seats</span>
+            <span>20,000 emails/mo</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Custom fields & lifecycle CRM</span>
+            <span><strong>1 SMS # included</strong> + 500 SMS/mo</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>10 GB storage · 6 team seats</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Zoom integration · Priority support</span>
           </li>
         </ul>
-        <a href="/signup?plan=pro" class="btn btn-primary">Try Free for 7 Days</a>
-        <div class="trial-note">Then $89/mo · Cancel anytime</div>
+        <a href="/signup?plan=pro" class="btn btn-primary">Start Free Trial</a>
+        <div class="trial-note">7 days free · Then $89/mo</div>
       </div>
 
       <!-- Enterprise -->
       <div class="pricing-card">
         <h3>Enterprise</h3>
         <div class="price" data-monthly="179" data-annual="149">$179<span class="price-period">/mo</span></div>
-        <div class="price-note" data-monthly="$1,790/yr billed annually" data-annual="$1,790 billed annually">$1,790/yr billed annually</div>
-        <div class="tagline">Your platform, your rules</div>
+        <div class="price-note" data-monthly="billed monthly" data-annual="$1,790/year">billed monthly</div>
+        <div class="tagline">Your platform, your way</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>Your own domain</strong></span>
+            <span>Everything in Pro, plus:</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>50K emails + 1K SMS/mo</span>
+            <span><strong>Your own custom domain</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>100 GB · Unlimited seats</span>
+            <span>50,000 emails/mo</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>SSO, Salesforce, Zoom, SLA</span>
+            <span><strong>1 SMS # included</strong> + 1,000 SMS/mo</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>100 GB storage · Unlimited seats</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>API access · Dedicated support</span>
           </li>
         </ul>
-        <a href="/signup?plan=enterprise" class="btn btn-secondary">Try Free for 7 Days</a>
-        <div class="trial-note">Then $179/mo · Cancel anytime</div>
+        <a href="/signup?plan=enterprise" class="btn btn-secondary">Start Free Trial</a>
+        <div class="trial-note">7 days free · Then $179/mo</div>
       </div>
     </div>
 
-    <!-- Why Upgrade Section -->
-    <div class="upgrade-reasons">
-      <h3>Why organizations upgrade to Pro</h3>
-      <div class="reason-cards">
-        <div class="reason-card">
-          <div class="reason-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
-          </div>
-          <h4>Your Brand</h4>
-          <p>Get yourorg.villagekeep.com instead of a generic URL. No "Powered by" badge.</p>
-        </div>
-        <div class="reason-card">
-          <div class="reason-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <h4>Your Team</h4>
-          <p>Add 6 staff members. Delegate tasks. No more sharing one login.</p>
-        </div>
-        <div class="reason-card">
-          <div class="reason-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <h4>More Power</h4>
-          <p>SMS messaging, 10GB storage, 10K emails, growth analytics, auto-certificates.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Competitor Comparison -->
-    <div class="competitor-compare">
-      <div class="competitor-box">
-        <span class="vs-label">vs Wild Apricot</span>
-        <div class="comparison-row">
-          <div class="them">
-            <span class="price-tag">$60–420/mo</span>
-            <span class="detail">Members capped by tier</span>
-          </div>
-          <div class="vs">vs</div>
-          <div class="us">
-            <span class="price-tag">$19–179/mo</span>
-            <span class="detail">Unlimited members always</span>
-          </div>
-        </div>
-        <p class="savings">Save up to $3,000/year with VillageKeep</p>
-      </div>
-    </div>
-
-    <!-- All Features Link -->
+    <!-- Compare -->
     <div class="compare-link">
-      <a onclick="document.getElementById('compare-details').classList.toggle('show')">See all features by plan</a>
+      <a onclick="document.getElementById('compare-details').classList.toggle('show')">
+        Compare all features
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </a>
     </div>
 
     <div id="compare-details" class="compare-details">
@@ -839,11 +1073,41 @@
         <div class="value"><strong>Unlimited</strong></div>
         <div class="value"><strong>Unlimited</strong></div>
 
-        <div class="feature">Fundraising</div>
+        <div class="feature">Automations</div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
+
+        <div class="feature">CRM & Fundraising</div>
         <div class="value check">Full</div>
         <div class="value check">Full</div>
         <div class="value check">Full</div>
         <div class="value check">Full</div>
+
+        <div class="feature">Custom fields</div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
+        <div class="value"><strong>Unlimited</strong></div>
+
+        <div class="feature">Emails included</div>
+        <div class="value">Pay per use</div>
+        <div class="value">2,000/mo</div>
+        <div class="value"><strong>20,000/mo</strong></div>
+        <div class="value"><strong>50,000/mo</strong></div>
+
+        <div class="feature">SMS phone number</div>
+        <div class="value">$1/mo add-on</div>
+        <div class="value check">1 included</div>
+        <div class="value check">1 included</div>
+        <div class="value check">1 included</div>
+
+        <div class="feature">SMS included</div>
+        <div class="value">Pay per use</div>
+        <div class="value">50/mo</div>
+        <div class="value"><strong>500/mo</strong></div>
+        <div class="value"><strong>1,000/mo</strong></div>
 
         <div class="feature">Team seats</div>
         <div class="value">1</div>
@@ -851,83 +1115,104 @@
         <div class="value"><strong>6</strong></div>
         <div class="value"><strong>Unlimited</strong></div>
 
-        <div class="feature">Portal URL</div>
-        <div class="value">/p/org</div>
-        <div class="value">/p/org</div>
-        <div class="value"><strong>Subdomain</strong></div>
-        <div class="value"><strong>Custom domain</strong></div>
-
-        <div class="feature">Email / SMS included</div>
-        <div class="value">Pay per use</div>
-        <div class="value">5K / 100</div>
-        <div class="value"><strong>10K / 200</strong></div>
-        <div class="value"><strong>50K / 1K</strong></div>
-
         <div class="feature">Storage</div>
-        <div class="value">—</div>
+        <div class="value">100 MB</div>
         <div class="value">1 GB</div>
         <div class="value"><strong>10 GB</strong></div>
         <div class="value"><strong>100 GB</strong></div>
 
-        <div class="feature">CRM features</div>
-        <div class="value">Basic contacts</div>
-        <div class="value">+ Timeline, tags</div>
-        <div class="value"><strong>Full CRM</strong></div>
-        <div class="value"><strong>Full CRM</strong></div>
+        <div class="feature">Branding</div>
+        <div class="value">VillageMembers</div>
+        <div class="value check">Removed</div>
+        <div class="value check">Removed</div>
+        <div class="value check">Removed</div>
 
-        <div class="feature">Certificates</div>
-        <div class="value">—</div>
-        <div class="value">—</div>
-        <div class="value check">Included</div>
-        <div class="value check">Included</div>
+        <div class="feature">Portal URL</div>
+        <div class="value">/p/yourorg</div>
+        <div class="value">/p/yourorg</div>
+        <div class="value"><strong>Subdomain</strong></div>
+        <div class="value"><strong>Custom domain</strong></div>
 
-        <div class="feature">Custom email domain</div>
+        <div class="feature">Zoom integration</div>
         <div class="value">—</div>
         <div class="value">—</div>
-        <div class="value check">Included</div>
-        <div class="value check">Included</div>
+        <div class="value check">Yes</div>
+        <div class="value check">Yes</div>
 
-        <div class="feature">SSO / Integrations</div>
+        <div class="feature">API access</div>
         <div class="value">—</div>
-        <div class="value">Zapier</div>
-        <div class="value">+ Mailchimp</div>
-        <div class="value check">All + Salesforce</div>
+        <div class="value">—</div>
+        <div class="value">—</div>
+        <div class="value check">Full</div>
 
         <div class="feature">Support</div>
         <div class="value">Docs</div>
-        <div class="value">Email (48hr)</div>
-        <div class="value"><strong>Priority (24hr)</strong></div>
-        <div class="value"><strong>Dedicated rep</strong></div>
+        <div class="value">Email</div>
+        <div class="value"><strong>Priority</strong></div>
+        <div class="value"><strong>Dedicated</strong></div>
       </div>
     </div>
 
-    <!-- Email/SMS Pricing -->
+    <!-- Usage Pricing -->
     <div class="usage-pricing">
-      <h4>Email & SMS Overage Pricing</h4>
-      <p>Free tier pays per use. Paid tiers include allowances with lower overage rates.</p>
+      <h4>Email & SMS Pricing</h4>
+      <p>Free tier pays per use. Paid plans include allowances with lower overage rates.</p>
       <div class="usage-table">
         <div class="usage-row header">
           <span></span><span>Free</span><span>Starter</span><span>Pro</span><span>Enterprise</span>
         </div>
         <div class="usage-row">
-          <span>Email per 1,000</span><span>$8.00</span><span>$3.00</span><span>$1.50</span><span>$0.75</span>
+          <span>Per 1,000 emails</span><span>$8</span><span>$3</span><span>$1.50</span><span>$0.75</span>
         </div>
         <div class="usage-row">
-          <span>SMS per 100</span><span>$4.00</span><span>$2.50</span><span>$1.50</span><span>$1.00</span>
+          <span>SMS phone number</span><span>$1/mo</span><span>1 included</span><span>1 included</span><span>1 included</span>
+        </div>
+        <div class="usage-row">
+          <span>Per 100 SMS (after allowance)</span><span>$4</span><span>$2.50</span><span>$1.50</span><span>$1</span>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <h2>Ready to grow your community?</h2>
+    <p>Join thousands of organizations managing their members with VillageMembers.</p>
+    <a href="/signup" class="btn">Start Free Today</a>
+  </section>
+
   <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2024 VillageKeep. Built with care for your community.</p>
-    <p style="margin-top: var(--space-4); font-size: var(--text-sm);">
+    <div class="footer-content">
+      <div>
+        <div class="footer-brand">VillageMembers</div>
+        <p class="footer-tagline">Membership management and fundraising for organizations that put community first.</p>
+      </div>
+      <div class="footer-column">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/docs">Documentation</a>
+        <a href="/changelog">Changelog</a>
+      </div>
+      <div class="footer-column">
+        <h4>Company</h4>
+        <a href="/about">About</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Contact</a>
+      </div>
+      <div class="footer-column">
+        <h4>Legal</h4>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 VillageMembers. All rights reserved.</p>
       <a href="/dev/login">Platform Admin</a>
-    </p>
+    </div>
   </footer>
 
-  <script src="/js/app.js"></script>
   <script>
     // Billing toggle functionality
     const billingToggle = document.getElementById('billing-toggle');
@@ -938,15 +1223,12 @@
       billingToggle.addEventListener('change', function() {
         const isAnnual = this.checked;
 
-        // Toggle label styles
         monthlyLabel.classList.toggle('active', !isAnnual);
         annualLabel.classList.toggle('active', isAnnual);
 
-        // Update all price displays
         document.querySelectorAll('.pricing-card .price[data-monthly]').forEach(el => {
           const monthly = el.dataset.monthly;
           const annual = el.dataset.annual;
-          const period = el.querySelector('.price-period');
 
           if (isAnnual) {
             el.innerHTML = `$${annual}<span class="price-period">/mo</span>`;
@@ -955,7 +1237,6 @@
           }
         });
 
-        // Update price notes
         document.querySelectorAll('.pricing-card .price-note[data-monthly]').forEach(el => {
           el.textContent = isAnnual ? el.dataset.annual : el.dataset.monthly;
         });
