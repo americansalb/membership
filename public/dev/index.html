@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Developer Admin - VillageKeep</title>
+  <title>Developer Admin - VillageMembers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
     .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); }
     .plan-card { position: relative; }
     .plan-card.current { border: 2px solid var(--orange-500); }
-    .plan-price { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--navy-800); }
+    .plan-price { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--green-700); }
     .plan-period { font-size: var(--text-sm); color: var(--text-muted); }
     .plan-features { margin-top: var(--space-4); }
     .plan-features li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-sm); }
@@ -34,14 +34,14 @@
     .org-plan-badge { font-size: var(--text-xs); }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
     .stat-card { text-align: center; }
-    .stat-value { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--navy-800); }
+    .stat-value { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--green-700); }
     .stat-label { font-size: var(--text-sm); color: var(--text-muted); }
   </style>
 </head>
 <body>
   <div class="dev-layout">
     <header class="dev-header">
-      <h1>VillageKeep Developer Admin</h1>
+      <h1>VillageMembers Developer Admin</h1>
       <div class="flex items-center gap-4">
         <span id="dev-email" class="text-sm" style="opacity: 0.8;"></span>
         <button onclick="logout()" class="btn btn-ghost btn-sm" style="color: white; border-color: rgba(255,255,255,0.3);">Logout</button>
