@@ -468,6 +468,97 @@ router.delete('/tiers/:id', requireUser, requireAdmin, async (req, res) => {
 });
 
 // ============================================
+// DASHBOARD STATS
+// ============================================
+
+router.get('/dashboard/stats', requireUser, async (req, res) => {
+  try {
+    const orgId = req.user.orgId;
+
+    // Get all stats in parallel
+    const [
+      memberStats,
+      tierStats,
+      revenueStats,
+      recentMembers,
+      ceuStats
+    ] = await Promise.all([
+      // Member counts by status
+      db.query(`
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE status = 'active') as active,
+          COUNT(*) FILTER (WHERE status = 'expired') as expired,
+          COUNT(*) FILTER (WHERE status = 'pending') as pending,
+          COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') as new_this_month
+        FROM members WHERE org_id = $1
+      `, [orgId]),
+
+      // Tier counts
+      db.query(`
+        SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_active = true) as active
+        FROM tiers WHERE org_id = $1
+      `, [orgId]),
+
+      // Revenue this month (from transactions)
+      db.query(`
+        SELECT
+          COALESCE(SUM(amount_cents), 0) as total_cents,
+          COUNT(*) as transaction_count
+        FROM transactions
+        WHERE org_id = $1
+          AND status = 'completed'
+          AND created_at > DATE_TRUNC('month', NOW())
+      `, [orgId]),
+
+      // Recent members (last 5)
+      db.query(`
+        SELECT id, email, first_name, last_name, status, created_at
+        FROM members
+        WHERE org_id = $1
+        ORDER BY created_at DESC
+        LIMIT 5
+      `, [orgId]),
+
+      // CEU stats
+      db.query(`
+        SELECT
+          COALESCE(SUM(credits), 0) as total_credits,
+          COUNT(DISTINCT member_id) as members_with_credits
+        FROM ceu_credits WHERE org_id = $1
+      `, [orgId])
+    ]);
+
+    res.json({
+      members: {
+        total: parseInt(memberStats.rows[0].total),
+        active: parseInt(memberStats.rows[0].active),
+        expired: parseInt(memberStats.rows[0].expired),
+        pending: parseInt(memberStats.rows[0].pending),
+        newThisMonth: parseInt(memberStats.rows[0].new_this_month)
+      },
+      tiers: {
+        total: parseInt(tierStats.rows[0].total),
+        active: parseInt(tierStats.rows[0].active)
+      },
+      revenue: {
+        thisMonth: parseInt(revenueStats.rows[0].total_cents),
+        transactionCount: parseInt(revenueStats.rows[0].transaction_count)
+      },
+      ceu: {
+        totalCredits: parseFloat(ceuStats.rows[0].total_credits),
+        membersWithCredits: parseInt(ceuStats.rows[0].members_with_credits)
+      },
+      recentMembers: recentMembers.rows
+    });
+
+  } catch (err) {
+    console.error('Dashboard stats error:', err);
+    res.status(500).json({ error: 'Failed to load dashboard stats' });
+  }
+});
+
+// ============================================
 // ORGANIZATION
 // ============================================
 

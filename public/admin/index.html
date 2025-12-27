@@ -157,24 +157,34 @@
         <!-- Stats -->
         <div class="stats-grid">
           <div class="card card-shadow stat-card">
-            <div class="stat-value">0</div>
+            <div class="stat-value" id="stat-members">-</div>
             <div class="stat-label">Total Members</div>
-            <div class="stat-change positive">Get started by adding your first member</div>
+            <div class="stat-change" id="stat-members-change">Loading...</div>
           </div>
           <div class="card card-shadow stat-card">
-            <div class="stat-value">$0</div>
-            <div class="stat-label">Monthly Revenue</div>
-            <div class="stat-change">Set up payment tiers to start earning</div>
+            <div class="stat-value" id="stat-revenue">-</div>
+            <div class="stat-label">Revenue This Month</div>
+            <div class="stat-change" id="stat-revenue-change">Loading...</div>
           </div>
           <div class="card card-shadow stat-card">
-            <div class="stat-value">0</div>
+            <div class="stat-value" id="stat-tiers">-</div>
             <div class="stat-label">Active Tiers</div>
-            <div class="stat-change">Create membership tiers</div>
+            <div class="stat-change" id="stat-tiers-change">Loading...</div>
           </div>
           <div class="card card-shadow stat-card">
-            <div class="stat-value">0</div>
+            <div class="stat-value" id="stat-ceu">-</div>
             <div class="stat-label">CEU Credits Tracked</div>
-            <div class="stat-change">Enable CEU tracking in settings</div>
+            <div class="stat-change" id="stat-ceu-change">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Recent Members -->
+        <div class="card card-shadow" style="margin-bottom: var(--space-6);">
+          <div class="card-header">
+            <h3>Recent Members</h3>
+          </div>
+          <div class="card-body" id="recent-members">
+            <p class="text-muted">Loading...</p>
           </div>
         </div>
 
@@ -185,9 +195,9 @@
           </div>
           <div class="card-body">
             <div class="flex gap-4" style="flex-wrap: wrap;">
-              <a href="/admin/members.html?action=add" class="btn btn-primary">Add Member</a>
-              <a href="/admin/tiers.html?action=add" class="btn btn-secondary">Create Tier</a>
-              <a href="/admin/donations.html?action=create" class="btn btn-secondary">New Campaign</a>
+              <a href="/admin/members.html" class="btn btn-primary">Add Member</a>
+              <a href="/admin/tiers.html" class="btn btn-secondary">Create Tier</a>
+              <a href="/admin/settings.html" class="btn btn-secondary">Settings</a>
             </div>
           </div>
         </div>
@@ -218,7 +228,6 @@
   <script src="/js/app.js"></script>
   <script src="/js/api.js"></script>
   <script>
-    // Check authentication
     let currentUser = null;
     let currentOrg = null;
 
@@ -233,12 +242,85 @@
         currentUser = data;
         currentOrg = data.org;
 
-        // Update UI with org name
         document.getElementById('org-name').textContent = currentOrg?.name || 'Your Organization';
         document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || 'Account';
 
+        // Load dashboard stats
+        loadDashboardStats();
       } catch (err) {
         window.location.href = '/login';
+      }
+    }
+
+    async function loadDashboardStats() {
+      try {
+        const res = await fetch('/api/v1/dashboard/stats', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load stats');
+        const data = await res.json();
+
+        // Members
+        document.getElementById('stat-members').textContent = data.members.total;
+        if (data.members.total === 0) {
+          document.getElementById('stat-members-change').textContent = 'Add your first member to get started';
+          document.getElementById('stat-members-change').className = 'stat-change';
+        } else {
+          const newText = data.members.newThisMonth > 0 ? `+${data.members.newThisMonth} this month` : 'No new members this month';
+          document.getElementById('stat-members-change').textContent = newText;
+          document.getElementById('stat-members-change').className = data.members.newThisMonth > 0 ? 'stat-change positive' : 'stat-change';
+        }
+
+        // Revenue
+        const revenueDollars = (data.revenue.thisMonth / 100).toFixed(2);
+        document.getElementById('stat-revenue').textContent = `$${revenueDollars}`;
+        if (data.revenue.thisMonth === 0) {
+          document.getElementById('stat-revenue-change').textContent = 'Set up Stripe to collect payments';
+        } else {
+          document.getElementById('stat-revenue-change').textContent = `${data.revenue.transactionCount} transactions`;
+          document.getElementById('stat-revenue-change').className = 'stat-change positive';
+        }
+
+        // Tiers
+        document.getElementById('stat-tiers').textContent = data.tiers.active;
+        if (data.tiers.active === 0) {
+          document.getElementById('stat-tiers-change').textContent = 'Create your first tier';
+        } else {
+          document.getElementById('stat-tiers-change').textContent = `${data.tiers.total} total tiers`;
+        }
+
+        // CEU
+        document.getElementById('stat-ceu').textContent = data.ceu.totalCredits;
+        if (data.ceu.totalCredits === 0) {
+          document.getElementById('stat-ceu-change').textContent = 'No credits tracked yet';
+        } else {
+          document.getElementById('stat-ceu-change').textContent = `${data.ceu.membersWithCredits} members with credits`;
+        }
+
+        // Recent members
+        const recentContainer = document.getElementById('recent-members');
+        if (data.recentMembers.length === 0) {
+          recentContainer.innerHTML = '<p class="text-muted">No members yet. <a href="/admin/members.html">Add your first member</a></p>';
+        } else {
+          recentContainer.innerHTML = `
+            <table class="table" style="margin: 0;">
+              <tbody>
+                ${data.recentMembers.map(m => `
+                  <tr style="cursor: pointer;" onclick="window.location='/admin/members.html'">
+                    <td><strong>${m.first_name || ''} ${m.last_name || ''}</strong><br><span class="text-sm text-muted">${m.email}</span></td>
+                    <td style="text-align: right;"><span class="badge badge-${m.status === 'active' ? 'success' : 'default'}">${m.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <a href="/admin/members.html" class="btn btn-ghost btn-sm" style="margin-top: var(--space-4);">View all members →</a>
+          `;
+        }
+
+      } catch (err) {
+        console.error('Failed to load dashboard stats:', err);
+        document.getElementById('stat-members-change').textContent = 'Failed to load';
+        document.getElementById('stat-revenue-change').textContent = 'Failed to load';
+        document.getElementById('stat-tiers-change').textContent = 'Failed to load';
+        document.getElementById('stat-ceu-change').textContent = 'Failed to load';
       }
     }
 
@@ -247,7 +329,6 @@
       window.location.href = '/login';
     }
 
-    // Run on load
     checkAuth();
   </script>
 </body>
