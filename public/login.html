@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - VillageKeep</title>
+  <title>Login - VillageMembers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,7 +31,8 @@
     .auth-logo a {
       font-size: var(--text-2xl);
       font-weight: var(--font-bold);
-      color: var(--navy-800);
+      color: var(--green-700);
+      text-decoration: none;
     }
     .auth-header {
       text-align: center;
@@ -69,13 +70,29 @@
       font-size: var(--text-sm);
       display: none;
     }
+    .success-banner {
+      background-color: var(--success-light);
+      color: var(--success);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      font-size: var(--text-sm);
+      display: none;
+    }
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: var(--text-sm);
+      margin-top: var(--space-1);
+      margin-bottom: var(--space-4);
+    }
   </style>
 </head>
 <body>
   <div class="auth-page">
     <div class="auth-card">
       <div class="auth-logo">
-        <a href="/">VillageKeep</a>
+        <a href="/">VillageMembers</a>
       </div>
 
       <div class="card card-shadow">
@@ -86,6 +103,7 @@
           </div>
 
           <div id="error-banner" class="error-banner"></div>
+          <div id="success-banner" class="success-banner"></div>
 
           <form id="login-form">
             <div class="form-group">
@@ -96,6 +114,7 @@
             <div class="form-group">
               <label class="label" for="password">Password</label>
               <input type="password" id="password" name="password" class="input" required autocomplete="current-password">
+              <a href="/forgot-password.html" class="forgot-link">Forgot password?</a>
             </div>
 
             <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%;">
@@ -125,7 +144,18 @@
   <script>
     const form = document.getElementById('login-form');
     const errorBanner = document.getElementById('error-banner');
+    const successBanner = document.getElementById('success-banner');
     const submitBtn = document.getElementById('submit-btn');
+
+    // Check for success messages in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === '1') {
+      successBanner.textContent = 'Email verified successfully! You can now sign in.';
+      successBanner.style.display = 'block';
+    } else if (urlParams.get('reset') === '1') {
+      successBanner.textContent = 'Password reset successfully! Please sign in with your new password.';
+      successBanner.style.display = 'block';
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

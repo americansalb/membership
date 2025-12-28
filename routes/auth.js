@@ -79,19 +79,31 @@ router.post('/signup', async (req, res) => {
       // Set cookie
       res.cookie('session', token, COOKIE_OPTIONS);
 
+      // Create email verification token
+      const { token: verifyToken } = await auth.createEmailVerificationToken({
+        userId,
+        email: email.toLowerCase()
+      });
+
+      // TODO: Send verification email
+      console.log(`[DEV] Email verification token for ${email}: ${verifyToken}`);
+      console.log(`[DEV] Verify URL: /auth/verify-email?token=${verifyToken}`);
+
       res.status(201).json({
         success: true,
         user: {
           id: userId,
           email: email.toLowerCase(),
           name: name || null,
-          role: 'owner'
+          role: 'owner',
+          emailVerified: false
         },
         org: {
           id: orgId,
           name: orgName,
           slug
-        }
+        },
+        message: 'Account created! Please check your email to verify your address.'
       });
 
     } catch (err) {
@@ -341,6 +353,198 @@ router.post('/logout', async (req, res) => {
   } catch (err) {
     console.error('Logout error:', err);
     res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
+// ============================================
+// FORGOT PASSWORD (request reset)
+// ============================================
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email, accountType = 'user' } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Always return success to prevent email enumeration
+    const successResponse = {
+      success: true,
+      message: 'If an account exists with that email, a reset link has been sent.'
+    };
+
+    if (accountType === 'member') {
+      // Look up member (need orgSlug too for members)
+      const { orgSlug } = req.body;
+      if (!orgSlug) {
+        return res.json(successResponse); // Don't reveal org is required
+      }
+
+      const result = await db.query(
+        `SELECT m.id, m.email FROM members m
+         JOIN organizations o ON m.org_id = o.id
+         WHERE m.email = $1 AND o.slug = $2`,
+        [email.toLowerCase(), orgSlug]
+      );
+
+      if (result.rows.length > 0) {
+        const member = result.rows[0];
+        const { token } = await auth.createPasswordResetToken({ memberId: member.id });
+        // TODO: Send email with reset link
+        console.log(`[DEV] Password reset token for member ${email}: ${token}`);
+      }
+    } else {
+      // Look up user (org admin/staff)
+      const result = await db.query(
+        'SELECT id, email FROM users WHERE email = $1',
+        [email.toLowerCase()]
+      );
+
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        const { token } = await auth.createPasswordResetToken({ userId: user.id });
+        // TODO: Send email with reset link
+        console.log(`[DEV] Password reset token for user ${email}: ${token}`);
+      }
+    }
+
+    res.json(successResponse);
+
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+});
+
+// ============================================
+// RESET PASSWORD (with token)
+// ============================================
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Validate token
+    const tokenData = await auth.validatePasswordResetToken(token);
+
+    if (!tokenData) {
+      return res.status(400).json({ error: 'Invalid or expired reset link' });
+    }
+
+    // Hash new password
+    const passwordHash = await auth.hashPassword(password);
+
+    // Update password
+    if (tokenData.user_id) {
+      await db.query(
+        'UPDATE users SET password_hash = $1 WHERE id = $2',
+        [passwordHash, tokenData.user_id]
+      );
+      // Invalidate all sessions for security
+      await auth.deleteAllUserSessions(tokenData.user_id);
+    } else if (tokenData.member_id) {
+      await db.query(
+        'UPDATE members SET password_hash = $1 WHERE id = $2',
+        [passwordHash, tokenData.member_id]
+      );
+      await auth.deleteAllMemberSessions(tokenData.member_id);
+    }
+
+    // Mark token as used
+    await auth.usePasswordResetToken(token);
+
+    res.json({ success: true, message: 'Password has been reset. Please log in.' });
+
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// ============================================
+// VERIFY EMAIL
+// ============================================
+
+router.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+
+    const success = await auth.markEmailVerified(token);
+
+    if (!success) {
+      return res.status(400).json({ error: 'Invalid or expired verification link' });
+    }
+
+    // Redirect to login with success message
+    res.redirect('/login.html?verified=1');
+
+  } catch (err) {
+    console.error('Verify email error:', err);
+    res.status(500).json({ error: 'Failed to verify email' });
+  }
+});
+
+// ============================================
+// RESEND VERIFICATION EMAIL
+// ============================================
+
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const token = req.cookies.session;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const session = await auth.validateSession(token);
+
+    if (!session || session.type !== 'user') {
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+
+    // Get user email
+    const result = await db.query(
+      'SELECT id, email, email_verified FROM users WHERE id = $1',
+      [session.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+
+    if (user.email_verified) {
+      return res.status(400).json({ error: 'Email already verified' });
+    }
+
+    // Create new verification token
+    const { token: verifyToken } = await auth.createEmailVerificationToken({
+      userId: user.id,
+      email: user.email
+    });
+
+    // TODO: Send verification email
+    console.log(`[DEV] Email verification token for ${user.email}: ${verifyToken}`);
+
+    res.json({ success: true, message: 'Verification email sent' });
+
+  } catch (err) {
+    console.error('Resend verification error:', err);
+    res.status(500).json({ error: 'Failed to send verification email' });
   }
 });
 
