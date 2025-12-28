@@ -53,6 +53,9 @@ app.use('/api/v1', require('./routes/api'));
 // Dev API routes (platform admin)
 app.use('/api/v1/dev', require('./routes/dev'));
 
+// Community routes (member-facing: forums, messages, notifications)
+app.use('/api/v1/community', require('./routes/community'));
+
 // Page routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
