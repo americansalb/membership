@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discussion - VillageMembers</title>
+  <title>Discussion</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -804,6 +804,8 @@
         if (data.type !== 'member') throw new Error('Not a member');
 
         currentMember = data;
+        // Store org name for page title
+        window.orgName = data.orgName || data.org?.name || '';
       } catch (err) {
         window.location.href = '/portal/login';
       }
@@ -893,7 +895,8 @@
     function updateHeader() {
       document.getElementById('header-title').textContent = post.title || 'Discussion';
       document.getElementById('header-meta').textContent = post.forum_name || '';
-      document.title = `${post.title || 'Discussion'} - VillageMembers`;
+      const titleSuffix = window.orgName || 'Community';
+      document.title = `${post.title || 'Discussion'} - ${titleSuffix}`;
     }
 
     // ==========================================

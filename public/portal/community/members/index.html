@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Members - VillageMembers</title>
+  <title>Members</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,6 +58,16 @@
     .header-title {
       font-size: var(--text-xl);
       font-weight: var(--font-bold);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .header-title img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      object-fit: contain;
     }
 
     .directory-content {
@@ -345,7 +355,7 @@
         <a href="../" class="back-btn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </a>
-        <h1 class="header-title">Member Directory</h1>
+        <h1 class="header-title" id="header-title">Member Directory</h1>
       </div>
     </header>
 
@@ -415,9 +425,25 @@
           window.location.href = '/portal/login.html';
           return;
         }
+        updateOrgBranding(data);
       } catch (err) {
         console.error('Auth check failed:', err);
         window.location.href = '/portal/login.html';
+      }
+    }
+
+    function updateOrgBranding(data) {
+      const orgName = data.orgName || data.org?.name || 'Members';
+      document.title = `Member Directory - ${orgName}`;
+
+      // Add logo if available
+      const logoUrl = data.orgLogoUrl || data.org?.logo_url;
+      if (logoUrl) {
+        const title = document.getElementById('header-title');
+        const logo = document.createElement('img');
+        logo.src = logoUrl;
+        logo.alt = orgName;
+        title.insertBefore(logo, title.firstChild);
       }
     }
 

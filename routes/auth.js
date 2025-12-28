@@ -595,15 +595,19 @@ router.get('/me', async (req, res) => {
       return res.status(401).json({ error: 'Session expired' });
     }
 
-    // Get full org info
+    // Get full org info including logo
     const orgResult = await db.query(
-      'SELECT id, name, slug, plan FROM organizations WHERE id = $1',
+      'SELECT id, name, slug, plan, logo_url FROM organizations WHERE id = $1',
       [session.orgId]
     );
 
+    const org = orgResult.rows[0] || null;
+
     res.json({
       ...session,
-      org: orgResult.rows[0] || null
+      orgName: org?.name || null,
+      orgLogoUrl: org?.logo_url || null,
+      org
     });
 
   } catch (err) {

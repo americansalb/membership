@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Member Profile - VillageMembers</title>
+  <title>Member Profile</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -747,6 +747,8 @@
           window.location.href = '/portal/login.html';
           return;
         }
+        // Store org name for later use in page title
+        window.orgName = data.orgName || data.org?.name || '';
       } catch (err) {
         console.error('Auth check failed:', err);
         window.location.href = '/portal/login.html';
@@ -816,6 +818,9 @@
         month: 'long',
         year: 'numeric'
       });
+
+      // Update page title with member name and org
+      document.title = window.orgName ? `${name} - ${window.orgName}` : name;
 
       container.innerHTML = `
         <!-- Profile Card -->

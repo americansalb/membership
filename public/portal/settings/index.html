@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings - VillageMembers</title>
+  <title>Settings</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -654,6 +654,11 @@
         if (data.type !== 'member') {
           window.location.href = '/portal/login.html';
           return;
+        }
+        // Update page title with org name
+        const orgName = data.orgName || data.org?.name;
+        if (orgName) {
+          document.title = `Settings - ${orgName}`;
         }
       } catch (err) {
         console.error('Auth check failed:', err);

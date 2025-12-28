@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Community - VillageMembers</title>
+  <title>Community</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,9 +53,26 @@
     }
 
     .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
       font-size: var(--text-lg);
       font-weight: var(--font-bold);
-      color: var(--green-700);
+      color: var(--navy-800);
+    }
+
+    .sidebar-logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      object-fit: contain;
+    }
+
+    .org-name {
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .back-link {
@@ -880,7 +897,10 @@
     <!-- Left Sidebar -->
     <aside id="community-sidebar" class="community-sidebar">
       <div class="sidebar-header">
-        <a href="/portal/" class="back-link">← Back to Portal</a>
+        <div class="sidebar-logo" id="org-branding">
+          <span class="org-name" id="org-name">Community</span>
+        </div>
+        <a href="/portal/" class="back-link">← Portal</a>
       </div>
 
       <!-- Forums -->
@@ -1070,6 +1090,7 @@
 
         currentMember = data;
         updateUserUI();
+        updateOrgBranding(data);
       } catch (err) {
         window.location.href = '/portal/login';
       }
@@ -1079,6 +1100,23 @@
       const initials = getInitials(currentMember.name || currentMember.email);
       document.getElementById('user-avatar').textContent = initials;
       document.getElementById('current-user-avatar').textContent = initials;
+    }
+
+    function updateOrgBranding(data) {
+      // Update page title
+      const orgName = data.orgName || data.org?.name || 'Community';
+      document.title = `Community - ${orgName}`;
+      document.getElementById('org-name').textContent = orgName;
+
+      // Add logo if available
+      const logoUrl = data.orgLogoUrl || data.org?.logo_url;
+      if (logoUrl) {
+        const branding = document.getElementById('org-branding');
+        const logo = document.createElement('img');
+        logo.src = logoUrl;
+        logo.alt = orgName;
+        branding.insertBefore(logo, branding.firstChild);
+      }
     }
 
     function getInitials(name) {
