@@ -554,6 +554,34 @@ router.post('/resend-verification', async (req, res) => {
 
 router.get('/me', async (req, res) => {
   try {
+    // Check for developer session first
+    const devToken = req.cookies.dev_session;
+    const devId = req.cookies.dev_id;
+
+    if (devToken && devId) {
+      const tokenHash = auth.hashToken(devToken);
+      const devSession = await db.query(
+        `SELECT ds.developer_id, d.email, d.name
+         FROM dev_sessions ds
+         JOIN developers d ON ds.developer_id = d.id
+         WHERE ds.token_hash = $1
+         AND ds.expires_at > NOW()
+         AND d.is_active = true`,
+        [tokenHash]
+      );
+
+      if (devSession.rows.length > 0) {
+        const dev = devSession.rows[0];
+        return res.json({
+          type: 'developer',
+          id: dev.developer_id,
+          email: dev.email,
+          name: dev.name
+        });
+      }
+    }
+
+    // Check for regular user/member session
     const token = req.cookies.session;
 
     if (!token) {
