@@ -812,6 +812,279 @@ router.get('/dashboard/stats', requireUser, async (req, res) => {
   }
 });
 
+// Dashboard priorities - what needs attention today
+router.get('/dashboard/priorities', requireUser, async (req, res) => {
+  try {
+    const orgId = req.user.orgId;
+
+    const [
+      failedPayments,
+      expiringMemberships,
+      expiredMemberships,
+      ceuDeadlines,
+      pendingMembers,
+      inactiveHighValue
+    ] = await Promise.all([
+      // Members with recent failed payments (critical - they want to pay but can't)
+      db.query(`
+        SELECT DISTINCT ON (m.id)
+          m.id, m.email, m.first_name, m.last_name, m.phone,
+          t.name as tier_name, t.price_cents,
+          m.joined_at,
+          EXTRACT(DAYS FROM NOW() - m.joined_at)::INT as member_days,
+          (SELECT COUNT(*) FROM member_activity
+           WHERE member_id = m.id AND type = 'payment_failed'
+           AND created_at > NOW() - INTERVAL '30 days') as failed_count,
+          (SELECT MAX(created_at) FROM member_activity
+           WHERE member_id = m.id AND type = 'payment_failed') as last_failed_at
+        FROM members m
+        LEFT JOIN tiers t ON m.tier_id = t.id
+        WHERE m.org_id = $1
+          AND EXISTS (
+            SELECT 1 FROM member_activity ma
+            WHERE ma.member_id = m.id
+            AND ma.type = 'payment_failed'
+            AND ma.created_at > NOW() - INTERVAL '14 days'
+          )
+        ORDER BY m.id, (SELECT MAX(created_at) FROM member_activity WHERE member_id = m.id AND type = 'payment_failed') DESC
+        LIMIT 10
+      `, [orgId]),
+
+      // Memberships expiring in next 7 days (urgent renewals)
+      db.query(`
+        SELECT
+          m.id, m.email, m.first_name, m.last_name, m.phone,
+          t.name as tier_name, t.price_cents,
+          m.expires_at,
+          m.auto_renew,
+          EXTRACT(DAYS FROM m.expires_at - NOW())::INT as days_until_expiration,
+          EXTRACT(DAYS FROM NOW() - m.joined_at)::INT as member_days,
+          (SELECT COALESCE(SUM(amount_cents), 0) FROM transactions
+           WHERE member_id = m.id AND status = 'completed') as lifetime_value
+        FROM members m
+        LEFT JOIN tiers t ON m.tier_id = t.id
+        WHERE m.org_id = $1
+          AND m.status = 'active'
+          AND m.expires_at IS NOT NULL
+          AND m.expires_at BETWEEN NOW() AND NOW() + INTERVAL '7 days'
+        ORDER BY m.expires_at ASC
+        LIMIT 10
+      `, [orgId]),
+
+      // Recently expired (lapsed but recoverable)
+      db.query(`
+        SELECT
+          m.id, m.email, m.first_name, m.last_name, m.phone,
+          t.name as tier_name, t.price_cents,
+          m.expires_at,
+          ABS(EXTRACT(DAYS FROM m.expires_at - NOW()))::INT as days_since_expiration,
+          EXTRACT(DAYS FROM NOW() - m.joined_at)::INT as member_days,
+          (SELECT COALESCE(SUM(amount_cents), 0) FROM transactions
+           WHERE member_id = m.id AND status = 'completed') as lifetime_value
+        FROM members m
+        LEFT JOIN tiers t ON m.tier_id = t.id
+        WHERE m.org_id = $1
+          AND m.status = 'expired'
+          AND m.expires_at > NOW() - INTERVAL '30 days'
+        ORDER BY m.expires_at DESC
+        LIMIT 10
+      `, [orgId]),
+
+      // CEU deadlines approaching (members need help)
+      db.query(`
+        SELECT
+          m.id, m.email, m.first_name, m.last_name,
+          m.ceu_required, m.ceu_earned,
+          m.ceu_period_end,
+          (m.ceu_period_end - CURRENT_DATE) as days_until_deadline,
+          (m.ceu_required - m.ceu_earned) as ceu_needed
+        FROM members m
+        WHERE m.org_id = $1
+          AND m.status = 'active'
+          AND m.ceu_required > 0
+          AND m.ceu_earned < m.ceu_required
+          AND m.ceu_period_end IS NOT NULL
+          AND m.ceu_period_end BETWEEN CURRENT_DATE AND CURRENT_DATE + 30
+        ORDER BY m.ceu_period_end ASC
+        LIMIT 10
+      `, [orgId]),
+
+      // Pending members waiting for action
+      db.query(`
+        SELECT
+          m.id, m.email, m.first_name, m.last_name,
+          m.created_at,
+          EXTRACT(DAYS FROM NOW() - m.created_at)::INT as days_pending,
+          t.name as tier_name
+        FROM members m
+        LEFT JOIN tiers t ON m.tier_id = t.id
+        WHERE m.org_id = $1
+          AND m.status = 'pending'
+        ORDER BY m.created_at ASC
+        LIMIT 10
+      `, [orgId]),
+
+      // High-value members who haven't logged in (at risk of churning)
+      db.query(`
+        SELECT
+          m.id, m.email, m.first_name, m.last_name,
+          t.name as tier_name,
+          m.last_login_at,
+          EXTRACT(DAYS FROM NOW() - m.last_login_at)::INT as days_since_login,
+          EXTRACT(DAYS FROM NOW() - m.joined_at)::INT as member_days,
+          (SELECT COALESCE(SUM(amount_cents), 0) FROM transactions
+           WHERE member_id = m.id AND status = 'completed') as lifetime_value
+        FROM members m
+        LEFT JOIN tiers t ON m.tier_id = t.id
+        WHERE m.org_id = $1
+          AND m.status = 'active'
+          AND m.last_login_at < NOW() - INTERVAL '90 days'
+          AND EXISTS (
+            SELECT 1 FROM transactions
+            WHERE member_id = m.id AND status = 'completed'
+            HAVING SUM(amount_cents) > 50000
+          )
+        ORDER BY (SELECT SUM(amount_cents) FROM transactions WHERE member_id = m.id AND status = 'completed') DESC
+        LIMIT 5
+      `, [orgId])
+    ]);
+
+    // Build prioritized action list
+    const priorities = [];
+
+    // Failed payments are highest priority
+    failedPayments.rows.forEach(m => {
+      const memberDays = m.member_days || 0;
+      const isLongTerm = memberDays > 365;
+      priorities.push({
+        type: 'payment_failed',
+        severity: m.failed_count >= 3 ? 'critical' : 'high',
+        member: {
+          id: m.id,
+          name: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+          email: m.email,
+          phone: m.phone
+        },
+        title: `Payment failed ${m.failed_count}x`,
+        context: isLongTerm ? `${Math.floor(memberDays / 365)}-year member` : 'Member',
+        tierName: m.tier_name,
+        amount: m.price_cents,
+        suggestion: 'Card may be expired. Personal call usually resolves this.',
+        actions: ['call', 'email', 'view']
+      });
+    });
+
+    // Expiring memberships
+    expiringMemberships.rows.forEach(m => {
+      if (m.auto_renew) return; // Skip auto-renew members
+      priorities.push({
+        type: 'expiring_soon',
+        severity: m.days_until_expiration <= 3 ? 'high' : 'medium',
+        member: {
+          id: m.id,
+          name: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+          email: m.email,
+          phone: m.phone
+        },
+        title: `Expires in ${m.days_until_expiration} day${m.days_until_expiration !== 1 ? 's' : ''}`,
+        context: m.lifetime_value > 0 ? `$${(m.lifetime_value / 100).toFixed(0)} lifetime` : null,
+        tierName: m.tier_name,
+        suggestion: 'Send renewal reminder or personal outreach',
+        actions: ['send_renewal', 'call', 'view']
+      });
+    });
+
+    // Recently expired (recovery window)
+    expiredMemberships.rows.forEach(m => {
+      priorities.push({
+        type: 'recently_expired',
+        severity: m.days_since_expiration <= 7 ? 'high' : 'medium',
+        member: {
+          id: m.id,
+          name: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+          email: m.email,
+          phone: m.phone
+        },
+        title: `Expired ${m.days_since_expiration} day${m.days_since_expiration !== 1 ? 's' : ''} ago`,
+        context: m.member_days > 365 ? `${Math.floor(m.member_days / 365)}-year member` : null,
+        tierName: m.tier_name,
+        suggestion: 'Still in recovery window. Personal touch works best.',
+        actions: ['call', 'send_renewal', 'view']
+      });
+    });
+
+    // CEU deadlines
+    ceuDeadlines.rows.forEach(m => {
+      priorities.push({
+        type: 'ceu_deadline',
+        severity: m.days_until_deadline <= 7 ? 'high' : 'medium',
+        member: {
+          id: m.id,
+          name: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+          email: m.email
+        },
+        title: `Needs ${m.ceu_needed} CEUs in ${m.days_until_deadline} days`,
+        context: `${m.ceu_earned}/${m.ceu_required} completed`,
+        suggestion: 'Send CEU reminder with course recommendations',
+        actions: ['send_ceu_reminder', 'view']
+      });
+    });
+
+    // Pending members
+    pendingMembers.rows.forEach(m => {
+      priorities.push({
+        type: 'pending',
+        severity: m.days_pending > 7 ? 'medium' : 'low',
+        member: {
+          id: m.id,
+          name: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+          email: m.email
+        },
+        title: `Pending for ${m.days_pending} day${m.days_pending !== 1 ? 's' : ''}`,
+        tierName: m.tier_name,
+        suggestion: 'Review and approve or follow up',
+        actions: ['approve', 'view']
+      });
+    });
+
+    // At-risk high-value
+    inactiveHighValue.rows.forEach(m => {
+      priorities.push({
+        type: 'at_risk',
+        severity: 'low',
+        member: {
+          id: m.id,
+          name: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+          email: m.email
+        },
+        title: `No login in ${m.days_since_login} days`,
+        context: `$${(m.lifetime_value / 100).toFixed(0)} lifetime value`,
+        tierName: m.tier_name,
+        suggestion: 'High-value member not engaging. Check in.',
+        actions: ['email', 'view']
+      });
+    });
+
+    // Sort by severity
+    const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    priorities.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
+    res.json({
+      priorities: priorities.slice(0, 15),
+      counts: {
+        critical: priorities.filter(p => p.severity === 'critical').length,
+        high: priorities.filter(p => p.severity === 'high').length,
+        medium: priorities.filter(p => p.severity === 'medium').length,
+        low: priorities.filter(p => p.severity === 'low').length
+      }
+    });
+
+  } catch (err) {
+    console.error('Dashboard priorities error:', err);
+    res.status(500).json({ error: 'Failed to load priorities' });
+  }
+});
+
 // ============================================
 // ORGANIZATION
 // ============================================
