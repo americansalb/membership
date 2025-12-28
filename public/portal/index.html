@@ -142,7 +142,7 @@
       }
 
       .portal-content {
-        padding-bottom: 5rem; /* Space for bottom nav */
+        padding-bottom: 5rem;
       }
     }
 
@@ -162,21 +162,6 @@
       align-items: center;
       justify-content: center;
       padding: 0 4px;
-    }
-
-    .nav-badge {
-      background: var(--error);
-      color: white;
-      font-size: 10px;
-      font-weight: bold;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 9px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-      margin-left: 4px;
     }
 
     /* Notifications dropdown */
@@ -242,48 +227,6 @@
       text-align: center;
       color: var(--text-tertiary);
     }
-
-    /* Community preview card */
-    .community-preview {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-    }
-
-    .forum-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-3);
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-    }
-
-    .forum-item:hover {
-      background: var(--bg-tertiary);
-    }
-
-    .forum-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md);
-      background: var(--primary-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    .forum-info h5 {
-      margin: 0;
-    }
-
-    .forum-info p {
-      margin: 0;
-      font-size: var(--text-sm);
-      color: var(--text-secondary);
-    }
   </style>
 </head>
 <body>
@@ -293,9 +236,7 @@
       <a href="/portal/" class="portal-logo" id="org-name">VillageMembers</a>
       <nav class="portal-nav">
         <a href="/portal/" class="active">Home</a>
-        <a href="/portal/community.html">Community</a>
-        <a href="/portal/directory.html">Members</a>
-        <a href="/portal/messages.html">Messages <span id="msg-badge" class="nav-badge" style="display:none;">0</span></a>
+        <a href="/portal/account.html">Account</a>
       </nav>
       <div style="display: flex; align-items: center; gap: var(--space-3);">
         <button id="notifications-btn" class="btn btn-ghost btn-sm" style="position: relative;" onclick="toggleNotifications()">
@@ -327,9 +268,6 @@
             <h2 id="member-name" style="margin-bottom: var(--space-1);">Loading...</h2>
             <span class="badge badge-navy">Member</span>
           </div>
-        </div>
-        <div>
-          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
         </div>
       </div>
 
@@ -390,19 +328,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Community -->
-        <div class="card card-shadow">
-          <div class="card-header">
-            <h4>Community</h4>
-            <a href="/portal/community.html" class="btn btn-ghost btn-sm">View All</a>
-          </div>
-          <div class="card-body">
-            <div id="community-preview" class="community-preview">
-              <div class="text-muted text-center">Loading community...</div>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
 
@@ -411,14 +336,6 @@
       <a href="/portal/" class="bottom-nav-link active">
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
-      </a>
-      <a href="/portal/community.html" class="bottom-nav-link">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        Community
-      </a>
-      <a href="/portal/messages.html" class="bottom-nav-link" style="position: relative;">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-        Messages
       </a>
       <a href="/portal/account.html" class="bottom-nav-link">
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -467,10 +384,8 @@
         // Update nav links after auth check
         updateNavLinks();
 
-        // Load community data
+        // Load notifications (admin announcements)
         loadNotifications();
-        loadMessages();
-        loadCommunityPreview();
 
       } catch (err) {
         window.location.href = portalBase + '/login';
@@ -486,7 +401,7 @@
       window.location.href = portalBase + '/login';
     }
 
-    // Notifications
+    // Notifications (admin announcements)
     async function loadNotifications() {
       try {
         const res = await fetch('/api/v1/community/notifications', { credentials: 'include' });
@@ -561,61 +476,6 @@
         dropdown.style.display = 'none';
       }
     });
-
-    // Messages
-    async function loadMessages() {
-      try {
-        const res = await fetch('/api/v1/community/messages', { credentials: 'include' });
-        if (!res.ok) return;
-        const data = await res.json();
-
-        // Update badge
-        const badge = document.getElementById('msg-badge');
-        if (data.unread > 0) {
-          badge.textContent = data.unread > 9 ? '9+' : data.unread;
-          badge.style.display = 'inline-flex';
-        } else {
-          badge.style.display = 'none';
-        }
-      } catch (err) {
-        console.error('Failed to load messages:', err);
-      }
-    }
-
-    // Community preview
-    async function loadCommunityPreview() {
-      try {
-        const res = await fetch('/api/v1/community/forums', { credentials: 'include' });
-        if (!res.ok) {
-          document.getElementById('community-preview').innerHTML = '<div class="text-muted text-center">Community coming soon</div>';
-          return;
-        }
-        const data = await res.json();
-        const forums = data.forums || [];
-
-        if (forums.length === 0) {
-          document.getElementById('community-preview').innerHTML = `
-            <div class="text-muted text-center">
-              <p>No community forums yet.</p>
-            </div>
-          `;
-          return;
-        }
-
-        document.getElementById('community-preview').innerHTML = forums.slice(0, 3).map(f => `
-          <div class="forum-item" onclick="window.location.href='${portalBase}/community.html?forum=${f.slug}'">
-            <div class="forum-icon">${f.icon || '💬'}</div>
-            <div class="forum-info">
-              <h5>${escapeHtml(f.name)}</h5>
-              <p>${f.post_count || 0} discussions</p>
-            </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error('Failed to load community:', err);
-        document.getElementById('community-preview').innerHTML = '<div class="text-muted text-center">Unable to load community</div>';
-      }
-    }
 
     // Helpers
     function escapeHtml(str) {
