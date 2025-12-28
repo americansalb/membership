@@ -644,4 +644,42 @@ router.get('/directory/:id', requireMember, async (req, res) => {
   }
 });
 
+// ============================================
+// REPORTS
+// ============================================
+
+// Submit a report
+router.post('/reports', requireMember, async (req, res) => {
+  try {
+    const { target_id, target_type, reason, details } = req.body;
+
+    if (!target_id || !target_type || !reason) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const validTypes = ['post', 'message', 'member'];
+    if (!validTypes.includes(target_type)) {
+      return res.status(400).json({ error: 'Invalid target type' });
+    }
+
+    const validReasons = ['spam', 'harassment', 'inappropriate', 'other'];
+    if (!validReasons.includes(reason)) {
+      return res.status(400).json({ error: 'Invalid reason' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO community_reports (org_id, reporter_id, target_type, target_id, reason, details)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [req.member.orgId, req.member.id, target_type, target_id, reason, details || null]
+    );
+
+    res.json({ success: true, reportId: result.rows[0].id });
+  } catch (err) {
+    console.error('Submit report error:', err);
+    res.status(500).json({ error: 'Failed to submit report' });
+  }
+});
+
+
 module.exports = router;
