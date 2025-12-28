@@ -1,14 +1,24 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const db = require('./db');
 const migrate = require('./db/migrate');
+const { initializeSocket } = require('./lib/socket');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// Initialize Socket.io
+const io = initializeSocket(server);
+
+// Make io available to routes
+app.set('io', io);
 
 // Run migrations on startup
 migrate().catch(console.error);
@@ -23,12 +33,46 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Limit each IP to 500 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit login attempts
+  message: { error: 'Too many login attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const postLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 posts per minute
+  message: { error: 'Posting too fast, please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Apply rate limiters
+app.use('/api/', apiLimiter);
+app.use('/auth/login', authLimiter);
+app.use('/auth/signup', authLimiter);
+
+// Make rate limiters available to routes
+app.set('postLimiter', postLimiter);
+
 // Parse JSON and URL-encoded bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoints
 app.get('/health', (req, res) => {
@@ -127,6 +171,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong' });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`VillageKeep running on port ${PORT}`);
+  console.log(`WebSocket server ready`);
 });
