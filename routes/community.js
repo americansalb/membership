@@ -135,6 +135,52 @@ router.post('/admin/notifications/send', requireUser, async (req, res) => {
 
 
 // ============================================
+// FEED (Unified feed across all forums)
+// ============================================
+
+// Get feed of posts (all forums or filtered)
+router.get('/feed', requireMember, async (req, res) => {
+  try {
+    const { forum_id, limit = 20, offset = 0 } = req.query;
+
+    let query = `
+      SELECT p.*,
+        m.first_name, m.last_name, m.email, m.profile_photo_url,
+        f.name as forum_name, f.slug as forum_slug, f.icon as forum_icon,
+        (SELECT COUNT(*) FROM community_posts WHERE parent_id = p.id AND deleted_at IS NULL) as reply_count,
+        EXISTS(SELECT 1 FROM community_post_likes WHERE post_id = p.id AND member_id = $1) as liked_by_me
+      FROM community_posts p
+      JOIN community_forums f ON p.forum_id = f.id
+      LEFT JOIN members m ON p.member_id = m.id
+      WHERE f.org_id = $2
+        AND p.parent_id IS NULL
+        AND p.is_approved = true
+        AND p.deleted_at IS NULL
+        AND f.is_active = true
+    `;
+    const params = [req.member.id, req.member.orgId];
+    let paramIndex = 3;
+
+    if (forum_id) {
+      query += ` AND p.forum_id = $${paramIndex}`;
+      params.push(forum_id);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY p.is_pinned DESC, p.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const result = await db.query(query, params);
+
+    res.json({ posts: result.rows });
+  } catch (err) {
+    console.error('Feed error:', err);
+    res.status(500).json({ error: 'Failed to load feed' });
+  }
+});
+
+
+// ============================================
 // FORUMS
 // ============================================
 
