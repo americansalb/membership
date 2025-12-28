@@ -236,7 +236,13 @@
       <a href="/portal/" class="portal-logo" id="org-name">VillageMembers</a>
       <nav class="portal-nav">
         <a href="/portal/" class="active">Home</a>
-        <a href="/portal/account.html">Account</a>
+        <a href="/portal/community/">Community</a>
+        <a href="/portal/community/members/">Members</a>
+        <a href="/portal/community/messages/" style="position: relative;">
+          Messages
+          <span id="msg-badge" class="notif-badge" style="display:none; top: -8px; right: -12px;">0</span>
+        </a>
+        <a href="/portal/settings/">Settings</a>
       </nav>
       <div style="display: flex; align-items: center; gap: var(--space-3);">
         <button id="notifications-btn" class="btn btn-ghost btn-sm" style="position: relative;" onclick="toggleNotifications()">
@@ -273,6 +279,37 @@
 
       <!-- Dashboard Grid -->
       <div class="dashboard-grid">
+        <!-- Community Hub Card -->
+        <div class="card card-shadow" style="background: linear-gradient(135deg, var(--green-50) 0%, var(--navy-50) 100%); border: 2px solid var(--green-200);">
+          <div class="card-header" style="border-bottom: 1px solid var(--green-200);">
+            <h4 style="display: flex; align-items: center; gap: var(--space-2);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green-600)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Community Hub
+            </h4>
+            <a href="/portal/community/" class="btn btn-primary btn-sm">Enter</a>
+          </div>
+          <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
+              <a href="/portal/community/" style="text-align: center; padding: var(--space-3); background: white; border-radius: var(--radius-md); text-decoration: none; color: inherit; border: 1px solid var(--border-light); transition: all 0.2s;">
+                <div style="font-size: var(--text-2xl); margin-bottom: var(--space-1);">💬</div>
+                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Forum</div>
+              </a>
+              <a href="/portal/community/members/" style="text-align: center; padding: var(--space-3); background: white; border-radius: var(--radius-md); text-decoration: none; color: inherit; border: 1px solid var(--border-light); transition: all 0.2s;">
+                <div style="font-size: var(--text-2xl); margin-bottom: var(--space-1);">👥</div>
+                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Members</div>
+              </a>
+              <a href="/portal/community/messages/" style="text-align: center; padding: var(--space-3); background: white; border-radius: var(--radius-md); text-decoration: none; color: inherit; border: 1px solid var(--border-light); transition: all 0.2s; position: relative;">
+                <div style="font-size: var(--text-2xl); margin-bottom: var(--space-1);">✉️</div>
+                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Messages</div>
+                <span id="dash-msg-badge" class="notif-badge" style="display:none; position: absolute; top: 4px; right: 4px;">0</span>
+              </a>
+            </div>
+            <div id="community-preview" style="font-size: var(--text-sm); color: var(--text-secondary);">
+              <p>Connect with fellow members, share experiences, and grow together.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- CEU Progress -->
         <div class="card card-shadow">
           <div class="card-header">
@@ -337,9 +374,18 @@
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
       </a>
-      <a href="/portal/account.html" class="bottom-nav-link">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        Account
+      <a href="/portal/community/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Community
+      </a>
+      <a href="/portal/community/messages/" class="bottom-nav-link" style="position: relative;">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        Messages
+        <span id="mobile-msg-badge" class="notif-badge" style="display:none; position: absolute; top: 4px; right: calc(50% - 24px);">0</span>
+      </a>
+      <a href="/portal/settings/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
       </a>
     </nav>
   </div>
@@ -387,8 +433,41 @@
         // Load notifications (admin announcements)
         loadNotifications();
 
+        // Load unread message count
+        loadUnreadMessages();
+
       } catch (err) {
         window.location.href = portalBase + '/login';
+      }
+    }
+
+    async function loadUnreadMessages() {
+      try {
+        const res = await fetch('/api/v1/community/threads', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Count unread threads
+        let unread = 0;
+        if (data.threads) {
+          unread = data.threads.filter(t => t.unread_count > 0).length;
+        }
+
+        // Update all message badges
+        const badges = ['msg-badge', 'mobile-msg-badge', 'dash-msg-badge'];
+        badges.forEach(id => {
+          const badge = document.getElementById(id);
+          if (badge) {
+            if (unread > 0) {
+              badge.textContent = unread > 9 ? '9+' : unread;
+              badge.style.display = 'flex';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Failed to load unread messages:', err);
       }
     }
 
