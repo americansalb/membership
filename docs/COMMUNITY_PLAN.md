@@ -429,49 +429,170 @@ The community MUST be mobile-first. Members will check this on their phones.
 
 ---
 
-## Implementation Layers
+## Implementation Scope
 
-### Layer 2A: Community Foundation (MVP)
-1. Community home page with feed
-2. Forum view with posts
-3. Post view with replies
-4. Basic member directory (list view)
-5. Basic member profile
-6. Simple messaging (inbox + threads)
+**No layers. No MVP. Build it complete.**
 
-### Layer 2B: Polish
-1. Rich profiles (all fields)
-2. Online status indicators
-3. Like animations
-4. Image uploads in posts (paid)
-5. Threaded replies (nested)
-6. Search across forums
+### Community Pages (all features from day one)
+1. **Community home** - Feed, forum sidebar, member preview, search, real-time updates
+2. **Forum view** - Posts, sorting, pinning, admin controls
+3. **Post view** - Threaded replies (nested), likes with animations, rich text
+4. **Member directory** - Grid view, search, filters, online status, map view (paid)
+5. **Member profile** - Full rich profiles, all fields, activity feed, badges
+6. **Messages inbox** - Two-panel, real-time, read receipts, reactions
 
-### Layer 2C: Premium Features
-1. Custom forums (paid)
-2. Theme customization (paid)
-3. Advanced directory filters (paid)
-4. Group messaging (paid)
-5. Read receipts (paid)
-6. Member badges/flair (paid)
+### Moderation Tools (built-in from start)
+- Delete any post/reply
+- Edit any post/reply
+- Pin/unpin posts
+- Lock threads (prevent new replies)
+- Ban member from community
+- Mute member (can read, can't post)
+- Report system (members flag content)
+- Moderation log (audit trail)
+
+### Admin Controls
+- Create/edit/delete forums
+- Set forum permissions (who can post, who can view)
+- Customize profile fields
+- Enable/disable community features per tier
+- View community analytics (posts, engagement, active members)
+
+### Security
+- 2FA for members (optional, org can require)
+- Session management (see active sessions, logout all)
+- Rate limiting on posts/messages
+- Content filtering (profanity, spam detection)
+- Audit logs for admin actions
+
+### Real-time Features
+- WebSocket connections for:
+  - New posts in feed
+  - New replies on posts you're viewing
+  - New messages
+  - Online status updates
+  - Typing indicators in messages
+- Graceful fallback to polling if WebSocket fails
+
+### Rich Content
+- Rich text editor (bold, italic, lists, links)
+- Image uploads in posts (with compression)
+- File attachments (PDF, docs) - paid tier
+- Embeds (YouTube, links with previews)
+- @mentions with autocomplete
+- Emoji picker
+
+### Notifications
+- In-app notification center
+- Email digests (daily/weekly summary) - paid tier
+- Push notifications (PWA) - future
+- Granular preferences (what to notify, how often)
 
 ---
 
-## Open Questions
+## Database Schema Additions
 
-1. **Real-time or polling?** WebSockets add complexity but feel better. Start with polling (every 30s), add WebSocket later?
+```sql
+-- Member online status tracking
+ALTER TABLE members ADD COLUMN last_seen_at TIMESTAMPTZ;
+ALTER TABLE members ADD COLUMN is_online BOOLEAN DEFAULT false;
 
-2. **Notifications strategy?** In-app only for now? Email digests later?
+-- 2FA for members
+ALTER TABLE members ADD COLUMN totp_secret VARCHAR(255);
+ALTER TABLE members ADD COLUMN totp_enabled BOOLEAN DEFAULT false;
+ALTER TABLE members ADD COLUMN backup_codes JSONB;
 
-3. **Moderation tools?** Admins need to delete posts, ban members, etc. Priority?
+-- Member sessions
+CREATE TABLE member_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  member_id UUID REFERENCES members(id) ON DELETE CASCADE,
+  token_hash VARCHAR(255) NOT NULL,
+  user_agent TEXT,
+  ip_address INET,
+  last_active_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
 
-4. **Post formatting?** Plain text only? Markdown? Rich text editor?
+-- Moderation
+ALTER TABLE community_posts ADD COLUMN locked_at TIMESTAMPTZ;
+ALTER TABLE community_posts ADD COLUMN locked_by UUID REFERENCES users(id);
+ALTER TABLE community_posts ADD COLUMN edited_at TIMESTAMPTZ;
+ALTER TABLE community_posts ADD COLUMN edited_by UUID;
+
+ALTER TABLE members ADD COLUMN community_banned_at TIMESTAMPTZ;
+ALTER TABLE members ADD COLUMN community_banned_by UUID REFERENCES users(id);
+ALTER TABLE members ADD COLUMN community_muted_until TIMESTAMPTZ;
+
+CREATE TABLE community_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+  reporter_id UUID REFERENCES members(id) ON DELETE SET NULL,
+  post_id UUID REFERENCES community_posts(id) ON DELETE CASCADE,
+  reason VARCHAR(50) NOT NULL,
+  details TEXT,
+  status VARCHAR(20) DEFAULT 'pending',
+  resolved_by UUID REFERENCES users(id),
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE moderation_log (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id),
+  action VARCHAR(50) NOT NULL,
+  target_type VARCHAR(20) NOT NULL,
+  target_id UUID NOT NULL,
+  details JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Read receipts for messages
+ALTER TABLE direct_messages ADD COLUMN read_at TIMESTAMPTZ;
+
+-- Typing indicators (ephemeral, handled in-memory/redis)
+
+-- Rich content
+ALTER TABLE community_posts ADD COLUMN content_html TEXT;
+ALTER TABLE community_posts ADD COLUMN attachments JSONB DEFAULT '[]';
+
+-- @mentions
+CREATE TABLE mentions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id UUID REFERENCES community_posts(id) ON DELETE CASCADE,
+  member_id UUID REFERENCES members(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
 
 ---
 
-## Next Steps
+## Tech Decisions
 
-1. Review this plan
-2. Decide on Layer 2A scope
-3. Design database schema changes (if any)
-4. Build page by page, fully functional before moving to next
+1. **Real-time**: WebSocket with Socket.io (fallback to polling built-in)
+2. **Rich text**: Tiptap editor (ProseMirror-based, clean output)
+3. **Image uploads**: Sharp for compression, store in /uploads or S3
+4. **2FA**: TOTP with speakeasy library, QR codes with qrcode library
+5. **Rate limiting**: express-rate-limit per endpoint
+6. **Content filtering**: Basic profanity filter, spam heuristics
+
+---
+
+## Build Order
+
+Not layers. Just the order we write code:
+
+1. Database migrations (all schema above)
+2. WebSocket infrastructure (Socket.io setup)
+3. Community home page (complete)
+4. Forum page (complete with moderation)
+5. Post page (complete with threading, rich text)
+6. Member directory (complete with search/filters)
+7. Member profile (complete with all fields)
+8. Messages (complete with real-time)
+9. Admin moderation panel
+10. 2FA setup flow
+11. Notification preferences
+
+Each page is DONE before moving to the next. No skeletons. No "we'll add that later."
