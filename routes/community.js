@@ -90,7 +90,7 @@ router.post('/notifications/:id/dismiss', requireMember, async (req, res) => {
 // Send announcement to all members (or filtered)
 router.post('/admin/notifications/send', requireUser, async (req, res) => {
   try {
-    const { title, body, link, tier_id, status_filter } = req.body;
+    const { title, body, link, tier_id, status_filter, filter } = req.body;
     const orgId = req.user.orgId;
 
     if (!title) {
@@ -108,9 +108,12 @@ router.post('/admin/notifications/send', requireUser, async (req, res) => {
       paramIndex++;
     }
 
-    if (status_filter) {
+    // Support both 'filter' (from UI) and 'status_filter' (API)
+    // 'all' means no filter, 'active' means only active members
+    const statusValue = filter || status_filter;
+    if (statusValue && statusValue !== 'all') {
       memberQuery += ` AND status = $${paramIndex}`;
-      params.push(status_filter);
+      params.push(statusValue);
       paramIndex++;
     }
 
@@ -127,7 +130,7 @@ router.post('/admin/notifications/send', requireUser, async (req, res) => {
       created++;
     }
 
-    res.json({ success: true, sent: created });
+    res.json({ success: true, sent: created, count: created });
   } catch (err) {
     console.error('Send notification error:', err);
     res.status(500).json({ error: 'Failed to send notification' });

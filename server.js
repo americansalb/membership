@@ -8,6 +8,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const db = require('./db');
 const migrate = require('./db/migrate');
+const runSeeds = require('./db/seed');
 const { initializeSocket } = require('./lib/socket');
 
 const app = express();
@@ -20,8 +21,10 @@ const io = initializeSocket(server);
 // Make io available to routes
 app.set('io', io);
 
-// Run migrations on startup
-migrate().catch(console.error);
+// Run migrations and seeds on startup
+migrate()
+  .then(() => runSeeds())
+  .catch(console.error);
 
 // Security middleware
 app.use(helmet({
