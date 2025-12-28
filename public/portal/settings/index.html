@@ -644,9 +644,20 @@
     }
 
     async function checkAuth() {
-      const res = await fetch('/auth/me', { credentials: 'include' });
-      if (!res.ok || (await res.json()).type !== 'member') {
-        window.location.href = '/portal/login';
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = '/portal/login.html';
+          return;
+        }
+        const data = await res.json();
+        if (data.type !== 'member') {
+          window.location.href = '/portal/login.html';
+          return;
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '/portal/login.html';
       }
     }
 
