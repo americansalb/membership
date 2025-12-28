@@ -185,10 +185,10 @@ router.get('/feed', requireMember, async (req, res) => {
 // FORUMS
 // ============================================
 
-// List forums for an org
+// List forums for an org (auto-creates defaults if none exist)
 router.get('/forums', requireMember, async (req, res) => {
   try {
-    const result = await db.query(
+    let result = await db.query(
       `SELECT f.*,
         (SELECT COUNT(*) FROM community_posts WHERE forum_id = f.id AND parent_id IS NULL) as topic_count
        FROM community_forums f
@@ -196,6 +196,36 @@ router.get('/forums', requireMember, async (req, res) => {
        ORDER BY f.sort_order, f.created_at`,
       [req.member.orgId]
     );
+
+    // Auto-create default forums if none exist
+    if (result.rows.length === 0) {
+      const defaultForums = [
+        { name: 'Announcements', slug: 'announcements', icon: '📢', description: 'Important updates and news from the community', allow_member_posts: false, sort_order: 0 },
+        { name: 'General Discussion', slug: 'general', icon: '💬', description: 'Chat about anything related to our community', sort_order: 1 },
+        { name: 'Introductions', slug: 'introductions', icon: '👋', description: 'Introduce yourself to the community', sort_order: 2 },
+        { name: 'Questions & Help', slug: 'questions', icon: '❓', description: 'Ask questions and get help from fellow members', sort_order: 3 },
+        { name: 'Resources & Tips', slug: 'resources', icon: '📚', description: 'Share useful resources, tips, and best practices', sort_order: 4 }
+      ];
+
+      for (const forum of defaultForums) {
+        await db.query(
+          `INSERT INTO community_forums (org_id, name, slug, icon, description, allow_member_posts, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (org_id, slug) DO NOTHING`,
+          [req.member.orgId, forum.name, forum.slug, forum.icon, forum.description, forum.allow_member_posts !== false, forum.sort_order]
+        );
+      }
+
+      // Re-fetch forums
+      result = await db.query(
+        `SELECT f.*,
+          (SELECT COUNT(*) FROM community_posts WHERE forum_id = f.id AND parent_id IS NULL) as topic_count
+         FROM community_forums f
+         WHERE f.org_id = $1 AND f.is_active = true
+         ORDER BY f.sort_order, f.created_at`,
+        [req.member.orgId]
+      );
+    }
 
     res.json({ forums: result.rows });
   } catch (err) {

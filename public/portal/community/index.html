@@ -1584,7 +1584,7 @@
     // ==========================================
     async function loadUnreadMessages() {
       try {
-        const res = await fetch('/api/v1/community/messages', { credentials: 'include' });
+        const res = await fetch('/api/v1/community/threads', { credentials: 'include' });
         if (!res.ok) return;
 
         const data = await res.json();
