@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Details - VillageMembers Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-6); background-color: var(--bg-primary); border-bottom: 1px solid var(--border-color); }
+    .admin-content { padding: var(--space-6); max-width: 1200px; }
+
+    /* Back link */
+    .back-link { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--text-secondary); text-decoration: none; margin-bottom: var(--space-4); }
+    .back-link:hover { color: var(--text-primary); }
+
+    /* Member header */
+    .member-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-6); flex-wrap: wrap; }
+    .member-identity h1 { margin: 0 0 var(--space-1); font-size: var(--text-2xl); }
+    .member-identity .email { color: var(--text-secondary); }
+    .member-meta { display: flex; gap: var(--space-4); margin-top: var(--space-3); flex-wrap: wrap; }
+    .member-meta-item { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary); }
+    .member-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+    /* Status badges */
+    .status-badge { display: inline-flex; align-items: center; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: var(--font-medium); }
+    .status-active { background: var(--success-light); color: var(--success); }
+    .status-expired { background: var(--error-light); color: var(--error); }
+    .status-pending { background: var(--warning-light); color: var(--warning); }
+    .status-canceled { background: var(--bg-tertiary); color: var(--text-secondary); }
+
+    /* Issues alert */
+    .issues-alert { background: var(--error-light); border: 1px solid var(--error); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-6); }
+    .issues-alert.medium { background: var(--warning-light); border-color: var(--warning); }
+    .issues-alert h3 { margin: 0 0 var(--space-3); color: var(--error); display: flex; align-items: center; gap: var(--space-2); }
+    .issues-alert.medium h3 { color: var(--warning-dark); }
+    .issue-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .issue-item:last-child { border-bottom: none; }
+    .issue-title { font-weight: var(--font-medium); }
+    .issue-suggestion { font-size: var(--text-sm); color: var(--text-secondary); }
+
+    /* Grid layout */
+    .member-grid { display: grid; grid-template-columns: 1fr 400px; gap: var(--space-6); }
+    @media (max-width: 1024px) { .member-grid { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .detail-card { background: var(--bg-primary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); margin-bottom: var(--space-4); }
+    .detail-card-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); border-bottom: 1px solid var(--border-color); }
+    .detail-card-header h2 { margin: 0; font-size: var(--text-lg); }
+    .detail-card-body { padding: var(--space-4); }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4); }
+    .stat-box { text-align: center; padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md); }
+    .stat-value { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--primary); }
+    .stat-label { font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1); }
+
+    /* Detail rows */
+    .detail-row { display: flex; justify-content: space-between; padding: var(--space-3) 0; border-bottom: 1px solid var(--border-light); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--text-secondary); font-size: var(--text-sm); }
+    .detail-value { font-weight: var(--font-medium); text-align: right; }
+
+    /* Timeline */
+    .timeline { position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: var(--border-color); }
+    .timeline-item { position: relative; padding-left: 45px; padding-bottom: var(--space-4); }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-icon { position: absolute; left: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-primary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+    .timeline-icon.payment { border-color: var(--success); color: var(--success); }
+    .timeline-icon.payment-failed { border-color: var(--error); color: var(--error); }
+    .timeline-icon.email { border-color: var(--primary); color: var(--primary); }
+    .timeline-icon.status { border-color: var(--warning); color: var(--warning); }
+    .timeline-icon.login { border-color: var(--text-secondary); color: var(--text-secondary); }
+    .timeline-icon.note { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .timeline-icon.ceu { border-color: var(--success); color: var(--success); }
+    .timeline-content { background: var(--bg-secondary); padding: var(--space-3); border-radius: var(--radius-md); }
+    .timeline-title { font-weight: var(--font-medium); margin-bottom: var(--space-1); }
+    .timeline-meta { font-size: var(--text-xs); color: var(--text-tertiary); }
+    .timeline-description { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-2); }
+
+    /* CEU Progress */
+    .ceu-progress { margin-bottom: var(--space-4); }
+    .ceu-bar-container { height: 24px; background: var(--bg-tertiary); border-radius: var(--radius-full); overflow: hidden; position: relative; }
+    .ceu-bar { height: 100%; background: var(--success); border-radius: var(--radius-full); transition: width 0.3s; }
+    .ceu-bar.warning { background: var(--warning); }
+    .ceu-bar.danger { background: var(--error); }
+    .ceu-bar-label { position: absolute; right: var(--space-3); top: 50%; transform: translateY(-50%); font-size: var(--text-sm); font-weight: var(--font-medium); }
+    .ceu-deadline { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-2); }
+
+    /* Quick actions */
+    .quick-actions { display: flex; flex-direction: column; gap: var(--space-2); }
+    .quick-action { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary); cursor: pointer; transition: all 0.2s; text-align: left; width: 100%; }
+    .quick-action:hover { border-color: var(--primary); background: var(--primary-light); }
+    .quick-action-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .quick-action-text { flex: 1; }
+    .quick-action-title { font-weight: var(--font-medium); }
+    .quick-action-desc { font-size: var(--text-xs); color: var(--text-secondary); }
+
+    /* Empty state */
+    .empty-timeline { text-align: center; padding: var(--space-8); color: var(--text-tertiary); }
+
+    /* Loading */
+    .loading { text-align: center; padding: var(--space-12); color: var(--text-tertiary); }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Dashboard
+        </a>
+        <a href="/admin/members.html" class="sidebar-link active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Tiers
+        </a>
+        <div class="sidebar-section">Settings</div>
+        <a href="/admin/settings.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <div><span id="org-name" class="text-sm text-muted">Loading...</span></div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm"></span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <a href="/admin/members.html" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to Members
+        </a>
+
+        <div id="loading" class="loading">Loading member...</div>
+
+        <div id="member-content" style="display: none;">
+          <!-- Member Header -->
+          <div class="member-header">
+            <div class="member-identity">
+              <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <h1 id="member-name">Loading...</h1>
+                <span id="member-status" class="status-badge status-active">active</span>
+              </div>
+              <div id="member-email" class="email"></div>
+              <div class="member-meta">
+                <div class="member-meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                  <span id="member-tier">—</span>
+                </div>
+                <div class="member-meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <span id="member-tenure">—</span>
+                </div>
+                <div class="member-meta-item" id="phone-container" style="display: none;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  <a href="#" id="member-phone" class="text-link"></a>
+                </div>
+              </div>
+            </div>
+            <div class="member-actions">
+              <button onclick="openEditModal()" class="btn btn-secondary">Edit</button>
+              <button onclick="openEmailModal()" class="btn btn-secondary">Send Email</button>
+              <button onclick="logCall()" class="btn btn-primary">Log Call</button>
+            </div>
+          </div>
+
+          <!-- Issues Alert -->
+          <div id="issues-container" style="display: none;"></div>
+
+          <!-- Main Grid -->
+          <div class="member-grid">
+            <!-- Left Column: Timeline & Details -->
+            <div>
+              <!-- Stats -->
+              <div class="stats-row">
+                <div class="stat-box">
+                  <div class="stat-value" id="stat-lifetime-value">$0</div>
+                  <div class="stat-label">Lifetime Value</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value" id="stat-transactions">0</div>
+                  <div class="stat-label">Payments</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value" id="stat-days-member">0</div>
+                  <div class="stat-label">Days as Member</div>
+                </div>
+              </div>
+
+              <!-- CEU Progress (if applicable) -->
+              <div id="ceu-section" class="detail-card" style="display: none;">
+                <div class="detail-card-header">
+                  <h2>CEU Progress</h2>
+                  <span id="ceu-status" class="status-badge status-active">On Track</span>
+                </div>
+                <div class="detail-card-body">
+                  <div class="ceu-progress">
+                    <div class="ceu-bar-container">
+                      <div id="ceu-bar" class="ceu-bar" style="width: 0%"></div>
+                      <span id="ceu-bar-label" class="ceu-bar-label">0 / 0 CEUs</span>
+                    </div>
+                    <div id="ceu-deadline" class="ceu-deadline"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Activity Timeline -->
+              <div class="detail-card">
+                <div class="detail-card-header">
+                  <h2>Activity Timeline</h2>
+                  <button onclick="addNote()" class="btn btn-ghost btn-sm">+ Add Note</button>
+                </div>
+                <div class="detail-card-body">
+                  <div id="timeline" class="timeline">
+                    <div class="empty-timeline">No activity recorded yet</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Quick Actions & Details -->
+            <div>
+              <!-- Quick Actions -->
+              <div class="detail-card">
+                <div class="detail-card-header">
+                  <h2>Quick Actions</h2>
+                </div>
+                <div class="detail-card-body">
+                  <div class="quick-actions" id="quick-actions">
+                    <button class="quick-action" onclick="sendRenewalReminder()">
+                      <div class="quick-action-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      </div>
+                      <div class="quick-action-text">
+                        <div class="quick-action-title">Send Renewal Reminder</div>
+                        <div class="quick-action-desc">Email about upcoming renewal</div>
+                      </div>
+                    </button>
+                    <button class="quick-action" onclick="sendPasswordReset()">
+                      <div class="quick-action-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </div>
+                      <div class="quick-action-text">
+                        <div class="quick-action-title">Send Password Reset</div>
+                        <div class="quick-action-desc">Help them log in to portal</div>
+                      </div>
+                    </button>
+                    <button class="quick-action" onclick="processManualPayment()">
+                      <div class="quick-action-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                      </div>
+                      <div class="quick-action-text">
+                        <div class="quick-action-title">Process Manual Payment</div>
+                        <div class="quick-action-desc">Record check or cash payment</div>
+                      </div>
+                    </button>
+                    <button class="quick-action" onclick="addCEUCredits()">
+                      <div class="quick-action-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                      </div>
+                      <div class="quick-action-text">
+                        <div class="quick-action-title">Add CEU Credits</div>
+                        <div class="quick-action-desc">Record continuing education</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Details -->
+              <div class="detail-card">
+                <div class="detail-card-header">
+                  <h2>Contact Details</h2>
+                  <button onclick="openEditModal()" class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+                <div class="detail-card-body">
+                  <div class="detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value" id="detail-email">—</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Phone</span>
+                    <span class="detail-value" id="detail-phone">—</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Address</span>
+                    <span class="detail-value" id="detail-address">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Membership Details -->
+              <div class="detail-card">
+                <div class="detail-card-header">
+                  <h2>Membership</h2>
+                </div>
+                <div class="detail-card-body">
+                  <div class="detail-row">
+                    <span class="detail-label">Tier</span>
+                    <span class="detail-value" id="detail-tier">—</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value" id="detail-status">—</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Joined</span>
+                    <span class="detail-value" id="detail-joined">—</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Expires</span>
+                    <span class="detail-value" id="detail-expires">—</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Auto-Renew</span>
+                    <span class="detail-value" id="detail-autorenew">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="detail-card">
+                <div class="detail-card-header">
+                  <h2>Notes</h2>
+                  <button onclick="editNotes()" class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+                <div class="detail-card-body">
+                  <div id="member-notes" class="text-muted">No notes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="/admin/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        Home
+      </a>
+      <a href="/admin/members.html" class="bottom-nav-link active">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        Members
+      </a>
+      <a href="/admin/tiers.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+        Tiers
+      </a>
+      <a href="/admin/settings.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </nav>
+  </div>
+
+  <!-- Add Note Modal -->
+  <div id="note-modal-backdrop" class="modal-backdrop" onclick="closeModal('note-modal')"></div>
+  <div id="note-modal" class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Note</h3>
+      <button class="modal-close" onclick="closeModal('note-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form onsubmit="saveNote(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="label">Note</label>
+          <textarea id="note-text" class="input" rows="4" placeholder="Add a note about this member..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('note-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Note</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Log Call Modal -->
+  <div id="call-modal-backdrop" class="modal-backdrop" onclick="closeModal('call-modal')"></div>
+  <div id="call-modal" class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Log Phone Call</h3>
+      <button class="modal-close" onclick="closeModal('call-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form onsubmit="saveCall(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="label">Outcome</label>
+          <select id="call-outcome" class="input" required>
+            <option value="connected">Connected - Spoke with member</option>
+            <option value="voicemail">Left voicemail</option>
+            <option value="no_answer">No answer, no voicemail</option>
+            <option value="wrong_number">Wrong number</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Notes</label>
+          <textarea id="call-notes" class="input" rows="4" placeholder="What did you discuss?"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('call-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Log Call</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+    let member = null;
+    let memberId = null;
+
+    // Get member ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    memberId = urlParams.get('id');
+
+    if (!memberId) {
+      window.location.href = '/admin/members.html';
+    }
+
+    // Auth check
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        currentUser = data;
+        currentOrg = data.org;
+        document.getElementById('org-name').textContent = currentOrg?.name || 'Organization';
+        document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || '';
+
+        await loadMember();
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/login';
+    }
+
+    async function loadMember() {
+      try {
+        const res = await fetch(`/api/v1/members/${memberId}/full`, { credentials: 'include' });
+        if (!res.ok) {
+          if (res.status === 404) {
+            toast.error('Member not found');
+            window.location.href = '/admin/members.html';
+            return;
+          }
+          throw new Error('Failed to load member');
+        }
+
+        const data = await res.json();
+        member = data.member;
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('member-content').style.display = 'block';
+
+        renderMember(data);
+      } catch (err) {
+        console.error('Load member error:', err);
+        toast.error('Failed to load member');
+      }
+    }
+
+    function renderMember(data) {
+      const m = data.member;
+      const fullName = [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email;
+
+      // Header
+      document.getElementById('member-name').textContent = fullName;
+      document.getElementById('member-email').textContent = m.email;
+      document.getElementById('member-tier').textContent = m.tier_name || 'No tier';
+
+      // Tenure
+      let tenure = '';
+      if (m.member_years > 0) {
+        tenure = `Member for ${m.member_years} year${m.member_years !== 1 ? 's' : ''}`;
+        if (m.member_months > 0) tenure += `, ${m.member_months} month${m.member_months !== 1 ? 's' : ''}`;
+      } else if (m.member_days > 0) {
+        tenure = `Member for ${m.member_days} day${m.member_days !== 1 ? 's' : ''}`;
+      } else {
+        tenure = 'New member';
+      }
+      document.getElementById('member-tenure').textContent = tenure;
+
+      // Status badge
+      const statusEl = document.getElementById('member-status');
+      statusEl.textContent = m.status;
+      statusEl.className = `status-badge status-${m.status}`;
+
+      // Phone
+      if (m.phone) {
+        document.getElementById('phone-container').style.display = 'flex';
+        document.getElementById('member-phone').textContent = m.phone;
+        document.getElementById('member-phone').href = `tel:${m.phone}`;
+      }
+
+      // Stats
+      document.getElementById('stat-lifetime-value').textContent = formatCurrency(m.lifetime_value_cents || 0);
+      document.getElementById('stat-transactions').textContent = m.total_transactions || 0;
+      document.getElementById('stat-days-member').textContent = m.member_days || 0;
+
+      // Issues
+      if (data.issues && data.issues.length > 0) {
+        renderIssues(data.issues);
+      }
+
+      // CEU Progress
+      if (m.ceu_required > 0) {
+        document.getElementById('ceu-section').style.display = 'block';
+        const progress = m.ceu_progress_percent || 0;
+        const earned = m.ceu_earned || 0;
+        const required = m.ceu_required;
+
+        document.getElementById('ceu-bar').style.width = `${Math.min(progress, 100)}%`;
+        document.getElementById('ceu-bar-label').textContent = `${earned} / ${required} CEUs`;
+
+        // Bar color based on progress and deadline
+        const bar = document.getElementById('ceu-bar');
+        if (m.days_until_ceu_deadline <= 7 && progress < 100) {
+          bar.classList.add('danger');
+          document.getElementById('ceu-status').textContent = 'Critical';
+          document.getElementById('ceu-status').className = 'status-badge status-expired';
+        } else if (m.days_until_ceu_deadline <= 30 && progress < 75) {
+          bar.classList.add('warning');
+          document.getElementById('ceu-status').textContent = 'Behind';
+          document.getElementById('ceu-status').className = 'status-badge status-pending';
+        }
+
+        if (m.ceu_period_end) {
+          const deadline = new Date(m.ceu_period_end);
+          document.getElementById('ceu-deadline').textContent =
+            `Deadline: ${deadline.toLocaleDateString()} (${m.days_until_ceu_deadline} days)`;
+        }
+      }
+
+      // Contact details
+      document.getElementById('detail-email').textContent = m.email;
+      document.getElementById('detail-phone').textContent = m.phone || '—';
+
+      const addressParts = [m.address_line1, m.address_line2, m.city, m.state, m.postal_code].filter(Boolean);
+      document.getElementById('detail-address').textContent = addressParts.length ? addressParts.join(', ') : '—';
+
+      // Membership details
+      document.getElementById('detail-tier').textContent = m.tier_name ?
+        `${m.tier_name} (${formatCurrency(m.tier_price_cents || 0)}/${m.tier_billing_period || 'year'})` : '—';
+      document.getElementById('detail-status').textContent = m.status;
+      document.getElementById('detail-joined').textContent = m.joined_at ?
+        new Date(m.joined_at).toLocaleDateString() : '—';
+      document.getElementById('detail-expires').textContent = m.expires_at ?
+        new Date(m.expires_at).toLocaleDateString() : 'Never';
+      document.getElementById('detail-autorenew').textContent = m.auto_renew ? 'Yes' : 'No';
+
+      // Notes
+      document.getElementById('member-notes').textContent = m.notes || 'No notes';
+      document.getElementById('member-notes').className = m.notes ? '' : 'text-muted';
+
+      // Timeline
+      renderTimeline(data.activity, data.transactions, data.ceuCredits);
+    }
+
+    function renderIssues(issues) {
+      const container = document.getElementById('issues-container');
+      const highSeverity = issues.some(i => i.severity === 'high');
+
+      container.style.display = 'block';
+      container.className = `issues-alert ${highSeverity ? '' : 'medium'}`;
+
+      container.innerHTML = `
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          Needs Attention
+        </h3>
+        ${issues.map(issue => `
+          <div class="issue-item">
+            <div>
+              <div class="issue-title">${issue.title}</div>
+              <div class="issue-suggestion">${issue.suggestion}</div>
+            </div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function renderTimeline(activity, transactions, ceuCredits) {
+      const timeline = document.getElementById('timeline');
+
+      // Combine and sort all events
+      const events = [];
+
+      // Add activity events
+      (activity || []).forEach(a => {
+        events.push({
+          type: a.type,
+          title: a.title,
+          description: a.description,
+          date: new Date(a.created_at),
+          metadata: a.metadata,
+          causedBy: a.caused_by_name
+        });
+      });
+
+      // Add transaction events (if not already in activity)
+      (transactions || []).forEach(t => {
+        if (!activity?.some(a => a.related_id === t.id)) {
+          events.push({
+            type: t.status === 'completed' ? 'payment_success' : 'payment_failed',
+            title: `${t.status === 'completed' ? 'Payment' : 'Payment failed'}: ${formatCurrency(t.amount_cents)}`,
+            description: t.description,
+            date: new Date(t.created_at)
+          });
+        }
+      });
+
+      // Sort by date descending
+      events.sort((a, b) => b.date - a.date);
+
+      if (events.length === 0) {
+        timeline.innerHTML = '<div class="empty-timeline">No activity recorded yet</div>';
+        return;
+      }
+
+      timeline.innerHTML = events.slice(0, 20).map(event => {
+        const iconClass = getTimelineIconClass(event.type);
+        const icon = getTimelineIcon(event.type);
+
+        return `
+          <div class="timeline-item">
+            <div class="timeline-icon ${iconClass}">${icon}</div>
+            <div class="timeline-content">
+              <div class="timeline-title">${event.title}</div>
+              <div class="timeline-meta">
+                ${formatRelativeTime(event.date)}
+                ${event.causedBy ? ` · by ${event.causedBy}` : ''}
+              </div>
+              ${event.description ? `<div class="timeline-description">${event.description}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getTimelineIconClass(type) {
+      const classes = {
+        'payment_success': 'payment',
+        'payment_failed': 'payment-failed',
+        'renewed': 'payment',
+        'email_sent': 'email',
+        'email_opened': 'email',
+        'status_changed': 'status',
+        'tier_changed': 'status',
+        'login': 'login',
+        'note_added': 'note',
+        'call_logged': 'note',
+        'ceu_earned': 'ceu',
+        'joined': 'payment'
+      };
+      return classes[type] || '';
+    }
+
+    function getTimelineIcon(type) {
+      const icons = {
+        'payment_success': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+        'payment_failed': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        'email_sent': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+        'email_opened': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 13V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9"/><polyline points="22,6 12,13 2,6"/><polyline points="16 18 18 20 22 16"/></svg>',
+        'login': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
+        'note_added': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        'call_logged': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+        'ceu_earned': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        'joined': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>'
+      };
+      return icons[type] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+    }
+
+    function formatCurrency(cents) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(cents / 100);
+    }
+
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+
+      return date.toLocaleDateString();
+    }
+
+    // Actions
+    function addNote() {
+      document.getElementById('note-text').value = '';
+      openModal('note-modal');
+    }
+
+    async function saveNote(e) {
+      e.preventDefault();
+      const text = document.getElementById('note-text').value;
+
+      try {
+        await fetch(`/api/v1/members/${memberId}/activity`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: 'note_added',
+            title: 'Note added',
+            description: text
+          })
+        });
+
+        closeModal('note-modal');
+        toast.success('Note added');
+        loadMember();
+      } catch (err) {
+        toast.error('Failed to add note');
+      }
+    }
+
+    function logCall() {
+      document.getElementById('call-outcome').value = 'connected';
+      document.getElementById('call-notes').value = '';
+      openModal('call-modal');
+    }
+
+    async function saveCall(e) {
+      e.preventDefault();
+      const outcome = document.getElementById('call-outcome').value;
+      const notes = document.getElementById('call-notes').value;
+
+      const outcomeLabels = {
+        'connected': 'Spoke with member',
+        'voicemail': 'Left voicemail',
+        'no_answer': 'No answer',
+        'wrong_number': 'Wrong number'
+      };
+
+      try {
+        await fetch(`/api/v1/members/${memberId}/activity`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: 'call_logged',
+            title: `Phone call: ${outcomeLabels[outcome]}`,
+            description: notes || null,
+            metadata: { outcome }
+          })
+        });
+
+        closeModal('call-modal');
+        toast.success('Call logged');
+        loadMember();
+      } catch (err) {
+        toast.error('Failed to log call');
+      }
+    }
+
+    function openEditModal() {
+      // For now, redirect to members page and open edit modal
+      // In a full implementation, we'd have an edit modal here too
+      window.location.href = `/admin/members.html?edit=${memberId}`;
+    }
+
+    function sendRenewalReminder() {
+      toast.info('Renewal reminder feature coming soon');
+    }
+
+    function sendPasswordReset() {
+      toast.info('Password reset feature coming soon');
+    }
+
+    function processManualPayment() {
+      toast.info('Manual payment feature coming soon');
+    }
+
+    function addCEUCredits() {
+      toast.info('CEU credits feature coming soon');
+    }
+
+    function openEmailModal() {
+      toast.info('Email feature coming soon');
+    }
+
+    function editNotes() {
+      // Could open a notes editing modal
+      openEditModal();
+    }
+
+    // Initialize
+    checkAuth();
+  </script>
+</body>
+</html>

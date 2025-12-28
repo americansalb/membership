@@ -143,7 +143,7 @@ router.get('/members', requireUser, async (req, res) => {
   }
 });
 
-// Get single member
+// Get single member (basic)
 router.get('/members/:id', requireUser, async (req, res) => {
   try {
     const result = await db.query(
@@ -163,6 +163,260 @@ router.get('/members/:id', requireUser, async (req, res) => {
   } catch (err) {
     console.error('Get member error:', err);
     res.status(500).json({ error: 'Failed to get member' });
+  }
+});
+
+// Get member with full context (for member detail page)
+router.get('/members/:id/full', requireUser, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const orgId = req.user.orgId;
+
+    // Get everything in parallel
+    const [
+      memberResult,
+      activityResult,
+      transactionsResult,
+      ceuResult,
+      issuesResult
+    ] = await Promise.all([
+      // Member with computed fields
+      db.query(`
+        SELECT
+          m.*,
+          t.name as tier_name,
+          t.price_cents as tier_price_cents,
+          t.billing_period as tier_billing_period,
+
+          -- Tenure
+          EXTRACT(DAYS FROM NOW() - m.joined_at)::INT as member_days,
+          DATE_PART('year', AGE(NOW(), m.joined_at))::INT as member_years,
+          DATE_PART('month', AGE(NOW(), m.joined_at))::INT % 12 as member_months,
+
+          -- Expiration
+          CASE
+            WHEN m.expires_at IS NOT NULL THEN
+              EXTRACT(DAYS FROM m.expires_at - NOW())::INT
+            ELSE NULL
+          END as days_until_expiration,
+
+          -- CEU progress
+          CASE
+            WHEN m.ceu_required > 0 THEN
+              ROUND((m.ceu_earned / m.ceu_required * 100)::NUMERIC, 1)
+            ELSE NULL
+          END as ceu_progress_percent,
+          CASE
+            WHEN m.ceu_period_end IS NOT NULL THEN
+              (m.ceu_period_end - CURRENT_DATE)
+            ELSE NULL
+          END as days_until_ceu_deadline
+
+        FROM members m
+        LEFT JOIN tiers t ON m.tier_id = t.id
+        WHERE m.id = $1 AND m.org_id = $2
+      `, [memberId, orgId]),
+
+      // Activity timeline (last 50 events)
+      db.query(`
+        SELECT
+          ma.*,
+          u.name as caused_by_name,
+          u.email as caused_by_email
+        FROM member_activity ma
+        LEFT JOIN users u ON ma.caused_by_user_id = u.id
+        WHERE ma.member_id = $1 AND ma.org_id = $2
+        ORDER BY ma.created_at DESC
+        LIMIT 50
+      `, [memberId, orgId]),
+
+      // Transaction history
+      db.query(`
+        SELECT
+          t.*,
+          SUM(amount_cents) OVER () as lifetime_value_cents,
+          COUNT(*) OVER () as total_transactions
+        FROM transactions t
+        WHERE t.member_id = $1 AND t.org_id = $2
+        ORDER BY t.created_at DESC
+        LIMIT 20
+      `, [memberId, orgId]),
+
+      // CEU credits
+      db.query(`
+        SELECT *
+        FROM ceu_credits
+        WHERE member_id = $1 AND org_id = $2
+        ORDER BY completed_at DESC
+        LIMIT 20
+      `, [memberId, orgId]),
+
+      // Detect potential issues
+      db.query(`
+        SELECT
+          -- Failed payments in last 30 days
+          (SELECT COUNT(*) FROM member_activity
+           WHERE member_id = $1 AND type = 'payment_failed'
+           AND created_at > NOW() - INTERVAL '30 days') as recent_failed_payments,
+
+          -- Days since last login
+          (SELECT EXTRACT(DAYS FROM NOW() - MAX(created_at))::INT
+           FROM member_activity
+           WHERE member_id = $1 AND type = 'login') as days_since_login,
+
+          -- Days since last email open
+          (SELECT EXTRACT(DAYS FROM NOW() - MAX(created_at))::INT
+           FROM member_activity
+           WHERE member_id = $1 AND type = 'email_opened') as days_since_email_open,
+
+          -- Unopened emails in last 30 days
+          (SELECT COUNT(*) FROM member_activity
+           WHERE member_id = $1 AND type = 'email_sent'
+           AND created_at > NOW() - INTERVAL '30 days'
+           AND id NOT IN (
+             SELECT (metadata->>'email_id')::UUID FROM member_activity
+             WHERE member_id = $1 AND type = 'email_opened'
+           )) as recent_unopened_emails
+      `, [memberId])
+    ]);
+
+    if (memberResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const member = memberResult.rows[0];
+    const transactions = transactionsResult.rows;
+    const issues = issuesResult.rows[0] || {};
+
+    // Calculate lifetime value
+    const lifetimeValue = transactions.length > 0
+      ? parseInt(transactions[0].lifetime_value_cents) || 0
+      : 0;
+
+    // Build issues array for the UI
+    const detectedIssues = [];
+
+    // Check for payment issues
+    if (issues.recent_failed_payments > 0) {
+      detectedIssues.push({
+        type: 'payment_failed',
+        severity: issues.recent_failed_payments >= 3 ? 'high' : 'medium',
+        title: `Payment failed ${issues.recent_failed_payments} time(s) in last 30 days`,
+        suggestion: 'Contact member to update payment method'
+      });
+    }
+
+    // Check for engagement issues
+    if (issues.days_since_login > 180) {
+      detectedIssues.push({
+        type: 'inactive',
+        severity: 'low',
+        title: `No login in ${issues.days_since_login} days`,
+        suggestion: 'Member may not be using their benefits'
+      });
+    }
+
+    // Check for email deliverability
+    if (issues.recent_unopened_emails >= 3 && issues.days_since_email_open > 60) {
+      detectedIssues.push({
+        type: 'email_unreachable',
+        severity: 'medium',
+        title: 'Emails not being opened',
+        suggestion: 'Try calling or verify email address'
+      });
+    }
+
+    // Check for expiring membership
+    if (member.days_until_expiration !== null) {
+      if (member.days_until_expiration < 0) {
+        detectedIssues.push({
+          type: 'expired',
+          severity: 'high',
+          title: `Membership expired ${Math.abs(member.days_until_expiration)} days ago`,
+          suggestion: 'Send renewal reminder or personal outreach'
+        });
+      } else if (member.days_until_expiration <= 14) {
+        detectedIssues.push({
+          type: 'expiring_soon',
+          severity: 'medium',
+          title: `Membership expires in ${member.days_until_expiration} days`,
+          suggestion: member.auto_renew ? 'Auto-renew is on' : 'Send renewal reminder'
+        });
+      }
+    }
+
+    // Check for CEU deadline
+    if (member.days_until_ceu_deadline !== null && member.ceu_progress_percent < 100) {
+      if (member.days_until_ceu_deadline <= 30) {
+        const needed = member.ceu_required - member.ceu_earned;
+        detectedIssues.push({
+          type: 'ceu_deadline',
+          severity: member.days_until_ceu_deadline <= 7 ? 'high' : 'medium',
+          title: `Needs ${needed} more CEUs in ${member.days_until_ceu_deadline} days`,
+          suggestion: 'Send CEU reminder with course recommendations'
+        });
+      }
+    }
+
+    res.json({
+      member: {
+        ...member,
+        lifetime_value_cents: lifetimeValue,
+        total_transactions: transactions.length > 0 ? parseInt(transactions[0].total_transactions) : 0
+      },
+      activity: activityResult.rows,
+      transactions: transactions,
+      ceuCredits: ceuResult.rows,
+      issues: detectedIssues
+    });
+
+  } catch (err) {
+    console.error('Get member full error:', err);
+    res.status(500).json({ error: 'Failed to get member details' });
+  }
+});
+
+// Log activity for a member
+router.post('/members/:id/activity', requireUser, async (req, res) => {
+  try {
+    const { type, title, description, metadata, visible_to_member } = req.body;
+
+    if (!type || !title) {
+      return res.status(400).json({ error: 'Type and title are required' });
+    }
+
+    // Verify member belongs to org
+    const memberCheck = await db.query(
+      'SELECT 1 FROM members WHERE id = $1 AND org_id = $2',
+      [req.params.id, req.user.orgId]
+    );
+
+    if (memberCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const result = await db.query(`
+      INSERT INTO member_activity (
+        org_id, member_id, type, title, description,
+        metadata, caused_by_user_id, visible_to_member
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *
+    `, [
+      req.user.orgId,
+      req.params.id,
+      type,
+      title,
+      description || null,
+      JSON.stringify(metadata || {}),
+      req.user.id,
+      visible_to_member || false
+    ]);
+
+    res.status(201).json({ activity: result.rows[0] });
+
+  } catch (err) {
+    console.error('Log activity error:', err);
+    res.status(500).json({ error: 'Failed to log activity' });
   }
 });
 

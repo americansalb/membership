@@ -328,9 +328,9 @@
         return;
       }
 
-      // Table rows
+      // Table rows - click to go to detail page
       tbody.innerHTML = members.map(m => `
-        <tr class="member-row" onclick="editMember('${m.id}')">
+        <tr class="member-row" onclick="viewMember('${m.id}')">
           <td>${m.first_name || ''} ${m.last_name || ''}</td>
           <td>${m.email}</td>
           <td>${m.tier_name || '—'}</td>
@@ -341,7 +341,7 @@
 
       // Mobile cards
       cards.innerHTML = members.map(m => `
-        <div class="card card-shadow card-interactive member-card" onclick="editMember('${m.id}')">
+        <div class="card card-shadow card-interactive member-card" onclick="viewMember('${m.id}')">
           <div class="card-body">
             <div class="flex justify-between items-center mb-4">
               <strong>${m.first_name || ''} ${m.last_name || ''}</strong>
@@ -352,6 +352,10 @@
           </div>
         </div>
       `).join('');
+    }
+
+    function viewMember(id) {
+      window.location.href = `/admin/member.html?id=${id}`;
     }
 
     function renderPagination() {
