@@ -306,11 +306,11 @@ router.post('/dev/login', async (req, res) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // Dev sessions expire faster
 
-    // Store in a simple way - we'll use the sessions table with null user/member
+    // Store in dev_sessions table
     await db.query(
-      `INSERT INTO sessions (token_hash, expires_at, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4)`,
-      [tokenHash, expiresAt, req.ip, req.get('User-Agent')]
+      `INSERT INTO dev_sessions (developer_id, token_hash, expires_at, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [dev.id, tokenHash, expiresAt, req.ip, req.get('User-Agent')]
     );
 
     // Store dev id in a separate cookie or return it
