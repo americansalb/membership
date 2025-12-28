@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - VillageMembers</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    .messages-layout {
+      display: flex;
+      height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    /* Sidebar - Thread List */
+    .sidebar {
+      width: 360px;
+      background: var(--bg-primary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .back-btn:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .sidebar-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      flex: 1;
+    }
+
+    .new-message-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .new-message-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .threads-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .thread-item {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .thread-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .thread-item.active {
+      background: var(--primary-light);
+    }
+
+    .thread-item.unread {
+      background: rgba(var(--primary-rgb), 0.05);
+    }
+
+    .thread-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-base);
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .thread-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .thread-online {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--success);
+      border: 2px solid var(--bg-primary);
+    }
+
+    .thread-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .thread-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-1);
+    }
+
+    .thread-name {
+      font-weight: var(--font-medium);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .thread-item.unread .thread-name {
+      font-weight: var(--font-bold);
+    }
+
+    .thread-time {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+      margin-left: var(--space-2);
+    }
+
+    .thread-preview {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .thread-item.unread .thread-preview {
+      color: var(--text-primary);
+    }
+
+    .unread-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 var(--space-2);
+      background: var(--primary);
+      color: white;
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      border-radius: var(--radius-full);
+    }
+
+    /* Main Chat Area */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .chat-header {
+      padding: var(--space-4) var(--space-5);
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .chat-user-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .chat-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+    }
+
+    .chat-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .chat-user-name {
+      font-weight: var(--font-semibold);
+    }
+
+    .chat-user-status {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .chat-user-status.online {
+      color: var(--success);
+    }
+
+    .chat-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .chat-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .chat-action-btn:hover {
+      background: var(--bg-tertiary);
+    }
+
+    /* Messages Container */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .message-group {
+      display: flex;
+      gap: var(--space-3);
+    }
+
+    .message-group.sent {
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    .message-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .message-group.sent .message-avatar {
+      display: none;
+    }
+
+    .message-bubbles {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      max-width: 70%;
+    }
+
+    .message-bubble {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-xl);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .message-group.sent .message-bubble {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    .message-bubble:first-child {
+      border-top-left-radius: var(--radius-xl);
+    }
+
+    .message-group.sent .message-bubble:first-child {
+      border-top-right-radius: var(--radius-xl);
+    }
+
+    .message-bubble:last-child {
+      border-bottom-left-radius: var(--radius-sm);
+    }
+
+    .message-group.sent .message-bubble:last-child {
+      border-bottom-right-radius: var(--radius-sm);
+      border-bottom-left-radius: var(--radius-xl);
+    }
+
+    .message-text {
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-1);
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+
+    .message-group.sent .message-meta {
+      color: rgba(255, 255, 255, 0.7);
+      justify-content: flex-end;
+    }
+
+    .message-reactions {
+      display: flex;
+      gap: var(--space-1);
+      margin-top: var(--space-2);
+    }
+
+    .reaction-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 6px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      cursor: pointer;
+    }
+
+    .reaction-badge:hover {
+      background: var(--bg-tertiary);
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      padding: var(--space-3) var(--space-5);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      font-style: italic;
+      display: none;
+    }
+
+    .typing-indicator.visible {
+      display: block;
+    }
+
+    /* Message Input */
+    .message-input-area {
+      padding: var(--space-4) var(--space-5);
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .message-input-wrapper {
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-end;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      font-size: var(--text-base);
+      resize: none;
+      max-height: 120px;
+      min-height: 44px;
+      font-family: inherit;
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .send-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .send-btn:disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+      cursor: not-allowed;
+    }
+
+    /* Empty State */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-8);
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-4);
+    }
+
+    .empty-state h3 {
+      font-size: var(--text-lg);
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    /* New Message Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-4);
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: var(--space-5);
+      overflow-y: auto;
+    }
+
+    .search-members {
+      position: relative;
+      margin-bottom: var(--space-4);
+    }
+
+    .search-members input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      padding-left: 44px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-base);
+    }
+
+    .search-members input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .search-members svg {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+
+    .member-results {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .member-result-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .member-result-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .member-result-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-medium);
+      color: var(--text-secondary);
+    }
+
+    .member-result-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .member-result-info {
+      flex: 1;
+    }
+
+    .member-result-name {
+      font-weight: var(--font-medium);
+    }
+
+    .member-result-title {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    /* Date separator */
+    .date-separator {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin: var(--space-4) 0;
+    }
+
+    .date-separator::before,
+    .date-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    .date-separator span {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        width: 100%;
+        transform: translateX(0);
+        transition: transform 0.3s;
+      }
+
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+
+      .chat-area.visible {
+        display: flex;
+      }
+
+      .mobile-back {
+        display: flex;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-back {
+        display: none;
+      }
+    }
+
+    /* Loading */
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="messages-layout">
+    <!-- Sidebar - Thread List -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="../" class="back-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </a>
+        <h1 class="sidebar-title">Messages</h1>
+        <button class="new-message-btn" onclick="showNewMessageModal()" title="New Message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div id="threads-list" class="threads-list">
+        <div class="loading-spinner"><div class="spinner"></div></div>
+      </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="chat-area" id="chat-area">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Your Messages</h3>
+        <p>Select a conversation or start a new one</p>
+      </div>
+
+      <!-- Chat Content (hidden by default) -->
+      <div id="chat-content" style="display: none; flex-direction: column; height: 100%;">
+        <div class="chat-header">
+          <button class="back-btn mobile-back" onclick="closeMobileChat()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="chat-user-info">
+            <div class="chat-avatar" id="chat-avatar"></div>
+            <div>
+              <div class="chat-user-name" id="chat-user-name"></div>
+              <div class="chat-user-status" id="chat-user-status"></div>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <a class="chat-action-btn" id="view-profile-btn" title="View Profile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="messages-container" id="messages-container"></div>
+
+        <div class="typing-indicator" id="typing-indicator"></div>
+
+        <div class="message-input-area">
+          <div class="message-input-wrapper">
+            <textarea
+              id="message-input"
+              class="message-input"
+              placeholder="Type a message..."
+              rows="1"
+              onkeydown="handleInputKeydown(event)"
+              oninput="handleInputChange()"
+            ></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Message Modal -->
+  <div id="new-message-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">New Message</h2>
+        <button class="modal-close" onclick="hideNewMessageModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="search-members">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="member-search" placeholder="Search members..." oninput="searchMembers()">
+        </div>
+        <div id="member-results" class="member-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let threads = [];
+    let currentThreadId = null;
+    let currentThread = null;
+    let messages = [];
+    let currentMemberId = null;
+    let socket = null;
+    let typingTimeout = null;
+    let searchTimeout = null;
+
+    async function init() {
+      await checkAuth();
+      await loadThreads();
+      initSocket();
+      checkUrlParams();
+    }
+
+    async function checkAuth() {
+      const res = await fetch('/auth/me', { credentials: 'include' });
+      if (!res.ok) {
+        window.location.href = '/portal/login';
+        return;
+      }
+      const data = await res.json();
+      if (data.type !== 'member') {
+        window.location.href = '/portal/login';
+        return;
+      }
+      currentMemberId = data.id;
+    }
+
+    function initSocket() {
+      socket = io({ withCredentials: true });
+
+      socket.on('message:new', (data) => {
+        // Add message to thread if viewing
+        if (data.threadId === currentThreadId) {
+          addMessageToView(data.message);
+          markThreadRead(currentThreadId);
+        }
+
+        // Update thread in sidebar
+        updateThreadInList(data.threadId, data.message);
+      });
+
+      socket.on('typing', (data) => {
+        if (data.threadId === currentThreadId) {
+          showTypingIndicator(data.firstName);
+        }
+      });
+
+      socket.on('member:online', (data) => {
+        updateMemberOnlineStatus(data.memberId, true);
+      });
+
+      socket.on('member:offline', (data) => {
+        updateMemberOnlineStatus(data.memberId, false);
+      });
+    }
+
+    function checkUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const toMemberId = params.get('to');
+
+      if (toMemberId) {
+        startConversationWith(toMemberId);
+      }
+    }
+
+    async function loadThreads() {
+      try {
+        const res = await fetch('/api/v1/community/threads', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load threads');
+
+        const data = await res.json();
+        threads = data.threads || [];
+        renderThreads();
+      } catch (err) {
+        console.error('Load threads error:', err);
+        document.getElementById('threads-list').innerHTML =
+          '<div class="empty-state"><p>Failed to load messages</p></div>';
+      }
+    }
+
+    function renderThreads() {
+      const container = document.getElementById('threads-list');
+
+      if (threads.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding: var(--space-8);">
+            <p>No messages yet</p>
+            <p style="font-size: var(--text-sm); margin-top: var(--space-2);">
+              Start a conversation with a community member
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = threads.map(t => {
+        const other = t.other_participants?.[0] || {};
+        const name = `${other.first_name || ''} ${other.last_name || ''}`.trim() || 'Unknown';
+        const initials = getInitials(name);
+        const timeAgo = t.last_message_at ? formatTimeAgo(t.last_message_at) : '';
+        const isUnread = parseInt(t.unread_count) > 0;
+        const isActive = t.id === currentThreadId;
+
+        return `
+          <div class="thread-item ${isUnread ? 'unread' : ''} ${isActive ? 'active' : ''}"
+               onclick="openThread('${t.id}')"
+               data-thread-id="${t.id}">
+            <div class="thread-avatar">
+              ${other.profile_photo_url
+                ? `<img src="${other.profile_photo_url}" alt="${escapeHtml(name)}">`
+                : initials}
+              ${other.is_online ? '<div class="thread-online"></div>' : ''}
+            </div>
+            <div class="thread-content">
+              <div class="thread-header">
+                <span class="thread-name">${escapeHtml(name)}</span>
+                <span class="thread-time">${timeAgo}</span>
+              </div>
+              <div class="thread-preview">
+                ${escapeHtml(t.last_message_preview || 'No messages yet')}
+              </div>
+            </div>
+            ${isUnread ? `<span class="unread-badge">${t.unread_count}</span>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function openThread(threadId) {
+      currentThreadId = threadId;
+
+      // Update sidebar selection
+      document.querySelectorAll('.thread-item').forEach(el => {
+        el.classList.remove('active');
+        if (el.dataset.threadId === threadId) {
+          el.classList.add('active');
+          el.classList.remove('unread');
+          const badge = el.querySelector('.unread-badge');
+          if (badge) badge.remove();
+        }
+      });
+
+      // Show chat area
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('chat-content').style.display = 'flex';
+
+      // Mobile: show chat, hide sidebar
+      if (window.innerWidth <= 768) {
+        document.getElementById('sidebar').classList.add('hidden');
+      }
+
+      // Load thread messages
+      try {
+        const res = await fetch(`/api/v1/community/threads/${threadId}`, {
+          credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('Failed to load thread');
+
+        const data = await res.json();
+        currentThread = data.thread;
+        messages = data.messages || [];
+
+        renderChatHeader();
+        renderMessages();
+
+        // Scroll to bottom
+        const container = document.getElementById('messages-container');
+        container.scrollTop = container.scrollHeight;
+
+        // Focus input
+        document.getElementById('message-input').focus();
+      } catch (err) {
+        console.error('Open thread error:', err);
+      }
+    }
+
+    function renderChatHeader() {
+      const other = currentThread.participants?.find(p => p.id !== currentMemberId) || {};
+      const name = `${other.first_name || ''} ${other.last_name || ''}`.trim() || 'Unknown';
+      const initials = getInitials(name);
+
+      document.getElementById('chat-avatar').innerHTML = other.profile_photo_url
+        ? `<img src="${other.profile_photo_url}" alt="${escapeHtml(name)}">`
+        : initials;
+      document.getElementById('chat-user-name').textContent = name;
+
+      const statusEl = document.getElementById('chat-user-status');
+      if (other.is_online) {
+        statusEl.textContent = 'Online';
+        statusEl.className = 'chat-user-status online';
+      } else {
+        statusEl.textContent = 'Offline';
+        statusEl.className = 'chat-user-status';
+      }
+
+      document.getElementById('view-profile-btn').href = `../members/profile.html?id=${other.id}`;
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('messages-container');
+
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No messages yet. Say hello!</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      let lastDate = null;
+      let lastSenderId = null;
+
+      messages.forEach((msg, idx) => {
+        const msgDate = new Date(msg.created_at).toDateString();
+        const isSent = msg.sender_id === currentMemberId;
+        const showAvatar = msg.sender_id !== lastSenderId;
+
+        // Date separator
+        if (msgDate !== lastDate) {
+          html += `
+            <div class="date-separator">
+              <span>${formatDateSeparator(msg.created_at)}</span>
+            </div>
+          `;
+          lastDate = msgDate;
+        }
+
+        if (showAvatar || msgDate !== lastDate) {
+          // Start new message group
+          if (idx > 0) html += '</div></div>';
+
+          const name = `${msg.first_name || ''} ${msg.last_name || ''}`.trim();
+          const initials = getInitials(name);
+
+          html += `
+            <div class="message-group ${isSent ? 'sent' : ''}">
+              <div class="message-avatar">
+                ${msg.profile_photo_url
+                  ? `<img src="${msg.profile_photo_url}" alt="${escapeHtml(name)}">`
+                  : initials}
+              </div>
+              <div class="message-bubbles">
+          `;
+        }
+
+        html += `
+          <div class="message-bubble" data-message-id="${msg.id}">
+            <div class="message-text">${escapeHtml(msg.body)}</div>
+            <div class="message-meta">
+              <span>${formatMessageTime(msg.created_at)}</span>
+            </div>
+            ${msg.reactions && msg.reactions.length > 0 ? `
+              <div class="message-reactions">
+                ${renderReactions(msg.reactions)}
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        lastSenderId = msg.sender_id;
+      });
+
+      // Close last group
+      html += '</div></div>';
+
+      container.innerHTML = html;
+    }
+
+    function renderReactions(reactions) {
+      const grouped = {};
+      reactions.forEach(r => {
+        if (!grouped[r.emoji]) grouped[r.emoji] = [];
+        grouped[r.emoji].push(r.member_id);
+      });
+
+      return Object.entries(grouped).map(([emoji, members]) => `
+        <span class="reaction-badge" onclick="toggleReaction('${emoji}')">${emoji} ${members.length}</span>
+      `).join('');
+    }
+
+    function addMessageToView(msg) {
+      const container = document.getElementById('messages-container');
+      const isSent = msg.sender_id === currentMemberId;
+      const name = `${msg.first_name || ''} ${msg.last_name || ''}`.trim();
+      const initials = getInitials(name);
+
+      const html = `
+        <div class="message-group ${isSent ? 'sent' : ''}">
+          <div class="message-avatar">
+            ${msg.profile_photo_url
+              ? `<img src="${msg.profile_photo_url}" alt="${escapeHtml(name)}">`
+              : initials}
+          </div>
+          <div class="message-bubbles">
+            <div class="message-bubble" data-message-id="${msg.id}">
+              <div class="message-text">${escapeHtml(msg.body)}</div>
+              <div class="message-meta">
+                <span>${formatMessageTime(msg.created_at)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', html);
+      container.scrollTop = container.scrollHeight;
+
+      messages.push(msg);
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('message-input');
+      const body = input.value.trim();
+
+      if (!body || !currentThreadId) return;
+
+      input.value = '';
+      updateSendButton();
+      autoResizeInput();
+
+      try {
+        const res = await fetch(`/api/v1/community/threads/${currentThreadId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ body })
+        });
+
+        if (!res.ok) throw new Error('Failed to send');
+
+        const data = await res.json();
+        addMessageToView(data.message);
+        updateThreadInList(currentThreadId, data.message);
+      } catch (err) {
+        console.error('Send error:', err);
+        alert('Failed to send message');
+      }
+    }
+
+    function updateThreadInList(threadId, message) {
+      const thread = threads.find(t => t.id === threadId);
+      if (thread) {
+        thread.last_message_at = message.created_at;
+        thread.last_message_preview = message.body.substring(0, 100);
+
+        // Move to top and re-render
+        threads = [thread, ...threads.filter(t => t.id !== threadId)];
+        renderThreads();
+      }
+    }
+
+    function handleInputKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function handleInputChange() {
+      updateSendButton();
+      autoResizeInput();
+      sendTypingIndicator();
+    }
+
+    function updateSendButton() {
+      const input = document.getElementById('message-input');
+      const btn = document.getElementById('send-btn');
+      btn.disabled = !input.value.trim();
+    }
+
+    function autoResizeInput() {
+      const input = document.getElementById('message-input');
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    }
+
+    function sendTypingIndicator() {
+      if (!currentThreadId) return;
+
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        fetch(`/api/v1/community/threads/${currentThreadId}/typing`, {
+          method: 'POST',
+          credentials: 'include'
+        }).catch(() => {});
+      }, 500);
+    }
+
+    function showTypingIndicator(firstName) {
+      const el = document.getElementById('typing-indicator');
+      el.textContent = `${firstName} is typing...`;
+      el.classList.add('visible');
+
+      setTimeout(() => {
+        el.classList.remove('visible');
+      }, 3000);
+    }
+
+    async function markThreadRead(threadId) {
+      try {
+        await fetch(`/api/v1/community/threads/${threadId}/read`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (err) {
+        console.error('Mark read error:', err);
+      }
+    }
+
+    function showNewMessageModal() {
+      document.getElementById('new-message-modal').classList.remove('hidden');
+      document.getElementById('member-search').focus();
+    }
+
+    function hideNewMessageModal() {
+      document.getElementById('new-message-modal').classList.add('hidden');
+      document.getElementById('member-search').value = '';
+      document.getElementById('member-results').innerHTML = '';
+    }
+
+    async function searchMembers() {
+      clearTimeout(searchTimeout);
+      const query = document.getElementById('member-search').value.trim();
+
+      if (!query) {
+        document.getElementById('member-results').innerHTML = '';
+        return;
+      }
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/v1/community/directory?search=${encodeURIComponent(query)}&limit=10`, {
+            credentials: 'include'
+          });
+
+          if (!res.ok) throw new Error('Search failed');
+
+          const data = await res.json();
+          renderMemberResults(data.members || []);
+        } catch (err) {
+          console.error('Search error:', err);
+        }
+      }, 300);
+    }
+
+    function renderMemberResults(members) {
+      const container = document.getElementById('member-results');
+
+      if (members.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-tertiary); padding: var(--space-4);">No members found</p>';
+        return;
+      }
+
+      container.innerHTML = members
+        .filter(m => m.id !== currentMemberId)
+        .map(m => {
+          const name = `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'Member';
+          const initials = getInitials(name);
+
+          return `
+            <div class="member-result-item" onclick="startConversationWith('${m.id}')">
+              <div class="member-result-avatar">
+                ${m.profile_photo_url
+                  ? `<img src="${m.profile_photo_url}" alt="${escapeHtml(name)}">`
+                  : initials}
+              </div>
+              <div class="member-result-info">
+                <div class="member-result-name">${escapeHtml(name)}</div>
+                ${m.title ? `<div class="member-result-title">${escapeHtml(m.title)}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+    }
+
+    async function startConversationWith(memberId) {
+      hideNewMessageModal();
+
+      try {
+        const res = await fetch('/api/v1/community/threads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ recipient_id: memberId })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Failed to start conversation');
+          return;
+        }
+
+        const data = await res.json();
+
+        // Add to threads list if new
+        if (data.isNew) {
+          threads.unshift(data.thread);
+          renderThreads();
+        }
+
+        // Open the thread
+        openThread(data.thread.id);
+
+        // Clear URL params
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (err) {
+        console.error('Start conversation error:', err);
+        alert('Failed to start conversation');
+      }
+    }
+
+    function updateMemberOnlineStatus(memberId, isOnline) {
+      // Update thread list
+      threads.forEach(t => {
+        if (t.other_participants?.[0]?.id === memberId) {
+          t.other_participants[0].is_online = isOnline;
+        }
+      });
+      renderThreads();
+
+      // Update chat header if viewing this person
+      if (currentThread?.participants?.some(p => p.id === memberId)) {
+        const other = currentThread.participants.find(p => p.id === memberId);
+        if (other) {
+          other.is_online = isOnline;
+          renderChatHeader();
+        }
+      }
+    }
+
+    function closeMobileChat() {
+      document.getElementById('sidebar').classList.remove('hidden');
+      document.getElementById('chat-content').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'flex';
+      currentThreadId = null;
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const past = new Date(date);
+      const diffMs = now - past;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffMins < 1) return 'now';
+      if (diffMins < 60) return `${diffMins}m`;
+      if (diffHours < 24) return `${diffHours}h`;
+      if (diffDays < 7) return `${diffDays}d`;
+
+      return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function formatMessageTime(date) {
+      return new Date(date).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+    }
+
+    function formatDateSeparator(date) {
+      const d = new Date(date);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (d.toDateString() === today.toDateString()) return 'Today';
+      if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+      return d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

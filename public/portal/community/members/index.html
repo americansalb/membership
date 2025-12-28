@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members - VillageMembers</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    .directory-layout {
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    .directory-header {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-4) var(--space-6);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .back-btn:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .header-title {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+    }
+
+    .directory-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    /* Search and filters */
+    .search-section {
+      display: flex;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      padding-left: 44px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-base);
+      background: var(--bg-primary);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+
+    .filter-select {
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      background: var(--bg-primary);
+      min-width: 150px;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* Member Grid */
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .member-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .member-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .member-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 auto var(--space-4);
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .member-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .online-indicator {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--success);
+      border: 3px solid var(--bg-primary);
+    }
+
+    .member-name {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-1);
+    }
+
+    .member-title {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+
+    .member-badges {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: var(--space-4);
+    }
+
+    .member-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: var(--text-xs);
+      padding: var(--space-1) var(--space-2);
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-full);
+    }
+
+    .member-actions {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: center;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-12);
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-4);
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Loading */
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-12);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+
+    .page-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .page-btn:hover {
+      border-color: var(--primary);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .directory-content {
+        padding: var(--space-4);
+      }
+
+      .search-section {
+        flex-direction: column;
+      }
+
+      .filter-select {
+        width: 100%;
+      }
+
+      .members-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="directory-layout">
+    <header class="directory-header">
+      <div class="header-content">
+        <a href="../" class="back-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </a>
+        <h1 class="header-title">Member Directory</h1>
+      </div>
+    </header>
+
+    <main class="directory-content">
+      <!-- Search and Filters -->
+      <div class="search-section">
+        <div class="search-box">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Search members..." oninput="debounceSearch()">
+        </div>
+        <select id="filter-specialty" class="filter-select" onchange="applyFilters()">
+          <option value="">All specialties</option>
+          <option value="medical">Medical</option>
+          <option value="legal">Legal</option>
+          <option value="conference">Conference</option>
+          <option value="education">Education</option>
+        </select>
+        <select id="filter-online" class="filter-select" onchange="applyFilters()">
+          <option value="">All members</option>
+          <option value="online">Online now</option>
+        </select>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <span id="total-count">0 members</span>
+        <div class="stat-item">
+          <span class="online-dot"></span>
+          <span id="online-count">0 online</span>
+        </div>
+      </div>
+
+      <!-- Members Grid -->
+      <div id="members-container" class="members-grid">
+        <div class="loading-spinner"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination" style="display: none;"></div>
+    </main>
+  </div>
+
+  <script>
+    let members = [];
+    let onlineMembers = new Set();
+    let currentPage = 1;
+    let totalPages = 1;
+    let searchTimeout = null;
+    let socket = null;
+    const LIMIT = 24;
+
+    async function init() {
+      await checkAuth();
+      await loadMembers();
+      initSocket();
+    }
+
+    async function checkAuth() {
+      const res = await fetch('/auth/me', { credentials: 'include' });
+      if (!res.ok || (await res.json()).type !== 'member') {
+        window.location.href = '/portal/login';
+      }
+    }
+
+    function initSocket() {
+      socket = io({ withCredentials: true });
+
+      socket.on('members:online', (list) => {
+        onlineMembers = new Set(list.map(m => m.id));
+        updateOnlineStatus();
+      });
+
+      socket.on('member:online', (data) => {
+        onlineMembers.add(data.memberId);
+        updateOnlineStatus();
+      });
+
+      socket.on('member:offline', (data) => {
+        onlineMembers.delete(data.memberId);
+        updateOnlineStatus();
+      });
+    }
+
+    async function loadMembers() {
+      const search = document.getElementById('search-input').value.trim();
+      const specialty = document.getElementById('filter-specialty').value;
+      const onlineOnly = document.getElementById('filter-online').value === 'online';
+      const offset = (currentPage - 1) * LIMIT;
+
+      let url = `/api/v1/community/directory?limit=${LIMIT}&offset=${offset}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+
+      try {
+        const res = await fetch(url, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load members');
+
+        const data = await res.json();
+        members = data.members || [];
+
+        // Client-side filtering for specialty (simplified)
+        if (specialty) {
+          members = members.filter(m =>
+            m.skills?.includes(specialty) || m.bio?.toLowerCase().includes(specialty)
+          );
+        }
+
+        if (onlineOnly) {
+          members = members.filter(m => onlineMembers.has(m.id));
+        }
+
+        renderMembers();
+        updateStats();
+      } catch (err) {
+        console.error('Load members error:', err);
+        document.getElementById('members-container').innerHTML =
+          '<div class="empty-state">Failed to load members</div>';
+      }
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('members-container');
+
+      if (members.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <h3>No members found</h3>
+            <p>Try adjusting your search or filters</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = members.map(m => {
+        const name = `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'Member';
+        const initials = getInitials(name);
+        const isOnline = onlineMembers.has(m.id);
+
+        return `
+          <div class="member-card" onclick="viewProfile('${m.id}')">
+            <div class="member-avatar">
+              ${m.profile_photo_url
+                ? `<img src="${m.profile_photo_url}" alt="${name}">`
+                : initials}
+              ${isOnline ? '<div class="online-indicator"></div>' : ''}
+            </div>
+            <div class="member-name">${escapeHtml(name)}</div>
+            ${m.title ? `<div class="member-title">${escapeHtml(m.title)}</div>` : ''}
+            ${m.certifications && m.certifications.length > 0 ? `
+              <div class="member-badges">
+                ${m.certifications.slice(0, 2).map(c => `
+                  <span class="member-badge">✓ ${escapeHtml(c.name || c)}</span>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div class="member-actions" onclick="event.stopPropagation()">
+              <button class="action-btn" onclick="viewProfile('${m.id}')" title="View Profile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </button>
+              ${m.allow_messages !== false ? `
+                <button class="action-btn" onclick="sendMessage('${m.id}')" title="Send Message">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateOnlineStatus() {
+      document.getElementById('online-count').textContent = `${onlineMembers.size} online`;
+
+      // Update indicators on rendered cards
+      document.querySelectorAll('.member-card').forEach(card => {
+        const memberId = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+        const indicator = card.querySelector('.online-indicator');
+        const avatar = card.querySelector('.member-avatar');
+
+        if (onlineMembers.has(memberId)) {
+          if (!indicator) {
+            avatar.insertAdjacentHTML('beforeend', '<div class="online-indicator"></div>');
+          }
+        } else {
+          indicator?.remove();
+        }
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('total-count').textContent = `${members.length} members`;
+      document.getElementById('online-count').textContent = `${onlineMembers.size} online`;
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadMembers();
+      }, 300);
+    }
+
+    function applyFilters() {
+      currentPage = 1;
+      loadMembers();
+    }
+
+    function viewProfile(memberId) {
+      window.location.href = `profile.html?id=${memberId}`;
+    }
+
+    function sendMessage(memberId) {
+      window.location.href = `../messages/?to=${memberId}`;
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

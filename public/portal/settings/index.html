@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - VillageMembers</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .settings-layout {
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    .settings-header {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-4) var(--space-6);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .back-btn:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .header-title {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+    }
+
+    .settings-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: var(--space-1);
+      margin-bottom: var(--space-6);
+      background: var(--bg-primary);
+      padding: var(--space-1);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-medium);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Section Card */
+    .settings-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-4);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-1);
+    }
+
+    .card-subtitle {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .card-body {
+      padding: var(--space-5);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: var(--space-5);
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-hint {
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+      margin-top: var(--space-1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .toggle-row:last-child {
+      border-bottom: none;
+    }
+
+    .toggle-label {
+      font-weight: var(--font-medium);
+    }
+
+    .toggle-hint {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .toggle {
+      width: 48px;
+      height: 28px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-full);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle.on {
+      background: var(--primary);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle.on::after {
+      left: 24px;
+    }
+
+    /* 2FA */
+    .twofa-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+
+    .status-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .status-icon.enabled {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .status-icon.disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+    }
+
+    .status-text {
+      flex: 1;
+    }
+
+    .status-title {
+      font-weight: var(--font-semibold);
+    }
+
+    .status-subtitle {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .qr-container {
+      text-align: center;
+      padding: var(--space-6);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+
+    .qr-code {
+      max-width: 200px;
+      margin: 0 auto var(--space-4);
+    }
+
+    .manual-key {
+      font-family: monospace;
+      font-size: var(--text-sm);
+      background: var(--bg-primary);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      word-break: break-all;
+    }
+
+    .backup-codes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-2);
+      padding: var(--space-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      font-family: monospace;
+      font-size: var(--text-sm);
+    }
+
+    .backup-code {
+      padding: var(--space-2);
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Code Input */
+    .code-input-group {
+      display: flex;
+      gap: var(--space-3);
+      align-items: center;
+    }
+
+    .code-input {
+      flex: 1;
+      padding: var(--space-3);
+      font-size: var(--text-lg);
+      font-family: monospace;
+      text-align: center;
+      letter-spacing: 0.5em;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+    }
+
+    .code-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* Notification Grid */
+    .notification-grid {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .notification-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: var(--space-4);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-color);
+      align-items: center;
+    }
+
+    .notification-row:last-child {
+      border-bottom: none;
+    }
+
+    .notification-type {
+      font-weight: var(--font-medium);
+    }
+
+    .notification-toggle-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      text-align: center;
+      width: 60px;
+    }
+
+    .small-toggle {
+      width: 36px;
+      height: 20px;
+    }
+
+    .small-toggle::after {
+      width: 14px;
+      height: 14px;
+      top: 3px;
+      left: 3px;
+    }
+
+    .small-toggle.on::after {
+      left: 19px;
+    }
+
+    /* Alert */
+    .alert {
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+
+    .alert-success {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .alert-warning {
+      background: var(--warning-light);
+      color: #856404;
+      border: 1px solid var(--warning);
+    }
+
+    @media (max-width: 640px) {
+      .settings-content {
+        padding: var(--space-4);
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .notification-row {
+        grid-template-columns: 1fr;
+        gap: var(--space-2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-layout">
+    <header class="settings-header">
+      <div class="header-content">
+        <a href="/portal/" class="back-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </a>
+        <h1 class="header-title">Settings</h1>
+      </div>
+    </header>
+
+    <main class="settings-content">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('profile')">Profile</button>
+        <button class="tab-btn" onclick="showTab('security')">Security</button>
+        <button class="tab-btn" onclick="showTab('notifications')">Notifications</button>
+      </div>
+
+      <!-- Profile Tab -->
+      <div id="tab-profile" class="tab-content active">
+        <div class="settings-card">
+          <div class="card-header">
+            <h2 class="card-title">Profile Information</h2>
+            <p class="card-subtitle">Update your profile information visible to other members</p>
+          </div>
+          <div class="card-body">
+            <form id="profile-form" onsubmit="saveProfile(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">First Name</label>
+                  <input type="text" id="first_name" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Last Name</label>
+                  <input type="text" id="last_name" class="form-input">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Title / Role</label>
+                <input type="text" id="title" class="form-input" placeholder="e.g., Medical Interpreter">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Bio</label>
+                <textarea id="bio" class="form-textarea" placeholder="Tell the community about yourself..."></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">City</label>
+                  <input type="text" id="location_city" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">State/Province</label>
+                  <input type="text" id="location_state" class="form-input">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Country</label>
+                <input type="text" id="location_country" class="form-input">
+              </div>
+
+              <button type="submit" class="btn btn-primary">Save Profile</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="card-header">
+            <h2 class="card-title">Privacy Settings</h2>
+          </div>
+          <div class="card-body">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Show in Member Directory</div>
+                <div class="toggle-hint">Allow other members to find you in the directory</div>
+              </div>
+              <div class="toggle" id="toggle-directory" onclick="toggleSetting('directory_visible')"></div>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Allow Direct Messages</div>
+                <div class="toggle-hint">Let other members send you private messages</div>
+              </div>
+              <div class="toggle" id="toggle-messages" onclick="toggleSetting('allow_messages')"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Tab -->
+      <div id="tab-security" class="tab-content">
+        <div class="settings-card">
+          <div class="card-header">
+            <h2 class="card-title">Two-Factor Authentication (2FA)</h2>
+            <p class="card-subtitle">Add an extra layer of security to your account</p>
+          </div>
+          <div class="card-body">
+            <div id="2fa-status">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Tab -->
+      <div id="tab-notifications" class="tab-content">
+        <div class="settings-card">
+          <div class="card-header">
+            <h2 class="card-title">Email Preferences</h2>
+          </div>
+          <div class="card-body">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Email Notifications</div>
+                <div class="toggle-hint">Receive email notifications</div>
+              </div>
+              <div class="toggle" id="toggle-email" onclick="toggleEmailEnabled()"></div>
+            </div>
+
+            <div class="form-group" style="margin-top: var(--space-4);">
+              <label class="form-label">Email Digest Frequency</label>
+              <select id="email-digest" class="form-select" onchange="saveNotificationPrefs()">
+                <option value="immediate">Immediate</option>
+                <option value="daily">Daily digest</option>
+                <option value="weekly">Weekly digest</option>
+                <option value="never">Never</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="card-header">
+            <h2 class="card-title">Notification Types</h2>
+            <p class="card-subtitle">Choose which notifications you want to receive</p>
+          </div>
+          <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 60px 60px; gap: var(--space-2); margin-bottom: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); text-align: center;">
+              <div></div>
+              <div>In-App</div>
+              <div>Email</div>
+            </div>
+            <div class="notification-grid" id="notification-toggles">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let profile = {};
+    let notificationPrefs = {};
+    let twoFAStatus = {};
+
+    async function init() {
+      await checkAuth();
+      loadProfile();
+      load2FAStatus();
+      loadNotificationPrefs();
+    }
+
+    async function checkAuth() {
+      const res = await fetch('/auth/me', { credentials: 'include' });
+      if (!res.ok || (await res.json()).type !== 'member') {
+        window.location.href = '/portal/login';
+      }
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/v1/community/settings/profile', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load profile');
+
+        const data = await res.json();
+        profile = data.profile;
+
+        document.getElementById('first_name').value = profile.first_name || '';
+        document.getElementById('last_name').value = profile.last_name || '';
+        document.getElementById('title').value = profile.title || '';
+        document.getElementById('bio').value = profile.bio || '';
+        document.getElementById('location_city').value = profile.location_city || '';
+        document.getElementById('location_state').value = profile.location_state || '';
+        document.getElementById('location_country').value = profile.location_country || '';
+
+        updateToggle('toggle-directory', profile.directory_visible !== false);
+        updateToggle('toggle-messages', profile.allow_messages !== false);
+      } catch (err) {
+        console.error('Load profile error:', err);
+      }
+    }
+
+    async function saveProfile(e) {
+      e.preventDefault();
+
+      const updates = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        title: document.getElementById('title').value,
+        bio: document.getElementById('bio').value,
+        location_city: document.getElementById('location_city').value,
+        location_state: document.getElementById('location_state').value,
+        location_country: document.getElementById('location_country').value
+      };
+
+      try {
+        const res = await fetch('/api/v1/community/settings/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(updates)
+        });
+
+        if (!res.ok) throw new Error('Failed to save');
+        alert('Profile saved successfully!');
+      } catch (err) {
+        console.error('Save profile error:', err);
+        alert('Failed to save profile');
+      }
+    }
+
+    async function toggleSetting(field) {
+      const toggleId = field === 'directory_visible' ? 'toggle-directory' : 'toggle-messages';
+      const toggle = document.getElementById(toggleId);
+      const newValue = !toggle.classList.contains('on');
+
+      updateToggle(toggleId, newValue);
+
+      try {
+        await fetch('/api/v1/community/settings/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ [field]: newValue })
+        });
+      } catch (err) {
+        console.error('Toggle error:', err);
+        updateToggle(toggleId, !newValue);
+      }
+    }
+
+    function updateToggle(id, on) {
+      const toggle = document.getElementById(id);
+      if (on) {
+        toggle.classList.add('on');
+      } else {
+        toggle.classList.remove('on');
+      }
+    }
+
+    async function load2FAStatus() {
+      try {
+        const res = await fetch('/api/v1/community/security/2fa', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load 2FA status');
+
+        twoFAStatus = await res.json();
+        render2FAStatus();
+      } catch (err) {
+        console.error('Load 2FA error:', err);
+      }
+    }
+
+    function render2FAStatus() {
+      const container = document.getElementById('2fa-status');
+
+      if (twoFAStatus.enabled) {
+        container.innerHTML = `
+          <div class="twofa-status">
+            <div class="status-icon enabled">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 12 15 16 10"/></svg>
+            </div>
+            <div class="status-text">
+              <div class="status-title">2FA is enabled</div>
+              <div class="status-subtitle">${twoFAStatus.backupCodesRemaining} backup codes remaining</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+            <button class="btn btn-secondary" onclick="showRegenerateBackupCodes()">Regenerate Backup Codes</button>
+            <button class="btn btn-danger" onclick="showDisable2FA()">Disable 2FA</button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="twofa-status">
+            <div class="status-icon disabled">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="status-text">
+              <div class="status-title">2FA is not enabled</div>
+              <div class="status-subtitle">Protect your account with two-factor authentication</div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="start2FASetup()">Enable 2FA</button>
+        `;
+      }
+    }
+
+    async function start2FASetup() {
+      const container = document.getElementById('2fa-status');
+      container.innerHTML = '<div style="text-align: center; padding: var(--space-4);">Setting up 2FA...</div>';
+
+      try {
+        const res = await fetch('/api/v1/community/security/2fa/setup', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('Failed to start setup');
+
+        const data = await res.json();
+
+        container.innerHTML = `
+          <div class="qr-container">
+            <img src="${data.qrCode}" alt="QR Code" class="qr-code">
+            <p style="margin-bottom: var(--space-2);">Scan this QR code with your authenticator app</p>
+            <p style="font-size: var(--text-sm); color: var(--text-secondary);">Or enter this code manually:</p>
+            <div class="manual-key">${data.manualEntry}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Enter the 6-digit code from your app</label>
+            <div class="code-input-group">
+              <input type="text" id="verify-code" class="code-input" maxlength="6" placeholder="000000">
+              <button class="btn btn-primary" onclick="verify2FA()">Verify</button>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" onclick="load2FAStatus()">Cancel</button>
+        `;
+      } catch (err) {
+        console.error('2FA setup error:', err);
+        alert('Failed to start 2FA setup');
+        render2FAStatus();
+      }
+    }
+
+    async function verify2FA() {
+      const token = document.getElementById('verify-code').value;
+
+      if (!token || token.length !== 6) {
+        alert('Please enter a 6-digit code');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/community/security/2fa/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ token })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Invalid code');
+          return;
+        }
+
+        const data = await res.json();
+
+        document.getElementById('2fa-status').innerHTML = `
+          <div class="alert alert-success">
+            <strong>2FA has been enabled!</strong>
+            <p style="margin-top: var(--space-2);">Save these backup codes in a secure place. You can use them to access your account if you lose your authenticator device.</p>
+          </div>
+
+          <div class="backup-codes">
+            ${data.backupCodes.map(code => `<div class="backup-code">${code}</div>`).join('')}
+          </div>
+
+          <div style="margin-top: var(--space-4);">
+            <button class="btn btn-primary" onclick="load2FAStatus()">Done</button>
+          </div>
+        `;
+
+        twoFAStatus.enabled = true;
+      } catch (err) {
+        console.error('Verify error:', err);
+        alert('Failed to verify code');
+      }
+    }
+
+    function showDisable2FA() {
+      const container = document.getElementById('2fa-status');
+      container.innerHTML = `
+        <div class="alert alert-warning">
+          <strong>Disable Two-Factor Authentication?</strong>
+          <p>This will make your account less secure. Enter your current 2FA code to confirm.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current 2FA Code</label>
+          <div class="code-input-group">
+            <input type="text" id="disable-code" class="code-input" maxlength="6" placeholder="000000">
+            <button class="btn btn-danger" onclick="disable2FA()">Disable</button>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="render2FAStatus()">Cancel</button>
+      `;
+    }
+
+    async function disable2FA() {
+      const token = document.getElementById('disable-code').value;
+
+      try {
+        const res = await fetch('/api/v1/community/security/2fa/disable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ token })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Invalid code');
+          return;
+        }
+
+        twoFAStatus.enabled = false;
+        render2FAStatus();
+        alert('2FA has been disabled');
+      } catch (err) {
+        console.error('Disable error:', err);
+        alert('Failed to disable 2FA');
+      }
+    }
+
+    function showRegenerateBackupCodes() {
+      const container = document.getElementById('2fa-status');
+      container.innerHTML = `
+        <div class="alert alert-warning">
+          <strong>Regenerate Backup Codes?</strong>
+          <p>Your old backup codes will no longer work. Enter your current 2FA code to generate new ones.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current 2FA Code</label>
+          <div class="code-input-group">
+            <input type="text" id="regen-code" class="code-input" maxlength="6" placeholder="000000">
+            <button class="btn btn-primary" onclick="regenerateBackupCodes()">Generate</button>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="render2FAStatus()">Cancel</button>
+      `;
+    }
+
+    async function regenerateBackupCodes() {
+      const token = document.getElementById('regen-code').value;
+
+      try {
+        const res = await fetch('/api/v1/community/security/2fa/backup-codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ token })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Invalid code');
+          return;
+        }
+
+        const data = await res.json();
+
+        document.getElementById('2fa-status').innerHTML = `
+          <div class="alert alert-success">
+            <strong>New backup codes generated!</strong>
+            <p style="margin-top: var(--space-2);">Save these codes in a secure place.</p>
+          </div>
+
+          <div class="backup-codes">
+            ${data.backupCodes.map(code => `<div class="backup-code">${code}</div>`).join('')}
+          </div>
+
+          <div style="margin-top: var(--space-4);">
+            <button class="btn btn-primary" onclick="load2FAStatus()">Done</button>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Regenerate error:', err);
+        alert('Failed to regenerate codes');
+      }
+    }
+
+    async function loadNotificationPrefs() {
+      try {
+        const res = await fetch('/api/v1/community/settings/notifications', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load preferences');
+
+        notificationPrefs = await res.json();
+        renderNotificationPrefs();
+      } catch (err) {
+        console.error('Load notification prefs error:', err);
+      }
+    }
+
+    function renderNotificationPrefs() {
+      updateToggle('toggle-email', notificationPrefs.email_enabled !== false);
+      document.getElementById('email-digest').value = notificationPrefs.email_digest || 'daily';
+
+      const prefs = notificationPrefs.preferences || {
+        announcements: { in_app: true, email: true },
+        mentions: { in_app: true, email: true },
+        replies: { in_app: true, email: false },
+        messages: { in_app: true, email: true },
+        likes: { in_app: true, email: false }
+      };
+
+      const types = [
+        { key: 'announcements', label: 'Announcements' },
+        { key: 'mentions', label: 'Mentions (@you)' },
+        { key: 'replies', label: 'Replies to your posts' },
+        { key: 'messages', label: 'Direct messages' },
+        { key: 'likes', label: 'Likes on your posts' }
+      ];
+
+      const container = document.getElementById('notification-toggles');
+      container.innerHTML = types.map(type => {
+        const p = prefs[type.key] || { in_app: true, email: false };
+        return `
+          <div class="notification-row">
+            <div class="notification-type">${type.label}</div>
+            <div class="toggle small-toggle ${p.in_app ? 'on' : ''}"
+                 onclick="toggleNotificationPref('${type.key}', 'in_app', this)"></div>
+            <div class="toggle small-toggle ${p.email ? 'on' : ''}"
+                 onclick="toggleNotificationPref('${type.key}', 'email', this)"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function toggleEmailEnabled() {
+      const toggle = document.getElementById('toggle-email');
+      const newValue = !toggle.classList.contains('on');
+      updateToggle('toggle-email', newValue);
+
+      notificationPrefs.email_enabled = newValue;
+      await saveNotificationPrefs();
+    }
+
+    function toggleNotificationPref(type, channel, element) {
+      const isOn = element.classList.contains('on');
+      element.classList.toggle('on');
+
+      if (!notificationPrefs.preferences) {
+        notificationPrefs.preferences = {};
+      }
+      if (!notificationPrefs.preferences[type]) {
+        notificationPrefs.preferences[type] = { in_app: true, email: false };
+      }
+      notificationPrefs.preferences[type][channel] = !isOn;
+
+      saveNotificationPrefs();
+    }
+
+    async function saveNotificationPrefs() {
+      try {
+        await fetch('/api/v1/community/settings/notifications', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email_enabled: notificationPrefs.email_enabled,
+            email_digest: document.getElementById('email-digest').value,
+            preferences: notificationPrefs.preferences
+          })
+        });
+      } catch (err) {
+        console.error('Save notification prefs error:', err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

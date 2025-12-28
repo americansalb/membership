@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Profile - VillageMembers</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    .profile-layout {
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    .profile-header-bar {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-4) var(--space-6);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .back-btn:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .header-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .profile-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-2xl);
+      overflow: hidden;
+      margin-bottom: var(--space-6);
+    }
+
+    .profile-cover {
+      height: 120px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    }
+
+    .profile-main {
+      padding: var(--space-6);
+      padding-top: 0;
+    }
+
+    .profile-avatar-section {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-5);
+      margin-top: -50px;
+      margin-bottom: var(--space-4);
+    }
+
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-4xl);
+      font-weight: var(--font-bold);
+      color: var(--text-secondary);
+      border: 4px solid var(--bg-primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .online-indicator {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--success);
+      border: 4px solid var(--bg-primary);
+    }
+
+    .profile-name-section {
+      flex: 1;
+      padding-bottom: var(--space-2);
+    }
+
+    .profile-name {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-1);
+    }
+
+    .profile-title {
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-2);
+    }
+
+    .profile-location {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: var(--space-3);
+      padding-bottom: var(--space-2);
+    }
+
+    .btn-message {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-message:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-message:disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-tertiary);
+    }
+
+    /* Stats Row */
+    .profile-stats {
+      display: flex;
+      gap: var(--space-6);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Profile Sections */
+    .profile-section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+
+    .section-title {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-4);
+    }
+
+    .bio-text {
+      font-size: var(--text-base);
+      line-height: 1.7;
+      color: var(--text-primary);
+    }
+
+    /* Badges */
+    .badges-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .badge-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+    }
+
+    .badge-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-sm);
+    }
+
+    .badge-name {
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+    }
+
+    /* Certifications */
+    .cert-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .cert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+    }
+
+    .cert-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--success-light);
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cert-info {
+      flex: 1;
+    }
+
+    .cert-name {
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-1);
+    }
+
+    .cert-issuer {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .cert-date {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+
+    /* Skills */
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .skill-tag {
+      padding: var(--space-1) var(--space-3);
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+    }
+
+    /* Languages */
+    .languages-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .language-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+    }
+
+    .language-flag {
+      font-size: var(--text-lg);
+    }
+
+    /* Social Links */
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      transition: all 0.15s;
+    }
+
+    .social-link:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .social-link svg {
+      color: var(--text-secondary);
+    }
+
+    /* Activity Feed */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .activity-item {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: var(--radius-lg);
+      transition: all 0.15s;
+    }
+
+    .activity-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .activity-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .activity-icon.reply {
+      background: var(--secondary-light);
+      color: var(--secondary);
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .activity-title {
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-1);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .activity-meta {
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+    }
+
+    .activity-forum {
+      color: var(--primary);
+    }
+
+    /* Member Info Row */
+    .member-info-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* Report Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-4);
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: var(--space-5);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-select, .form-textarea {
+      width: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      background: var(--bg-primary);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+    }
+
+    /* Loading */
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-12);
+      min-height: 400px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Not found */
+    .not-found {
+      text-align: center;
+      padding: var(--space-12);
+    }
+
+    .not-found h2 {
+      font-size: var(--text-xl);
+      margin-bottom: var(--space-2);
+    }
+
+    .not-found p {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .profile-content {
+        padding: var(--space-4);
+      }
+
+      .profile-avatar-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-top: -60px;
+      }
+
+      .profile-name-section {
+        text-align: center;
+      }
+
+      .profile-location {
+        justify-content: center;
+      }
+
+      .profile-actions {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .profile-stats {
+        justify-content: center;
+      }
+
+      .profile-avatar {
+        width: 100px;
+        height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-layout">
+    <header class="profile-header-bar">
+      <div class="header-content">
+        <a href="./" class="back-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </a>
+        <h1 class="header-title">Profile</h1>
+        <div class="header-actions">
+          <button class="action-btn" onclick="showReportModal()" title="Report">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="profile-content" id="profile-content">
+      <div class="loading-container">
+        <div class="spinner"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Report Modal -->
+  <div id="report-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Report Member</h2>
+        <button class="modal-close" onclick="hideReportModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Reason</label>
+          <select id="report-reason" class="form-select">
+            <option value="">Select a reason...</option>
+            <option value="spam">Spam or fake account</option>
+            <option value="harassment">Harassment or bullying</option>
+            <option value="inappropriate">Inappropriate content</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Additional details (optional)</label>
+          <textarea id="report-details" class="form-textarea" placeholder="Provide more context..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="hideReportModal()">Cancel</button>
+        <button class="btn-message" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let member = null;
+    let badges = [];
+    let activity = [];
+    let stats = {};
+    let socket = null;
+    let currentMemberId = null;
+
+    async function init() {
+      await checkAuth();
+
+      const params = new URLSearchParams(window.location.search);
+      currentMemberId = params.get('id');
+
+      if (!currentMemberId) {
+        showNotFound();
+        return;
+      }
+
+      await loadProfile();
+      initSocket();
+    }
+
+    async function checkAuth() {
+      const res = await fetch('/auth/me', { credentials: 'include' });
+      if (!res.ok || (await res.json()).type !== 'member') {
+        window.location.href = '/portal/login';
+      }
+    }
+
+    function initSocket() {
+      socket = io({ withCredentials: true });
+
+      socket.on('member:online', (data) => {
+        if (data.memberId === currentMemberId) {
+          updateOnlineStatus(true);
+        }
+      });
+
+      socket.on('member:offline', (data) => {
+        if (data.memberId === currentMemberId) {
+          updateOnlineStatus(false);
+        }
+      });
+    }
+
+    function updateOnlineStatus(isOnline) {
+      const indicator = document.querySelector('.online-indicator');
+      if (isOnline && !indicator) {
+        document.querySelector('.profile-avatar').insertAdjacentHTML('beforeend',
+          '<div class="online-indicator"></div>'
+        );
+      } else if (!isOnline && indicator) {
+        indicator.remove();
+      }
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await fetch(`/api/v1/community/directory/${currentMemberId}`, {
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            showNotFound();
+            return;
+          }
+          throw new Error('Failed to load profile');
+        }
+
+        const data = await res.json();
+        member = data.member;
+        badges = data.badges || [];
+        activity = data.activity || [];
+        stats = data.stats || {};
+
+        renderProfile();
+      } catch (err) {
+        console.error('Load profile error:', err);
+        showError();
+      }
+    }
+
+    function renderProfile() {
+      const container = document.getElementById('profile-content');
+      const name = `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Member';
+      const initials = getInitials(name);
+      const location = formatLocation(member);
+      const joinDate = new Date(member.created_at).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+      });
+
+      container.innerHTML = `
+        <!-- Profile Card -->
+        <div class="profile-card">
+          <div class="profile-cover"></div>
+          <div class="profile-main">
+            <div class="profile-avatar-section">
+              <div class="profile-avatar">
+                ${member.profile_photo_url
+                  ? `<img src="${member.profile_photo_url}" alt="${escapeHtml(name)}">`
+                  : initials}
+                ${member.is_online ? '<div class="online-indicator"></div>' : ''}
+              </div>
+              <div class="profile-name-section">
+                <h1 class="profile-name">${escapeHtml(name)}</h1>
+                ${member.title ? `<div class="profile-title">${escapeHtml(member.title)}</div>` : ''}
+                ${location ? `
+                  <div class="profile-location">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    ${escapeHtml(location)}
+                  </div>
+                ` : ''}
+              </div>
+              <div class="profile-actions">
+                ${member.allow_messages !== false ? `
+                  <button class="btn-message" onclick="sendMessage()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Message
+                  </button>
+                ` : `
+                  <button class="btn-message" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Messages Disabled
+                  </button>
+                `}
+              </div>
+            </div>
+
+            <div class="profile-stats">
+              <div class="stat-item">
+                <div class="stat-value">${stats.post_count || 0}</div>
+                <div class="stat-label">Posts</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${stats.reply_count || 0}</div>
+                <div class="stat-label">Replies</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${stats.likes_received || 0}</div>
+                <div class="stat-label">Likes</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${badges.length}</div>
+                <div class="stat-label">Badges</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        ${member.bio ? `
+          <section class="profile-section">
+            <h2 class="section-title">About</h2>
+            <div class="bio-text">${escapeHtml(member.bio)}</div>
+          </section>
+        ` : ''}
+
+        <!-- Badges -->
+        ${badges.length > 0 ? `
+          <section class="profile-section">
+            <h2 class="section-title">Badges</h2>
+            <div class="badges-grid">
+              ${badges.map(b => `
+                <div class="badge-item" title="${escapeHtml(b.description || '')}">
+                  <div class="badge-icon" style="background: ${b.color || 'var(--primary)'}20; color: ${b.color || 'var(--primary)'}">
+                    ${b.icon || ''}
+                  </div>
+                  <span class="badge-name">${escapeHtml(b.name)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- Certifications -->
+        ${member.certifications && member.certifications.length > 0 ? `
+          <section class="profile-section">
+            <h2 class="section-title">Certifications & Credentials</h2>
+            <div class="cert-list">
+              ${member.certifications.map(c => {
+                const cert = typeof c === 'string' ? { name: c } : c;
+                return `
+                  <div class="cert-item">
+                    <div class="cert-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="cert-info">
+                      <div class="cert-name">${escapeHtml(cert.name)}</div>
+                      ${cert.issuer ? `<div class="cert-issuer">${escapeHtml(cert.issuer)}</div>` : ''}
+                      ${cert.date ? `<div class="cert-date">Issued ${cert.date}</div>` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- Skills -->
+        ${member.skills && member.skills.length > 0 ? `
+          <section class="profile-section">
+            <h2 class="section-title">Skills & Expertise</h2>
+            <div class="skills-list">
+              ${member.skills.map(s => `
+                <span class="skill-tag">${escapeHtml(typeof s === 'string' ? s : s.name)}</span>
+              `).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- Languages -->
+        ${member.languages && member.languages.length > 0 ? `
+          <section class="profile-section">
+            <h2 class="section-title">Languages</h2>
+            <div class="languages-list">
+              ${member.languages.map(l => {
+                const lang = typeof l === 'string' ? { name: l } : l;
+                return `
+                  <div class="language-item">
+                    ${lang.flag ? `<span class="language-flag">${lang.flag}</span>` : ''}
+                    <span>${escapeHtml(lang.name)}</span>
+                    ${lang.level ? `<span style="color: var(--text-tertiary);">(${lang.level})</span>` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- Social Links -->
+        ${member.social_links && Object.keys(member.social_links).length > 0 ? `
+          <section class="profile-section">
+            <h2 class="section-title">Connect</h2>
+            <div class="social-links">
+              ${renderSocialLinks(member.social_links)}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- Recent Activity -->
+        ${activity.length > 0 ? `
+          <section class="profile-section">
+            <h2 class="section-title">Recent Activity</h2>
+            <div class="activity-list">
+              ${activity.map(a => {
+                const isReply = a.type === 'reply';
+                const preview = stripHtml(a.body).substring(0, 100);
+                const timeAgo = formatTimeAgo(a.created_at);
+
+                return `
+                  <a href="../post.html?id=${isReply ? a.parent_id : a.id}" class="activity-item">
+                    <div class="activity-icon ${isReply ? 'reply' : ''}">
+                      ${isReply
+                        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>'
+                        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+                      }
+                    </div>
+                    <div class="activity-content">
+                      <div class="activity-title">
+                        ${isReply ? 'Replied to a post' : escapeHtml(a.title || 'Started a discussion')}
+                      </div>
+                      <div class="activity-meta">
+                        <span class="activity-forum">${escapeHtml(a.forum_name)}</span>
+                        &middot; ${timeAgo}
+                      </div>
+                    </div>
+                  </a>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- Member Info -->
+        <div class="member-info-row">
+          <div class="info-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Joined ${joinDate}
+          </div>
+          ${member.tier_name ? `
+            <div class="info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              ${escapeHtml(member.tier_name)}
+            </div>
+          ` : ''}
+          ${member.is_online ? `
+            <div class="info-item" style="color: var(--success);">
+              <span style="width: 8px; height: 8px; background: var(--success); border-radius: 50%;"></span>
+              Online now
+            </div>
+          ` : member.last_seen_at ? `
+            <div class="info-item">
+              Last seen ${formatTimeAgo(member.last_seen_at)}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderSocialLinks(links) {
+      const icons = {
+        linkedin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
+        twitter: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+        github: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>',
+        website: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        instagram: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+        youtube: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+      };
+
+      return Object.entries(links).map(([key, url]) => {
+        if (!url) return '';
+        const icon = icons[key] || icons.website;
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+
+        return `
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="social-link">
+            ${icon}
+            ${label}
+          </a>
+        `;
+      }).join('');
+    }
+
+    function formatLocation(m) {
+      const parts = [m.location_city, m.location_state, m.location_country].filter(Boolean);
+      return parts.join(', ');
+    }
+
+    function showNotFound() {
+      document.getElementById('profile-content').innerHTML = `
+        <div class="not-found">
+          <h2>Member Not Found</h2>
+          <p>This member doesn't exist or their profile is not visible.</p>
+          <a href="./" class="btn-message">Back to Directory</a>
+        </div>
+      `;
+    }
+
+    function showError() {
+      document.getElementById('profile-content').innerHTML = `
+        <div class="not-found">
+          <h2>Error Loading Profile</h2>
+          <p>Something went wrong. Please try again.</p>
+          <a href="./" class="btn-message">Back to Directory</a>
+        </div>
+      `;
+    }
+
+    function sendMessage() {
+      window.location.href = `../messages/?to=${currentMemberId}`;
+    }
+
+    function showReportModal() {
+      document.getElementById('report-modal').classList.remove('hidden');
+    }
+
+    function hideReportModal() {
+      document.getElementById('report-modal').classList.add('hidden');
+      document.getElementById('report-reason').value = '';
+      document.getElementById('report-details').value = '';
+    }
+
+    async function submitReport() {
+      const reason = document.getElementById('report-reason').value;
+      const details = document.getElementById('report-details').value;
+
+      if (!reason) {
+        alert('Please select a reason');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/community/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            target_id: currentMemberId,
+            target_type: 'member',
+            reason,
+            details
+          })
+        });
+
+        if (!res.ok) throw new Error('Failed to submit report');
+
+        hideReportModal();
+        alert('Report submitted. Thank you for helping keep our community safe.');
+      } catch (err) {
+        console.error('Report error:', err);
+        alert('Failed to submit report. Please try again.');
+      }
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const past = new Date(date);
+      const diffMs = now - past;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffMins < 1) return 'just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    function stripHtml(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html || '';
+      return div.textContent || '';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>
