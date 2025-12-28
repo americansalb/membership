@@ -342,15 +342,37 @@
 
         if (data.priorities.length === 0) {
           countEl.style.display = 'none';
-          container.innerHTML = `
-            <div class="all-clear">
-              <div class="all-clear-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+
+          // Check if we have any members at all
+          const statsRes = await fetch('/api/v1/dashboard/stats', { credentials: 'include' });
+          const stats = await statsRes.json();
+          const totalMembers = stats.members?.total || 0;
+
+          if (totalMembers === 0) {
+            container.innerHTML = `
+              <div class="all-clear">
+                <div class="all-clear-icon" style="background: var(--primary-light); color: var(--primary);">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3>Ready to get started?</h3>
+                <p>Add your first members or load demo data to explore the system.</p>
+                <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4); justify-content: center;">
+                  <a href="/admin/members.html" class="btn btn-primary">Add Member</a>
+                  <button onclick="seedDemoData()" class="btn btn-secondary">Load Demo Data</button>
+                </div>
               </div>
-              <h3>All caught up!</h3>
-              <p>No urgent items need your attention right now.</p>
-            </div>
-          `;
+            `;
+          } else {
+            container.innerHTML = `
+              <div class="all-clear">
+                <div class="all-clear-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <h3>All caught up!</h3>
+                <p>No urgent items need your attention right now.</p>
+              </div>
+            `;
+          }
           return;
         }
 
@@ -420,6 +442,30 @@
     async function logout() {
       await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
       window.location.href = '/login';
+    }
+
+    async function seedDemoData() {
+      if (!confirm('This will create 10 sample members and 3 membership tiers for testing. Continue?')) return;
+
+      try {
+        const res = await fetch('/api/v1/seed-demo-data', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to seed data');
+        }
+
+        const data = await res.json();
+        toast.success(data.message || 'Demo data loaded!');
+
+        // Refresh the page to show the new data
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
     checkAuth();
