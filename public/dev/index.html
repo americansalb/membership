@@ -101,7 +101,8 @@
                 <th>Plan</th>
                 <th>Members</th>
                 <th>Created</th>
-                <th></th>
+                <th>Change Plan</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="orgs-tbody">
@@ -219,7 +220,7 @@
     function renderOrgs() {
       const tbody = document.getElementById('orgs-tbody');
       if (orgs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">No organizations yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">No organizations yet</td></tr>';
         return;
       }
 
@@ -237,8 +238,29 @@
               <option value="enterprise" ${org.plan === 'enterprise' ? 'selected' : ''}>Enterprise</option>
             </select>
           </td>
+          <td>
+            <div class="flex gap-2">
+              <button onclick="setupForums('${org.id}')" class="btn btn-ghost btn-sm" title="Create default forums">📢</button>
+              <a href="/p/${org.slug}/" target="_blank" class="btn btn-ghost btn-sm" title="View member portal">🔗</a>
+            </div>
+          </td>
         </tr>
       `).join('');
+    }
+
+    async function setupForums(orgId) {
+      if (!confirm('Create default forums (Announcements, General, Introductions) for this org?')) return;
+      try {
+        const res = await fetch(`/api/v1/dev/orgs/${orgId}/setup-forums`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create forums');
+        toast.success(data.message || 'Forums created');
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
     async function changePlan(orgId, newPlan) {

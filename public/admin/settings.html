@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - VillageMembers Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; } }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-content {
+      padding: var(--space-6);
+      max-width: 800px;
+    }
+
+    .settings-section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-6);
+    }
+
+    .section-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-header h2 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      margin: 0;
+    }
+
+    .section-header p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin: var(--space-1) 0 0;
+    }
+
+    .section-body {
+      padding: var(--space-5);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--border-color);
+      margin-top: var(--space-4);
+    }
+
+    .logo-preview {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-secondary);
+      border: 2px dashed var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+      overflow: hidden;
+    }
+
+    .logo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .logo-upload {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .success-banner {
+      background: var(--success-light);
+      color: var(--success);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      display: none;
+    }
+
+    .error-banner {
+      background: var(--error-light);
+      color: var(--error);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      display: none;
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-medium);
+      font-size: var(--text-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Dashboard
+        </a>
+        <a href="/admin/members.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Tiers
+        </a>
+        <div class="sidebar-section">Community</div>
+        <a href="/admin/moderation.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Moderation
+        </a>
+        <div class="sidebar-section">Settings</div>
+        <a href="/admin/settings.html" class="sidebar-link active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div>
+          <h1 style="font-size: var(--text-xl); font-weight: var(--font-bold);">Organization Settings</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm text-muted"></span>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div id="success-banner" class="success-banner"></div>
+        <div id="error-banner" class="error-banner"></div>
+
+        <!-- Organization Info -->
+        <div class="settings-section">
+          <div class="section-header">
+            <h2>Organization Details</h2>
+            <p>Basic information about your organization</p>
+          </div>
+          <div class="section-body">
+            <form id="org-form">
+              <div class="form-group">
+                <label class="label">Organization Name</label>
+                <input type="text" id="org-name" class="input" required>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="label">URL Slug</label>
+                  <input type="text" id="org-slug" class="input" disabled>
+                  <p class="helper-text">Contact support to change your URL</p>
+                </div>
+                <div class="form-group">
+                  <label class="label">Contact Email</label>
+                  <input type="email" id="org-email" class="input" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="label">Logo</label>
+                <div class="logo-upload">
+                  <div class="logo-preview" id="logo-preview">
+                    <span>No logo</span>
+                  </div>
+                  <div>
+                    <input type="url" id="org-logo" class="input" placeholder="https://example.com/logo.png" style="width: 300px;">
+                    <p class="helper-text">Enter a URL to your logo image</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Plan Info -->
+        <div class="settings-section">
+          <div class="section-header">
+            <h2>Subscription Plan</h2>
+            <p>Your current plan and usage</p>
+          </div>
+          <div class="section-body">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div class="plan-badge" id="current-plan">Free</div>
+                <p class="text-sm text-muted mt-2" id="plan-description">Basic features for small organizations</p>
+              </div>
+              <button class="btn btn-secondary" onclick="alert('Contact support to upgrade your plan')">Upgrade Plan</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-section" style="border-color: var(--error);">
+          <div class="section-header" style="background: var(--error-light);">
+            <h2 style="color: var(--error);">Danger Zone</h2>
+            <p>Irreversible actions</p>
+          </div>
+          <div class="section-body">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <strong>Delete Organization</strong>
+                <p class="text-sm text-muted">Permanently delete your organization and all data</p>
+              </div>
+              <button class="btn" style="background: var(--error); color: white;" onclick="alert('Contact support to delete your organization')">Delete Organization</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let currentUser = null;
+    let currentOrg = null;
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        currentUser = data;
+        currentOrg = data.org;
+        document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || '';
+        loadOrgSettings();
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function loadOrgSettings() {
+      try {
+        const res = await fetch('/api/v1/org', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load settings');
+        const data = await res.json();
+        const org = data.org;
+
+        document.getElementById('org-name').value = org.name || '';
+        document.getElementById('org-slug').value = org.slug || '';
+        document.getElementById('org-email').value = org.email || '';
+        document.getElementById('org-logo').value = org.logo_url || '';
+
+        // Update plan display
+        const planName = (org.plan || 'free').charAt(0).toUpperCase() + (org.plan || 'free').slice(1);
+        document.getElementById('current-plan').textContent = planName;
+
+        // Update logo preview
+        updateLogoPreview(org.logo_url);
+      } catch (err) {
+        showError('Failed to load organization settings');
+      }
+    }
+
+    function updateLogoPreview(url) {
+      const preview = document.getElementById('logo-preview');
+      if (url) {
+        preview.innerHTML = `<img src="${url}" alt="Logo">`;
+      } else {
+        preview.innerHTML = '<span>No logo</span>';
+      }
+    }
+
+    // Update preview when URL changes
+    document.getElementById('org-logo').addEventListener('input', (e) => {
+      updateLogoPreview(e.target.value);
+    });
+
+    document.getElementById('org-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('org-name').value;
+      const email = document.getElementById('org-email').value;
+      const logoUrl = document.getElementById('org-logo').value;
+
+      try {
+        const res = await fetch('/api/v1/org', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, email, logo_url: logoUrl })
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to save');
+        }
+
+        showSuccess('Settings saved successfully');
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    function showSuccess(msg) {
+      const banner = document.getElementById('success-banner');
+      banner.textContent = msg;
+      banner.style.display = 'block';
+      document.getElementById('error-banner').style.display = 'none';
+      setTimeout(() => { banner.style.display = 'none'; }, 3000);
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('error-banner');
+      banner.textContent = msg;
+      banner.style.display = 'block';
+      document.getElementById('success-banner').style.display = 'none';
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

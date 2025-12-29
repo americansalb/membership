@@ -68,6 +68,16 @@ router.post('/signup', async (req, res) => {
       );
       const userId = userResult.rows[0].id;
 
+      // Create default community forums
+      await client.query(
+        `INSERT INTO community_forums (org_id, name, slug, icon, description, allow_member_posts, sort_order)
+         VALUES
+           ($1, 'Announcements', 'announcements', '📢', 'Official updates and announcements', false, 0),
+           ($1, 'General', 'general', '💬', 'General discussion and chat', true, 1),
+           ($1, 'Introductions', 'introductions', '👋', 'Introduce yourself to the community', true, 2)`,
+        [orgId]
+      );
+
       await client.query('COMMIT');
 
       // Create session
@@ -199,18 +209,39 @@ router.post('/member/login', async (req, res) => {
   try {
     const { email, password, orgSlug } = req.body;
 
-    if (!email || !password || !orgSlug) {
-      return res.status(400).json({ error: 'Email, password, and organization are required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find member
-    const result = await db.query(
-      `SELECT m.*, o.name as org_name, o.slug as org_slug
-       FROM members m
-       JOIN organizations o ON m.org_id = o.id
-       WHERE m.email = $1 AND o.slug = $2 AND m.password_hash IS NOT NULL`,
-      [email.toLowerCase(), orgSlug]
-    );
+    // Find member - if org slug provided, filter by it; otherwise get all matches
+    let result;
+    if (orgSlug) {
+      result = await db.query(
+        `SELECT m.*, o.name as org_name, o.slug as org_slug
+         FROM members m
+         JOIN organizations o ON m.org_id = o.id
+         WHERE m.email = $1 AND o.slug = $2 AND m.password_hash IS NOT NULL`,
+        [email.toLowerCase(), orgSlug]
+      );
+    } else {
+      // No org slug - find all memberships for this email
+      result = await db.query(
+        `SELECT m.*, o.name as org_name, o.slug as org_slug
+         FROM members m
+         JOIN organizations o ON m.org_id = o.id
+         WHERE m.email = $1 AND m.password_hash IS NOT NULL`,
+        [email.toLowerCase()]
+      );
+
+      // If multiple orgs, require them to specify
+      if (result.rows.length > 1) {
+        const orgs = result.rows.map(r => ({ name: r.org_name, slug: r.org_slug }));
+        return res.status(400).json({
+          error: 'You have memberships in multiple organizations. Please specify which one.',
+          organizations: orgs
+        });
+      }
+    }
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
