@@ -435,6 +435,108 @@
     </form>
   </div>
 
+  <!-- Manual Payment Modal -->
+  <div id="payment-modal-backdrop" class="modal-backdrop" onclick="closeModal('payment-modal')"></div>
+  <div id="payment-modal" class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Record Manual Payment</h3>
+      <button class="modal-close" onclick="closeModal('payment-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form onsubmit="saveManualPayment(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="label">Amount *</label>
+          <input type="number" id="payment-amount" class="input" step="0.01" min="0.01" required placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="label">Payment Method</label>
+          <select id="payment-method" class="input">
+            <option value="check">Check</option>
+            <option value="cash">Cash</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Reference Number</label>
+          <input type="text" id="payment-reference" class="input" placeholder="Check #, transaction ID, etc.">
+        </div>
+        <div class="form-group">
+          <label class="label">Description</label>
+          <input type="text" id="payment-description" class="input" placeholder="e.g., Annual membership dues">
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="payment-extend" checked>
+            Extend membership by one billing period
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('payment-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Record Payment</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- CEU Credits Modal -->
+  <div id="ceu-modal-backdrop" class="modal-backdrop" onclick="closeModal('ceu-modal')"></div>
+  <div id="ceu-modal" class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Add CEU Credits</h3>
+      <button class="modal-close" onclick="closeModal('ceu-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form onsubmit="saveCEUCredits(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="label">Course/Activity Title *</label>
+          <input type="text" id="ceu-title" class="input" required placeholder="e.g., Annual Conference 2024">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+          <div class="form-group">
+            <label class="label">Credits *</label>
+            <input type="number" id="ceu-credits" class="input" step="0.25" min="0.25" required placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="label">Category</label>
+            <select id="ceu-category" class="input">
+              <option value="">General</option>
+              <option value="ethics">Ethics</option>
+              <option value="medical">Medical</option>
+              <option value="legal">Legal</option>
+              <option value="technology">Technology</option>
+              <option value="communication">Communication</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="label">Provider</label>
+          <input type="text" id="ceu-provider" class="input" placeholder="Organization that provided the training">
+        </div>
+        <div class="form-group">
+          <label class="label">Completion Date</label>
+          <input type="date" id="ceu-date" class="input">
+        </div>
+        <div class="form-group">
+          <label class="label">Certificate Number</label>
+          <input type="text" id="ceu-certificate" class="input" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label class="label">Notes</label>
+          <textarea id="ceu-notes" class="input" rows="2" placeholder="Additional details"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('ceu-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Credits</button>
+      </div>
+    </form>
+  </div>
+
   <script src="/js/app.js"></script>
   <script src="/js/api.js"></script>
   <script>
@@ -454,9 +556,10 @@
     // Auth check
     async function checkAuth() {
       try {
-        const res = await fetch('/auth/me', { credentials: 'include' });
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
         if (!res.ok) { window.location.href = '/login'; return; }
         const data = await res.json();
+        if (data.type !== 'user') { window.location.href = '/login'; return; }
         currentUser = data;
         currentOrg = data.org;
         document.getElementById('org-name').textContent = currentOrg?.name || 'Organization';
@@ -810,24 +913,142 @@
       window.location.href = `/admin/members.html?edit=${memberId}`;
     }
 
-    function sendRenewalReminder() {
-      toast.info('Renewal reminder feature coming soon');
+    async function sendRenewalReminder() {
+      try {
+        const res = await fetch(`/api/v1/members/${memberId}/renewal-reminder`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to send reminder');
+        }
+
+        const data = await res.json();
+        toast.success(data.message || 'Renewal reminder sent');
+        loadMember();
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
-    function sendPasswordReset() {
-      toast.info('Password reset feature coming soon');
+    async function sendPasswordReset() {
+      if (!confirm('Send password reset email to this member?')) return;
+
+      try {
+        const res = await fetch(`/api/v1/members/${memberId}/password-reset`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to send reset');
+        }
+
+        const data = await res.json();
+        toast.success(data.message || 'Password reset sent');
+        loadMember();
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
     function processManualPayment() {
-      toast.info('Manual payment feature coming soon');
+      document.getElementById('payment-amount').value = '';
+      document.getElementById('payment-method').value = 'check';
+      document.getElementById('payment-reference').value = '';
+      document.getElementById('payment-description').value = '';
+      document.getElementById('payment-extend').checked = true;
+      openModal('payment-modal');
+    }
+
+    async function saveManualPayment(e) {
+      e.preventDefault();
+
+      const amount = parseFloat(document.getElementById('payment-amount').value);
+      const data = {
+        amount_cents: Math.round(amount * 100),
+        payment_method: document.getElementById('payment-method').value,
+        reference_number: document.getElementById('payment-reference').value || null,
+        description: document.getElementById('payment-description').value || null,
+        extend_membership: document.getElementById('payment-extend').checked
+      };
+
+      try {
+        const res = await fetch(`/api/v1/members/${memberId}/manual-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to record payment');
+        }
+
+        closeModal('payment-modal');
+        toast.success('Payment recorded');
+        loadMember();
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
     function addCEUCredits() {
-      toast.info('CEU credits feature coming soon');
+      document.getElementById('ceu-title').value = '';
+      document.getElementById('ceu-credits').value = '';
+      document.getElementById('ceu-category').value = '';
+      document.getElementById('ceu-provider').value = '';
+      document.getElementById('ceu-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('ceu-certificate').value = '';
+      document.getElementById('ceu-notes').value = '';
+      openModal('ceu-modal');
+    }
+
+    async function saveCEUCredits(e) {
+      e.preventDefault();
+
+      const data = {
+        title: document.getElementById('ceu-title').value,
+        credits: parseFloat(document.getElementById('ceu-credits').value),
+        category: document.getElementById('ceu-category').value || null,
+        provider: document.getElementById('ceu-provider').value || null,
+        completed_at: document.getElementById('ceu-date').value || null,
+        certificate_number: document.getElementById('ceu-certificate').value || null,
+        description: document.getElementById('ceu-notes').value || null
+      };
+
+      try {
+        const res = await fetch(`/api/v1/members/${memberId}/ceu-credits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to add credits');
+        }
+
+        closeModal('ceu-modal');
+        toast.success(`Added ${data.credits} CEU credits`);
+        loadMember();
+      } catch (err) {
+        toast.error(err.message);
+      }
     }
 
     function openEmailModal() {
-      toast.info('Email feature coming soon');
+      // For now, use default email client
+      if (member && member.email) {
+        window.location.href = `mailto:${member.email}`;
+      } else {
+        toast.error('No email address for this member');
+      }
     }
 
     function editNotes() {

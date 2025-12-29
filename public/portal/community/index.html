@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <!-- Socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    :root {
+      --sidebar-width: 280px;
+    }
+
+    /* Layout */
+    .community-layout {
+      display: flex;
+      min-height: 100vh;
+      background-color: var(--bg-secondary);
+    }
+
+    /* Left Sidebar */
+    .community-sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-primary);
+      border-right: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-lg);
+      font-weight: var(--font-bold);
+      color: var(--navy-800);
+    }
+
+    .sidebar-logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      object-fit: contain;
+    }
+
+    .org-name {
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .back-link {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+    }
+
+    /* Forums List */
+    .forums-section {
+      padding: var(--space-4);
+    }
+
+    .section-title {
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-3);
+    }
+
+    .forum-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .forum-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      transition: background-color 0.15s;
+      cursor: pointer;
+    }
+
+    .forum-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .forum-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .forum-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: var(--bg-tertiary);
+    }
+
+    .forum-item.active .forum-icon {
+      background: var(--primary);
+      color: white;
+    }
+
+    .forum-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .forum-name {
+      font-weight: var(--font-medium);
+      font-size: var(--text-sm);
+    }
+
+    .forum-count {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+
+    .forum-item.active .forum-count {
+      color: var(--primary);
+      opacity: 0.8;
+    }
+
+    /* Online Members */
+    .members-section {
+      padding: var(--space-4);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .online-count {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .online-avatars {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .online-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .online-avatar:hover {
+      transform: scale(1.1);
+    }
+
+    .online-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .see-all-link {
+      display: block;
+      margin-top: var(--space-3);
+      font-size: var(--text-sm);
+      color: var(--primary);
+    }
+
+    /* Main Content */
+    .community-main {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Header */
+    .community-header {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .header-title {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .icon-btn {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .icon-btn .badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: var(--error);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+
+    .user-menu:hover {
+      background: var(--bg-secondary);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--navy-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-semibold);
+      color: var(--navy-700);
+      font-size: var(--text-sm);
+    }
+
+    /* Feed Content */
+    .feed-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: var(--space-6);
+      width: 100%;
+    }
+
+    /* New Post Box */
+    .new-post-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .new-post-trigger {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      cursor: pointer;
+    }
+
+    .new-post-input {
+      flex: 1;
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      color: var(--text-tertiary);
+      font-size: var(--text-sm);
+    }
+
+    .new-post-input:hover {
+      background: var(--bg-tertiary);
+    }
+
+    /* Feed Posts */
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .post-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+
+    .post-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .post-card.pinned {
+      border-color: var(--warning);
+      background: linear-gradient(to right, var(--warning-light), var(--bg-primary) 4px);
+    }
+
+    .post-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      padding-bottom: 0;
+    }
+
+    .post-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .post-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .post-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .post-author {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .post-author-name {
+      font-weight: var(--font-semibold);
+    }
+
+    .post-author-name:hover {
+      color: var(--primary);
+    }
+
+    .post-forum-tag {
+      font-size: var(--text-xs);
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .post-time {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+
+    .pinned-badge {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: var(--text-xs);
+      color: var(--warning);
+      font-weight: var(--font-medium);
+    }
+
+    .post-content {
+      padding: var(--space-4);
+    }
+
+    .post-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-2);
+    }
+
+    .post-title a {
+      color: inherit;
+    }
+
+    .post-title a:hover {
+      color: var(--primary);
+    }
+
+    .post-body {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .post-body.truncated {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-footer {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border-light);
+    }
+
+    .post-action {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+    }
+
+    .post-action:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .post-action.liked {
+      color: var(--error);
+    }
+
+    .post-action.liked svg {
+      fill: currentColor;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-12);
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-4);
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+    }
+
+    /* Loading */
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .community-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+
+      .community-sidebar.open {
+        transform: translateX(0);
+      }
+
+      .community-main {
+        margin-left: 0;
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 45;
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+      }
+    }
+
+    @media (min-width: 1025px) {
+      .mobile-menu-btn {
+        display: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .feed-container {
+        padding: var(--space-4);
+      }
+
+      .post-header {
+        padding: var(--space-3);
+        padding-bottom: 0;
+      }
+
+      .post-content {
+        padding: var(--space-3);
+      }
+
+      .post-footer {
+        padding: var(--space-2) var(--space-3);
+      }
+    }
+
+    /* Dropdowns */
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: var(--space-2);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      min-width: 320px;
+      max-height: 400px;
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .dropdown-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-color);
+      font-weight: var(--font-semibold);
+    }
+
+    .dropdown-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .dropdown-item.unread {
+      background: var(--primary-light);
+    }
+
+    .dropdown-empty {
+      padding: var(--space-8);
+      text-align: center;
+      color: var(--text-tertiary);
+    }
+
+    /* New Post Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      display: none;
+    }
+
+    .modal-backdrop.active {
+      display: block;
+    }
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      z-index: 201;
+      display: none;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-secondary);
+    }
+
+    .modal-body {
+      padding: var(--space-4);
+      max-height: calc(90vh - 140px);
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Form styles */
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      background: var(--bg-primary);
+    }
+
+    textarea.form-input {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Bottom nav mobile */
+    .bottom-nav {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        z-index: 100;
+        padding: var(--space-2) 0;
+        padding-bottom: env(safe-area-inset-bottom, var(--space-2));
+      }
+
+      .bottom-nav-link {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: var(--space-2);
+        color: var(--text-tertiary);
+        font-size: 10px;
+      }
+
+      .bottom-nav-link.active {
+        color: var(--primary);
+      }
+
+      .bottom-nav-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .feed-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
+    /* Real-time update animation */
+    .post-card.new {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: var(--space-4);
+      right: var(--space-4);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .toast {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--error);
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Overlay (mobile) -->
+  <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <div class="community-layout">
+    <!-- Left Sidebar -->
+    <aside id="community-sidebar" class="community-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo" id="org-branding">
+          <span class="org-name" id="org-name">Community</span>
+        </div>
+        <a href="/portal/" class="back-link">← Portal</a>
+      </div>
+
+      <!-- Forums -->
+      <div class="forums-section">
+        <div class="section-title">Forums</div>
+        <div id="forums-list" class="forum-list">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Online Members -->
+      <div class="members-section">
+        <div class="online-count">
+          <span class="online-dot"></span>
+          <span id="online-count-text">0 online</span>
+        </div>
+        <div id="online-avatars" class="online-avatars">
+          <!-- Filled by JS -->
+        </div>
+        <a href="members/" class="see-all-link">See all members →</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="community-main">
+      <!-- Header -->
+      <header class="community-header">
+        <div style="display: flex; align-items: center; gap: var(--space-3);">
+          <button class="icon-btn mobile-menu-btn" onclick="toggleSidebar()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <h1 class="header-title" id="page-title">Community</h1>
+        </div>
+
+        <div class="header-actions">
+          <!-- Search -->
+          <button class="icon-btn" onclick="openSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+
+          <!-- Notifications -->
+          <div style="position: relative;">
+            <button class="icon-btn" id="notif-btn" onclick="toggleNotifications()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <span id="notif-badge" class="badge" style="display: none;">0</span>
+            </button>
+            <div id="notif-dropdown" class="dropdown" style="display: none;">
+              <div class="dropdown-header">
+                <span>Notifications</span>
+                <button class="btn btn-ghost btn-sm" onclick="markAllNotificationsRead()">Mark all read</button>
+              </div>
+              <div id="notif-list" class="dropdown-list">
+                <div class="dropdown-empty">No notifications</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div style="position: relative;">
+            <a href="messages/" class="icon-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <span id="msg-badge" class="badge" style="display: none;">0</span>
+            </a>
+          </div>
+
+          <!-- User Menu -->
+          <div class="user-menu" onclick="toggleUserMenu()">
+            <div id="user-avatar" class="user-avatar">--</div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+      </header>
+
+      <!-- Feed -->
+      <div class="feed-container">
+        <!-- New Post Box -->
+        <div class="new-post-box">
+          <div class="new-post-trigger" onclick="openNewPostModal()">
+            <div id="current-user-avatar" class="user-avatar">--</div>
+            <div class="new-post-input">Start a discussion...</div>
+          </div>
+        </div>
+
+        <!-- Feed List -->
+        <div id="feed-list" class="feed-list">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Load More -->
+        <div id="load-more" style="display: none; text-align: center; padding: var(--space-4);">
+          <button class="btn btn-secondary" onclick="loadMorePosts()">Load more</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="/portal/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+      </a>
+      <a href="./" class="bottom-nav-link active">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        Community
+      </a>
+      <a href="members/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        Members
+      </a>
+      <a href="messages/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Messages
+      </a>
+    </nav>
+  </div>
+
+  <!-- New Post Modal -->
+  <div id="new-post-backdrop" class="modal-backdrop" onclick="closeNewPostModal()"></div>
+  <div id="new-post-modal" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">New Discussion</h3>
+      <button class="modal-close" onclick="closeNewPostModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form onsubmit="submitNewPost(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Forum</label>
+          <select id="post-forum" class="form-select" required>
+            <!-- Filled by JS -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" id="post-title" class="form-input" placeholder="What's your discussion about?" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea id="post-body" class="form-input" placeholder="Share your thoughts..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeNewPostModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Post</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    // ==========================================
+    // STATE
+    // ==========================================
+    let currentMember = null;
+    let forums = [];
+    let posts = [];
+    let currentForumId = null;
+    let socket = null;
+    let onlineMembers = [];
+    let feedOffset = 0;
+    const FEED_LIMIT = 20;
+
+    // ==========================================
+    // INITIALIZATION
+    // ==========================================
+    async function init() {
+      await checkAuth();
+      await Promise.all([
+        loadForums(),
+        loadFeed(),
+        loadNotifications(),
+        loadUnreadMessages()
+      ]);
+      initSocket();
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=member', { credentials: 'include' });
+        if (!res.ok) throw new Error('Not authenticated');
+
+        const data = await res.json();
+        if (data.type !== 'member') throw new Error('Not a member');
+
+        currentMember = data;
+        updateUserUI();
+        updateOrgBranding(data);
+      } catch (err) {
+        window.location.href = '/portal/login';
+      }
+    }
+
+    function updateUserUI() {
+      const initials = getInitials(currentMember.name || currentMember.email);
+      document.getElementById('user-avatar').textContent = initials;
+      document.getElementById('current-user-avatar').textContent = initials;
+    }
+
+    function updateOrgBranding(data) {
+      // Update page title
+      const orgName = data.orgName || data.org?.name || 'Community';
+      document.title = `Community - ${orgName}`;
+      document.getElementById('org-name').textContent = orgName;
+
+      // Add logo if available
+      const logoUrl = data.orgLogoUrl || data.org?.logo_url;
+      if (logoUrl) {
+        const branding = document.getElementById('org-branding');
+        const logo = document.createElement('img');
+        logo.src = logoUrl;
+        logo.alt = orgName;
+        branding.insertBefore(logo, branding.firstChild);
+      }
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    // ==========================================
+    // SOCKET.IO
+    // ==========================================
+    function initSocket() {
+      socket = io({
+        withCredentials: true
+      });
+
+      socket.on('connect', () => {
+        console.log('Connected to community');
+        socket.emit('join', 'feed');
+      });
+
+      socket.on('members:online', (members) => {
+        onlineMembers = members;
+        renderOnlineMembers();
+      });
+
+      socket.on('member:online', (data) => {
+        if (!onlineMembers.find(m => m.id === data.memberId)) {
+          onlineMembers.push({ id: data.memberId, first_name: data.name.split(' ')[0], last_name: data.name.split(' ')[1] || '' });
+          renderOnlineMembers();
+        }
+      });
+
+      socket.on('member:offline', (data) => {
+        onlineMembers = onlineMembers.filter(m => m.id !== data.memberId);
+        renderOnlineMembers();
+      });
+
+      socket.on('post:new', (data) => {
+        if (!currentForumId || data.forumId === currentForumId) {
+          // Add to top of feed
+          const post = data.post;
+          posts.unshift(post);
+          renderNewPost(post);
+        }
+      });
+
+      socket.on('reply:new', (data) => {
+        // Update reply count
+        const post = posts.find(p => p.id === data.postId);
+        if (post) {
+          post.reply_count = (post.reply_count || 0) + 1;
+          updatePostReplyCount(post.id, post.reply_count);
+        }
+      });
+
+      socket.on('post:like', (data) => {
+        const post = posts.find(p => p.id === data.postId);
+        if (post) {
+          post.like_count = data.likeCount;
+          if (data.memberId === currentMember.id) {
+            post.liked_by_me = data.liked;
+          }
+          updatePostLikeUI(post.id, post.like_count, post.liked_by_me);
+        }
+      });
+
+      socket.on('notification:new', (notification) => {
+        showToast(notification.title, 'success');
+        incrementNotificationBadge();
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from community');
+      });
+    }
+
+    // ==========================================
+    // FORUMS
+    // ==========================================
+    async function loadForums() {
+      try {
+        const res = await fetch('/api/v1/community/forums', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load forums');
+
+        const data = await res.json();
+        forums = data.forums || [];
+        renderForums();
+        populateForumSelect();
+      } catch (err) {
+        console.error('Load forums error:', err);
+        document.getElementById('forums-list').innerHTML = '<div class="text-muted">Failed to load forums</div>';
+      }
+    }
+
+    function renderForums() {
+      const container = document.getElementById('forums-list');
+
+      if (forums.length === 0) {
+        container.innerHTML = '<div class="text-muted text-sm">No forums yet</div>';
+        return;
+      }
+
+      const allOption = `
+        <div class="forum-item ${!currentForumId ? 'active' : ''}" onclick="selectForum(null)">
+          <div class="forum-icon">📋</div>
+          <div class="forum-info">
+            <div class="forum-name">All Discussions</div>
+          </div>
+        </div>
+      `;
+
+      const forumItems = forums.map(f => `
+        <div class="forum-item ${currentForumId === f.id ? 'active' : ''}" onclick="selectForum('${f.id}')">
+          <div class="forum-icon">${f.icon || '💬'}</div>
+          <div class="forum-info">
+            <div class="forum-name">${escapeHtml(f.name)}</div>
+            <div class="forum-count">${f.post_count || 0} posts</div>
+          </div>
+        </div>
+      `).join('');
+
+      container.innerHTML = allOption + forumItems;
+    }
+
+    function selectForum(forumId) {
+      currentForumId = forumId;
+      feedOffset = 0;
+      renderForums();
+      loadFeed();
+
+      // Update title
+      if (forumId) {
+        const forum = forums.find(f => f.id === forumId);
+        document.getElementById('page-title').textContent = forum?.name || 'Community';
+      } else {
+        document.getElementById('page-title').textContent = 'Community';
+      }
+
+      // Close mobile sidebar
+      closeSidebar();
+    }
+
+    function populateForumSelect() {
+      const select = document.getElementById('post-forum');
+      select.innerHTML = forums
+        .filter(f => f.allow_member_posts !== false)
+        .map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`)
+        .join('');
+    }
+
+    // ==========================================
+    // FEED
+    // ==========================================
+    async function loadFeed() {
+      try {
+        document.getElementById('feed-list').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+        let url = `/api/v1/community/feed?limit=${FEED_LIMIT}&offset=${feedOffset}`;
+        if (currentForumId) {
+          url += `&forum_id=${currentForumId}`;
+        }
+
+        const res = await fetch(url, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load feed');
+
+        const data = await res.json();
+        posts = data.posts || [];
+        renderFeed();
+
+        // Show/hide load more
+        document.getElementById('load-more').style.display = posts.length >= FEED_LIMIT ? 'block' : 'none';
+      } catch (err) {
+        console.error('Load feed error:', err);
+        document.getElementById('feed-list').innerHTML = '<div class="empty-state">Failed to load discussions</div>';
+      }
+    }
+
+    async function loadMorePosts() {
+      feedOffset += FEED_LIMIT;
+
+      let url = `/api/v1/community/feed?limit=${FEED_LIMIT}&offset=${feedOffset}`;
+      if (currentForumId) {
+        url += `&forum_id=${currentForumId}`;
+      }
+
+      try {
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json();
+
+        if (data.posts && data.posts.length > 0) {
+          posts = [...posts, ...data.posts];
+          appendPosts(data.posts);
+        }
+
+        if (!data.posts || data.posts.length < FEED_LIMIT) {
+          document.getElementById('load-more').style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Load more error:', err);
+      }
+    }
+
+    function renderFeed() {
+      const container = document.getElementById('feed-list');
+
+      if (posts.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+            <h3>No discussions yet</h3>
+            <p>Be the first to start a conversation!</p>
+            <button class="btn btn-primary mt-4" onclick="openNewPostModal()">Start Discussion</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = posts.map(p => renderPostCard(p)).join('');
+    }
+
+    function appendPosts(newPosts) {
+      const container = document.getElementById('feed-list');
+      newPosts.forEach(p => {
+        container.insertAdjacentHTML('beforeend', renderPostCard(p));
+      });
+    }
+
+    function renderNewPost(post) {
+      const container = document.getElementById('feed-list');
+      const emptyState = container.querySelector('.empty-state');
+      if (emptyState) {
+        container.innerHTML = '';
+      }
+      container.insertAdjacentHTML('afterbegin', renderPostCard(post, true));
+    }
+
+    function renderPostCard(post, isNew = false) {
+      const author = `${post.first_name || ''} ${post.last_name || ''}`.trim() || 'Anonymous';
+      const initials = getInitials(author);
+      const forum = forums.find(f => f.id === post.forum_id);
+      const timeAgo = formatTimeAgo(new Date(post.created_at));
+
+      return `
+        <article class="post-card ${post.is_pinned ? 'pinned' : ''} ${isNew ? 'new' : ''}" data-post-id="${post.id}">
+          <div class="post-header">
+            <a href="members/profile.html?id=${post.member_id}" class="post-avatar">
+              ${post.profile_photo_url
+                ? `<img src="${post.profile_photo_url}" alt="${author}">`
+                : initials}
+            </a>
+            <div class="post-meta">
+              <div class="post-author">
+                <a href="members/profile.html?id=${post.member_id}" class="post-author-name">${escapeHtml(author)}</a>
+                ${forum ? `<span class="post-forum-tag">${escapeHtml(forum.name)}</span>` : ''}
+                ${post.is_pinned ? '<span class="pinned-badge">📌 Pinned</span>' : ''}
+              </div>
+              <div class="post-time">${timeAgo}</div>
+            </div>
+          </div>
+          <div class="post-content">
+            ${post.title ? `<h3 class="post-title"><a href="post.html?id=${post.id}">${escapeHtml(post.title)}</a></h3>` : ''}
+            <div class="post-body truncated">${escapeHtml(post.body)}</div>
+          </div>
+          <div class="post-footer">
+            <button class="post-action ${post.liked_by_me ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              <span id="like-count-${post.id}">${post.like_count || 0}</span>
+            </button>
+            <a href="post.html?id=${post.id}" class="post-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <span id="reply-count-${post.id}">${post.reply_count || 0}</span>
+            </a>
+            <button class="post-action" onclick="sharePost('${post.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    function updatePostLikeUI(postId, count, liked) {
+      const card = document.querySelector(`[data-post-id="${postId}"]`);
+      if (!card) return;
+
+      const likeBtn = card.querySelector('.post-action');
+      const countEl = document.getElementById(`like-count-${postId}`);
+
+      if (liked) {
+        likeBtn.classList.add('liked');
+      } else {
+        likeBtn.classList.remove('liked');
+      }
+      countEl.textContent = count;
+    }
+
+    function updatePostReplyCount(postId, count) {
+      const el = document.getElementById(`reply-count-${postId}`);
+      if (el) el.textContent = count;
+    }
+
+    // ==========================================
+    // ACTIONS
+    // ==========================================
+    async function toggleLike(postId) {
+      try {
+        const res = await fetch(`/api/v1/community/posts/${postId}/like`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('Failed to like');
+
+        const data = await res.json();
+        const post = posts.find(p => p.id === postId);
+        if (post) {
+          post.liked_by_me = data.liked;
+          post.like_count = (post.like_count || 0) + (data.liked ? 1 : -1);
+          updatePostLikeUI(postId, post.like_count, post.liked_by_me);
+        }
+      } catch (err) {
+        showToast('Failed to like post', 'error');
+      }
+    }
+
+    function sharePost(postId) {
+      const url = `${window.location.origin}/portal/community/post.html?id=${postId}`;
+      if (navigator.share) {
+        navigator.share({ url });
+      } else {
+        navigator.clipboard.writeText(url);
+        showToast('Link copied to clipboard', 'success');
+      }
+    }
+
+    // ==========================================
+    // NEW POST
+    // ==========================================
+    function openNewPostModal() {
+      document.getElementById('new-post-modal').classList.add('active');
+      document.getElementById('new-post-backdrop').classList.add('active');
+
+      // Pre-select current forum if filtered
+      if (currentForumId) {
+        document.getElementById('post-forum').value = currentForumId;
+      }
+    }
+
+    function closeNewPostModal() {
+      document.getElementById('new-post-modal').classList.remove('active');
+      document.getElementById('new-post-backdrop').classList.remove('active');
+    }
+
+    async function submitNewPost(event) {
+      event.preventDefault();
+
+      const forumId = document.getElementById('post-forum').value;
+      const title = document.getElementById('post-title').value.trim();
+      const body = document.getElementById('post-body').value.trim();
+
+      if (!forumId || !title || !body) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Posting...';
+
+      try {
+        const res = await fetch(`/api/v1/community/forums/${forumId}/posts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ title, body })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to create post');
+        }
+
+        const data = await res.json();
+        showToast('Discussion posted!', 'success');
+        closeNewPostModal();
+
+        // Reset form
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-body').value = '';
+
+        // Reload feed to show new post
+        loadFeed();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post';
+      }
+    }
+
+    // ==========================================
+    // ONLINE MEMBERS
+    // ==========================================
+    function renderOnlineMembers() {
+      const container = document.getElementById('online-avatars');
+      const countEl = document.getElementById('online-count-text');
+
+      countEl.textContent = `${onlineMembers.length} online`;
+
+      if (onlineMembers.length === 0) {
+        container.innerHTML = '<div class="text-muted text-sm">No one online</div>';
+        return;
+      }
+
+      container.innerHTML = onlineMembers.slice(0, 12).map(m => {
+        const initials = getInitials(`${m.first_name} ${m.last_name}`);
+        return `
+          <a href="members/profile.html?id=${m.id}" class="online-avatar" title="${m.first_name} ${m.last_name}">
+            ${m.profile_photo_url
+              ? `<img src="${m.profile_photo_url}" alt="${m.first_name}">`
+              : initials}
+          </a>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // NOTIFICATIONS
+    // ==========================================
+    async function loadNotifications() {
+      try {
+        const res = await fetch('/api/v1/community/notifications', { credentials: 'include' });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        renderNotifications(data.notifications || [], data.unread || 0);
+      } catch (err) {
+        console.error('Load notifications error:', err);
+      }
+    }
+
+    function renderNotifications(notifications, unread) {
+      const badge = document.getElementById('notif-badge');
+      const list = document.getElementById('notif-list');
+
+      if (unread > 0) {
+        badge.textContent = unread > 9 ? '9+' : unread;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+
+      if (notifications.length === 0) {
+        list.innerHTML = '<div class="dropdown-empty">No notifications</div>';
+        return;
+      }
+
+      list.innerHTML = notifications.map(n => `
+        <div class="dropdown-item ${n.read_at ? '' : 'unread'}" onclick="openNotification('${n.id}', '${n.link || ''}')">
+          <div style="font-weight: ${n.read_at ? 'normal' : '600'};">${escapeHtml(n.title)}</div>
+          ${n.body ? `<div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">${escapeHtml(n.body).substring(0, 100)}</div>` : ''}
+          <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">${formatTimeAgo(new Date(n.created_at))}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleNotifications() {
+      const dropdown = document.getElementById('notif-dropdown');
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function openNotification(id, link) {
+      await fetch(`/api/v1/community/notifications/${id}/read`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (link) {
+        window.location.href = link;
+      } else {
+        loadNotifications();
+        toggleNotifications();
+      }
+    }
+
+    async function markAllNotificationsRead() {
+      await fetch('/api/v1/community/notifications/read-all', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      loadNotifications();
+    }
+
+    function incrementNotificationBadge() {
+      const badge = document.getElementById('notif-badge');
+      const current = parseInt(badge.textContent) || 0;
+      badge.textContent = current + 1;
+      badge.style.display = 'flex';
+    }
+
+    // ==========================================
+    // MESSAGES
+    // ==========================================
+    async function loadUnreadMessages() {
+      try {
+        const res = await fetch('/api/v1/community/threads', { credentials: 'include' });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const badge = document.getElementById('msg-badge');
+
+        if (data.unread > 0) {
+          badge.textContent = data.unread > 9 ? '9+' : data.unread;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Load messages error:', err);
+      }
+    }
+
+    // ==========================================
+    // UI HELPERS
+    // ==========================================
+    function toggleSidebar() {
+      document.getElementById('community-sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('open');
+    }
+
+    function closeSidebar() {
+      document.getElementById('community-sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    }
+
+    function openSearch() {
+      // TODO: Implement search modal
+      showToast('Search coming soon', 'success');
+    }
+
+    function toggleUserMenu() {
+      // TODO: Implement user menu dropdown
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <span>${escapeHtml(message)}</span>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return date.toLocaleDateString();
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      const notifDropdown = document.getElementById('notif-dropdown');
+      const notifBtn = document.getElementById('notif-btn');
+      if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+        notifDropdown.style.display = 'none';
+      }
+    });
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>

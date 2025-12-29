@@ -1165,4 +1165,352 @@ router.put('/org', requireUser, requireAdmin, async (req, res) => {
   }
 });
 
+// ============================================
+// MEMBER QUICK ACTIONS
+// ============================================
+
+// Send password reset to member
+router.post('/members/:id/password-reset', requireUser, requireAdmin, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const orgId = req.user.orgId;
+
+    // Verify member belongs to this org
+    const memberResult = await db.query(
+      'SELECT id, email, first_name, last_name FROM members WHERE id = $1 AND org_id = $2',
+      [memberId, orgId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const member = memberResult.rows[0];
+
+    // Generate a simple reset token (in production, use proper auth module)
+    const resetToken = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    // Store token (using auth_tokens table)
+    await db.query(
+      `INSERT INTO auth_tokens (type, token_hash, member_id, expires_at)
+       VALUES ('password_reset', $1, $2, $3)`,
+      [require('crypto').createHash('sha256').update(resetToken).digest('hex'), memberId, expiresAt]
+    );
+
+    // Log activity
+    await db.query(
+      `INSERT INTO member_activity (org_id, member_id, type, title, caused_by_id)
+       VALUES ($1, $2, 'email_sent', 'Password reset email sent', $3)`,
+      [orgId, memberId, req.user.userId]
+    );
+
+    // In production: Send actual email
+    // For now, just log it
+    console.log(`[DEV] Password reset for ${member.email}: /reset-password?token=${resetToken}`);
+
+    res.json({
+      success: true,
+      message: `Password reset sent to ${member.email}`,
+      // In dev mode, include the token for testing
+      ...(process.env.NODE_ENV !== 'production' && { devToken: resetToken })
+    });
+
+  } catch (err) {
+    console.error('Password reset error:', err);
+    res.status(500).json({ error: 'Failed to send password reset' });
+  }
+});
+
+// Add CEU credits for a member
+router.post('/members/:id/ceu-credits', requireUser, requireAdmin, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const orgId = req.user.orgId;
+    const { title, credits, category, provider, completed_at, description, certificate_number } = req.body;
+
+    if (!title || !credits) {
+      return res.status(400).json({ error: 'Title and credits are required' });
+    }
+
+    // Verify member belongs to this org
+    const memberResult = await db.query(
+      'SELECT id, email, ceu_earned FROM members WHERE id = $1 AND org_id = $2',
+      [memberId, orgId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    // Insert CEU credit
+    const creditResult = await db.query(
+      `INSERT INTO ceu_credits (org_id, member_id, title, credits, category, provider, completed_at, description, certificate_number, verified, verified_by, verified_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, NOW())
+       RETURNING *`,
+      [orgId, memberId, title, credits, category || null, provider || null, completed_at || new Date(), description || null, certificate_number || null, req.user.userId]
+    );
+
+    // Update member's total CEU earned
+    await db.query(
+      `UPDATE members SET ceu_earned = COALESCE(ceu_earned, 0) + $1 WHERE id = $2`,
+      [credits, memberId]
+    );
+
+    // Log activity
+    await db.query(
+      `INSERT INTO member_activity (org_id, member_id, type, title, description, caused_by_id, metadata)
+       VALUES ($1, $2, 'ceu_earned', $3, $4, $5, $6)`,
+      [orgId, memberId, `Earned ${credits} CEU credits: ${title}`, description || null, req.user.userId, JSON.stringify({ credits, category })]
+    );
+
+    res.json({ success: true, credit: creditResult.rows[0] });
+
+  } catch (err) {
+    console.error('Add CEU credits error:', err);
+    res.status(500).json({ error: 'Failed to add CEU credits' });
+  }
+});
+
+// Process manual payment for a member
+router.post('/members/:id/manual-payment', requireUser, requireAdmin, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const orgId = req.user.orgId;
+    const { amount_cents, description, payment_method = 'cash', reference_number, extend_membership = true } = req.body;
+
+    if (!amount_cents || amount_cents <= 0) {
+      return res.status(400).json({ error: 'Valid amount is required' });
+    }
+
+    // Verify member belongs to this org
+    const memberResult = await db.query(
+      `SELECT m.*, t.billing_period, t.price_cents as tier_price
+       FROM members m
+       LEFT JOIN tiers t ON m.tier_id = t.id
+       WHERE m.id = $1 AND m.org_id = $2`,
+      [memberId, orgId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const member = memberResult.rows[0];
+
+    // Create transaction record
+    const transactionResult = await db.query(
+      `INSERT INTO transactions (org_id, member_id, type, description, amount_cents, fee_cents, net_cents, status)
+       VALUES ($1, $2, 'membership', $3, $4, 0, $4, 'completed')
+       RETURNING *`,
+      [orgId, memberId, description || `Manual payment (${payment_method})`, amount_cents]
+    );
+
+    // Extend membership if requested and member has a tier
+    let newExpiresAt = member.expires_at;
+    if (extend_membership && member.tier_id) {
+      const billingPeriod = member.billing_period || 'annual';
+      const currentExpires = member.expires_at ? new Date(member.expires_at) : new Date();
+
+      if (billingPeriod === 'monthly') {
+        newExpiresAt = new Date(currentExpires);
+        newExpiresAt.setMonth(newExpiresAt.getMonth() + 1);
+      } else if (billingPeriod === 'annual') {
+        newExpiresAt = new Date(currentExpires);
+        newExpiresAt.setFullYear(newExpiresAt.getFullYear() + 1);
+      }
+
+      await db.query(
+        `UPDATE members SET expires_at = $1, status = 'active' WHERE id = $2`,
+        [newExpiresAt, memberId]
+      );
+    }
+
+    // Log activity
+    await db.query(
+      `INSERT INTO member_activity (org_id, member_id, type, title, description, caused_by_id, related_id, metadata)
+       VALUES ($1, $2, 'payment_success', $3, $4, $5, $6, $7)`,
+      [
+        orgId, memberId,
+        `Manual payment: $${(amount_cents / 100).toFixed(2)}`,
+        description || null,
+        req.user.userId,
+        transactionResult.rows[0].id,
+        JSON.stringify({ payment_method, reference_number, amount_cents })
+      ]
+    );
+
+    res.json({
+      success: true,
+      transaction: transactionResult.rows[0],
+      membership_extended: extend_membership,
+      new_expires_at: newExpiresAt
+    });
+
+  } catch (err) {
+    console.error('Manual payment error:', err);
+    res.status(500).json({ error: 'Failed to process payment' });
+  }
+});
+
+// Seed demo data (for testing)
+router.post('/seed-demo-data', requireUser, requireAdmin, async (req, res) => {
+  try {
+    const orgId = req.user.orgId;
+
+    // Check if org already has members
+    const existingMembers = await db.query(
+      'SELECT COUNT(*) as count FROM members WHERE org_id = $1',
+      [orgId]
+    );
+
+    if (parseInt(existingMembers.rows[0].count) > 5) {
+      return res.status(400).json({ error: 'Organization already has members. Demo seeding is only for empty organizations.' });
+    }
+
+    // Create demo tiers if none exist
+    const existingTiers = await db.query(
+      'SELECT COUNT(*) as count FROM tiers WHERE org_id = $1',
+      [orgId]
+    );
+
+    let tiers = [];
+    if (parseInt(existingTiers.rows[0].count) === 0) {
+      const tierData = [
+        { name: 'Basic', price_cents: 0, billing_period: 'annual', benefits: ['Access to member directory', 'Monthly newsletter'], sort_order: 0 },
+        { name: 'Professional', price_cents: 9900, billing_period: 'annual', benefits: ['All Basic benefits', 'CEU tracking', 'Job board access', 'Event discounts'], sort_order: 1 },
+        { name: 'Premium', price_cents: 19900, billing_period: 'annual', benefits: ['All Professional benefits', 'Priority support', 'Mentorship matching', 'Conference registration'], sort_order: 2 }
+      ];
+
+      for (const t of tierData) {
+        const result = await db.query(
+          `INSERT INTO tiers (org_id, name, price_cents, billing_period, is_public, benefits, sort_order)
+           VALUES ($1, $2, $3, $4, true, $5, $6) RETURNING *`,
+          [orgId, t.name, t.price_cents, t.billing_period, JSON.stringify(t.benefits), t.sort_order]
+        );
+        tiers.push(result.rows[0]);
+      }
+    } else {
+      const tierResult = await db.query('SELECT * FROM tiers WHERE org_id = $1 ORDER BY sort_order', [orgId]);
+      tiers = tierResult.rows;
+    }
+
+    // Demo members with various scenarios
+    const demoMembers = [
+      { first_name: 'Sarah', last_name: 'Johnson', email: 'sarah.johnson@example.com', status: 'active', tier_idx: 2, days_ago: 400, ceu_earned: 12, ceu_required: 20 },
+      { first_name: 'Michael', last_name: 'Chen', email: 'michael.chen@example.com', status: 'active', tier_idx: 1, days_ago: 180, ceu_earned: 6, ceu_required: 15 },
+      { first_name: 'Emily', last_name: 'Rodriguez', email: 'emily.rodriguez@example.com', status: 'expired', tier_idx: 2, days_ago: 390, ceu_earned: 18, ceu_required: 20 },
+      { first_name: 'James', last_name: 'Wilson', email: 'james.wilson@example.com', status: 'active', tier_idx: 0, days_ago: 60, ceu_earned: 0, ceu_required: 0 },
+      { first_name: 'Lisa', last_name: 'Thompson', email: 'lisa.thompson@example.com', status: 'pending', tier_idx: 1, days_ago: 5, ceu_earned: 0, ceu_required: 15 },
+      { first_name: 'David', last_name: 'Brown', email: 'david.brown@example.com', status: 'active', tier_idx: 2, days_ago: 730, ceu_earned: 19, ceu_required: 20 },
+      { first_name: 'Jennifer', last_name: 'Garcia', email: 'jennifer.garcia@example.com', status: 'active', tier_idx: 1, days_ago: 365, ceu_earned: 2, ceu_required: 15 },
+      { first_name: 'Robert', last_name: 'Martinez', email: 'robert.martinez@example.com', status: 'canceled', tier_idx: 0, days_ago: 200, ceu_earned: 0, ceu_required: 0 },
+      { first_name: 'Amanda', last_name: 'Lee', email: 'amanda.lee@example.com', status: 'active', tier_idx: 2, days_ago: 90, ceu_earned: 5, ceu_required: 20 },
+      { first_name: 'Christopher', last_name: 'Taylor', email: 'christopher.taylor@example.com', status: 'active', tier_idx: 1, days_ago: 500, ceu_earned: 14, ceu_required: 15 }
+    ];
+
+    const createdMembers = [];
+    for (const m of demoMembers) {
+      const joinedAt = new Date();
+      joinedAt.setDate(joinedAt.getDate() - m.days_ago);
+
+      const expiresAt = new Date(joinedAt);
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+      const ceuPeriodEnd = new Date();
+      ceuPeriodEnd.setMonth(ceuPeriodEnd.getMonth() + 3); // CEU deadline in 3 months
+
+      const tier = tiers[m.tier_idx] || tiers[0];
+
+      const result = await db.query(
+        `INSERT INTO members (org_id, email, first_name, last_name, status, tier_id, joined_at, expires_at, ceu_earned, ceu_required, ceu_period_end)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *`,
+        [orgId, m.email, m.first_name, m.last_name, m.status, tier?.id, joinedAt, expiresAt, m.ceu_earned, m.ceu_required, m.ceu_required > 0 ? ceuPeriodEnd : null]
+      );
+      createdMembers.push(result.rows[0]);
+
+      // Add some activity for each member
+      await db.query(
+        `INSERT INTO member_activity (org_id, member_id, type, title, created_at)
+         VALUES ($1, $2, 'joined', 'Member joined', $3)`,
+        [orgId, result.rows[0].id, joinedAt]
+      );
+
+      // Add payment for paid tiers
+      if (tier && tier.price_cents > 0 && m.status !== 'pending') {
+        await db.query(
+          `INSERT INTO transactions (org_id, member_id, type, amount_cents, fee_cents, net_cents, status, created_at)
+           VALUES ($1, $2, 'membership', $3, $4, $5, 'completed', $6)`,
+          [orgId, result.rows[0].id, tier.price_cents, Math.round(tier.price_cents * 0.029), tier.price_cents - Math.round(tier.price_cents * 0.029), joinedAt]
+        );
+      }
+
+      // Add a failed payment for expired member
+      if (m.status === 'expired') {
+        const failedDate = new Date();
+        failedDate.setDate(failedDate.getDate() - 7);
+        await db.query(
+          `INSERT INTO member_activity (org_id, member_id, type, title, description, created_at)
+           VALUES ($1, $2, 'payment_failed', 'Payment failed', 'Card declined', $3)`,
+          [orgId, result.rows[0].id, failedDate]
+        );
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Created ${createdMembers.length} demo members and ${tiers.length} tiers`,
+      members: createdMembers.length,
+      tiers: tiers.length
+    });
+
+  } catch (err) {
+    console.error('Seed demo data error:', err);
+    res.status(500).json({ error: 'Failed to seed demo data' });
+  }
+});
+
+// Send renewal reminder email
+router.post('/members/:id/renewal-reminder', requireUser, requireAdmin, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const orgId = req.user.orgId;
+
+    // Verify member belongs to this org
+    const memberResult = await db.query(
+      `SELECT m.*, t.name as tier_name, t.price_cents
+       FROM members m
+       LEFT JOIN tiers t ON m.tier_id = t.id
+       WHERE m.id = $1 AND m.org_id = $2`,
+      [memberId, orgId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const member = memberResult.rows[0];
+
+    // Log activity (in production, would send actual email)
+    await db.query(
+      `INSERT INTO member_activity (org_id, member_id, type, title, caused_by_id)
+       VALUES ($1, $2, 'email_sent', 'Renewal reminder sent', $3)`,
+      [orgId, memberId, req.user.userId]
+    );
+
+    console.log(`[DEV] Renewal reminder sent to ${member.email}`);
+
+    res.json({
+      success: true,
+      message: `Renewal reminder sent to ${member.email}`
+    });
+
+  } catch (err) {
+    console.error('Renewal reminder error:', err);
+    res.status(500).json({ error: 'Failed to send renewal reminder' });
+  }
+});
+
 module.exports = router;

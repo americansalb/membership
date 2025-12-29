@@ -84,6 +84,96 @@
       color: var(--text-secondary);
     }
 
+    /* Portal Dropdown */
+    .portal-dropdown {
+      position: relative;
+    }
+
+    .portal-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .portal-menu {
+      position: absolute;
+      top: calc(100% + var(--space-2));
+      right: 0;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      min-width: 280px;
+      display: none;
+      z-index: 200;
+      overflow: hidden;
+    }
+
+    .portal-menu.show {
+      display: block;
+    }
+
+    .portal-option {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      text-decoration: none;
+      transition: background var(--transition-fast);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .portal-option:last-child {
+      border-bottom: none;
+    }
+
+    .portal-option:hover {
+      background: var(--bg-secondary);
+    }
+
+    .portal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-bold);
+      font-size: var(--text-sm);
+      flex-shrink: 0;
+    }
+
+    .portal-icon.org {
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+
+    .portal-icon.member {
+      background: var(--terra-100);
+      color: var(--terra-700);
+    }
+
+    .portal-icon.dev {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .portal-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .portal-info strong {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--gray-900);
+    }
+
+    .portal-info span {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
     /* Hero */
     .hero {
       padding: var(--space-20) var(--space-8) var(--space-16);
@@ -651,11 +741,11 @@
     }
 
     .footer-content {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: var(--space-12);
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: var(--space-10);
     }
 
     @media (max-width: 768px) {
@@ -767,7 +857,35 @@
       <a href="/docs">Docs</a>
     </nav>
     <div class="header-actions">
-      <a href="/login" class="btn btn-ghost">Sign In</a>
+      <div class="portal-dropdown">
+        <button class="btn btn-ghost portal-btn" onclick="togglePortalMenu()">
+          Sign In
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="portal-menu" id="portal-menu">
+          <a href="/login" class="portal-option">
+            <div class="portal-icon org">O</div>
+            <div class="portal-info">
+              <strong>Organization Admin</strong>
+              <span>Manage members, tiers & settings</span>
+            </div>
+          </a>
+          <a href="/portal/login" class="portal-option">
+            <div class="portal-icon member">M</div>
+            <div class="portal-info">
+              <strong>Member Portal</strong>
+              <span>Access your membership & community</span>
+            </div>
+          </a>
+          <a href="/dev/login" class="portal-option">
+            <div class="portal-icon dev">D</div>
+            <div class="portal-info">
+              <strong>Platform Developer</strong>
+              <span>VillageMembers platform admin</span>
+            </div>
+          </a>
+        </div>
+      </div>
       <a href="/signup" class="btn btn-primary">Get Started</a>
     </div>
   </header>
@@ -778,8 +896,8 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
       Membership + Fundraising in One Platform
     </span>
-    <h1>We only charge for what<br>actually costs us money.</h1>
-    <p>Members in a database? Costs us nothing—so we don't charge per member. Processing your payments? Costs us nothing—so we take no platform fee. Sending emails? That costs money—so we charge for that. Simple.</p>
+    <h1>Unlimited members. Zero platform fees.<br>Pay for email when you use it.</h1>
+    <p>Most membership software charges per member or takes a cut of payments. We don't. You pay for what actually costs money: emails and texts, by the message.</p>
     <div class="hero-cta">
       <a href="/signup" class="btn btn-primary">Start Free</a>
       <a href="#pricing" class="btn btn-secondary">See How We Price</a>
@@ -790,19 +908,19 @@
   <!-- Value Props -->
   <section class="social-proof">
     <div class="social-proof-content">
-      <p>Here's exactly what we charge for</p>
+      <p>What you actually pay</p>
       <div class="stats-row">
         <div class="stat">
           <div class="stat-value">$0</div>
-          <div class="stat-label">Per member (it costs us $0)</div>
+          <div class="stat-label">per member</div>
         </div>
         <div class="stat">
-          <div class="stat-value">$0</div>
-          <div class="stat-label">Platform fee on payments (Stripe does the work)</div>
+          <div class="stat-value">0%</div>
+          <div class="stat-label">platform fee</div>
         </div>
         <div class="stat">
           <div class="stat-value">$0.008</div>
-          <div class="stat-label">Per email sent (that's what it costs us)</div>
+          <div class="stat-label">per email</div>
         </div>
       </div>
     </div>
@@ -811,11 +929,21 @@
   <!-- Features -->
   <section class="features" id="features">
     <div class="section-header">
-      <h2>Full platform. No artificial limits.</h2>
-      <p>Every feature works on the free plan. We don't gate features to squeeze upgrades out of you.</p>
+      <h2>Build a village, not a database.</h2>
+      <p>Members connect with each other, not just with you. Community features are free because they cost us nothing to run.</p>
     </div>
 
     <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <h3>A community, not just a mailing list</h3>
+        <p>Discussion forums, in-app messaging, and member directory. Your members connect with each other, building real relationships.</p>
+      </div>
+
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -911,7 +1039,7 @@
         <h3>Free</h3>
         <div class="price">$0</div>
         <div class="price-note">forever — not a trial</div>
-        <div class="tagline">Everything you need to start</div>
+        <div class="tagline">A real village, not a trial</div>
         <ul>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -919,23 +1047,23 @@
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span><strong>Unlimited automations</strong></span>
+            <span><strong>Community forums & discussions</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Full CRM & fundraising</span>
+            <span><strong>In-app messaging & notifications</strong></span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Member portal & events</span>
+            <span>Member portal & directory</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Pay-per-use email</span>
+            <span>Events & registration</span>
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Add your own SMS # for $2.79/mo</span>
+            <span>Pay-per-use email & SMS</span>
           </li>
         </ul>
         <a href="/signup" class="btn btn-secondary">Start Free Forever</a>
@@ -1220,14 +1348,34 @@
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
       </div>
+      <div class="footer-column">
+        <h4>Sign In</h4>
+        <a href="/login">Organization Admin</a>
+        <a href="/portal/login">Member Portal</a>
+        <a href="/dev/login">Platform Developer</a>
+      </div>
     </div>
     <div class="footer-bottom">
       <p>&copy; 2025 VillageMembers. All rights reserved.</p>
-      <a href="/dev/login">Platform Admin</a>
     </div>
   </footer>
 
   <script>
+    // Portal dropdown functionality
+    function togglePortalMenu() {
+      const menu = document.getElementById('portal-menu');
+      menu.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.querySelector('.portal-dropdown');
+      const menu = document.getElementById('portal-menu');
+      if (dropdown && !dropdown.contains(e.target)) {
+        menu.classList.remove('show');
+      }
+    });
+
     // Billing toggle functionality
     const billingToggle = document.getElementById('billing-toggle');
     const monthlyLabel = document.getElementById('monthly-label');

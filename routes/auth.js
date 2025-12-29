@@ -8,6 +8,7 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
+  path: '/',
   maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
 };
 
@@ -166,6 +167,7 @@ router.post('/login', async (req, res) => {
     });
 
     // Set cookie
+    console.log('[login] Setting session cookie for user:', user.id, 'secure:', COOKIE_OPTIONS.secure);
     res.cookie('session', token, COOKIE_OPTIONS);
 
     res.json({
@@ -306,11 +308,11 @@ router.post('/dev/login', async (req, res) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // Dev sessions expire faster
 
-    // Store in a simple way - we'll use the sessions table with null user/member
+    // Store in dev_sessions table
     await db.query(
-      `INSERT INTO sessions (token_hash, expires_at, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4)`,
-      [tokenHash, expiresAt, req.ip, req.get('User-Agent')]
+      `INSERT INTO dev_sessions (developer_id, token_hash, expires_at, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [dev.id, tokenHash, expiresAt, req.ip, req.get('User-Agent')]
     );
 
     // Store dev id in a separate cookie or return it
@@ -554,28 +556,83 @@ router.post('/resend-verification', async (req, res) => {
 
 router.get('/me', async (req, res) => {
   try {
+    // Allow specifying which session type to check via query param
+    // e.g., /auth/me?type=user will only check user sessions
+    const requestedType = req.query.type;
+    console.log('[auth/me] Cookies received:', Object.keys(req.cookies), 'requested type:', requestedType || 'any');
+
+    // Check for developer session (only if not requesting specific non-dev type)
+    if (!requestedType || requestedType === 'developer') {
+      const devToken = req.cookies.dev_session;
+      const devId = req.cookies.dev_id;
+
+      if (devToken && devId) {
+        const tokenHash = auth.hashToken(devToken);
+        const devSession = await db.query(
+          `SELECT ds.developer_id, d.email, d.name
+           FROM dev_sessions ds
+           JOIN developers d ON ds.developer_id = d.id
+           WHERE ds.token_hash = $1
+           AND ds.expires_at > NOW()
+           AND d.is_active = true`,
+          [tokenHash]
+        );
+
+        if (devSession.rows.length > 0) {
+          const dev = devSession.rows[0];
+          return res.json({
+            type: 'developer',
+            id: dev.developer_id,
+            email: dev.email,
+            name: dev.name
+          });
+        }
+      }
+
+      // If specifically requesting developer type but no valid session
+      if (requestedType === 'developer') {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+    }
+
+    // Check for regular user/member session
     const token = req.cookies.session;
 
     if (!token) {
+      console.log('[auth/me] No session cookie found');
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    console.log('[auth/me] Session token found, validating...');
     const session = await auth.validateSession(token);
 
     if (!session) {
-      res.clearCookie('session');
+      console.log('[auth/me] Session validation failed - token invalid or expired');
+      res.clearCookie('session', { path: '/' });
       return res.status(401).json({ error: 'Session expired' });
     }
 
-    // Get full org info
+    console.log('[auth/me] Session valid, type:', session.type);
+
+    // If requesting specific type, verify it matches
+    if (requestedType && session.type !== requestedType) {
+      console.log('[auth/me] Type mismatch - requested:', requestedType, 'got:', session.type);
+      return res.status(401).json({ error: 'Not authenticated as ' + requestedType });
+    }
+
+    // Get full org info including logo
     const orgResult = await db.query(
-      'SELECT id, name, slug, plan FROM organizations WHERE id = $1',
+      'SELECT id, name, slug, plan, logo_url FROM organizations WHERE id = $1',
       [session.orgId]
     );
 
+    const org = orgResult.rows[0] || null;
+
     res.json({
       ...session,
-      org: orgResult.rows[0] || null
+      orgName: org?.name || null,
+      orgLogoUrl: org?.logo_url || null,
+      org
     });
 
   } catch (err) {

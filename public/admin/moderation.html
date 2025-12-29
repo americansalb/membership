@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Moderation - VillageMembers</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: var(--bg-primary);
+      border-right: 1px solid var(--border-color);
+      padding: var(--space-4);
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+    }
+
+    .sidebar-logo {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--primary);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      color: var(--text-secondary);
+      font-weight: var(--font-medium);
+      transition: all 0.15s;
+    }
+
+    .nav-link:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .nav-link.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 240px;
+      background: var(--bg-secondary);
+      min-height: 100vh;
+    }
+
+    .page-header {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-6);
+    }
+
+    .page-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-2);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+    }
+
+    .content-area {
+      padding: var(--space-6);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .stat-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+    }
+
+    .stat-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-2);
+    }
+
+    .stat-value {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+    }
+
+    .stat-value.warning {
+      color: var(--warning);
+    }
+
+    .stat-value.danger {
+      color: var(--danger);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: var(--space-1);
+      margin-bottom: var(--space-6);
+      background: var(--bg-primary);
+      padding: var(--space-1);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-medium);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Reports List */
+    .reports-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .report-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-4);
+    }
+
+    .report-type {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .report-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+      text-transform: uppercase;
+    }
+
+    .badge-post {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .badge-member {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .badge-message {
+      background: var(--secondary-light);
+      color: var(--secondary);
+    }
+
+    .reason-badge {
+      display: inline-flex;
+      padding: var(--space-1) var(--space-3);
+      background: var(--danger-light);
+      color: var(--danger);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+    }
+
+    .report-meta {
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+    }
+
+    .report-content {
+      margin-bottom: var(--space-4);
+      padding: var(--space-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+    }
+
+    .report-content-label {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-2);
+    }
+
+    .report-actions {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    /* Moderation Log */
+    .log-table {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .log-table th,
+    .log-table td {
+      padding: var(--space-4);
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .log-table th {
+      background: var(--bg-secondary);
+      font-weight: var(--font-semibold);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .log-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .action-badge {
+      display: inline-flex;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+    }
+
+    .action-ban { background: var(--danger-light); color: var(--danger); }
+    .action-mute { background: var(--warning-light); color: var(--warning); }
+    .action-delete { background: var(--danger-light); color: var(--danger); }
+    .action-lock { background: var(--secondary-light); color: var(--secondary); }
+    .action-dismiss { background: var(--bg-tertiary); color: var(--text-secondary); }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-12);
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-4);
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-4);
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: var(--space-5);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+    }
+
+    /* Loading */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      padding: var(--space-8);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile responsive */
+    .bottom-nav {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding-bottom: 5rem;
+      }
+
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        padding: var(--space-2);
+        justify-content: space-around;
+        z-index: 100;
+      }
+
+      .bottom-nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        text-decoration: none;
+        padding: var(--space-2);
+      }
+
+      .bottom-nav-link.active {
+        color: var(--primary);
+      }
+
+      .bottom-nav-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">VillageMembers</div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="nav-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Dashboard
+        </a>
+        <a href="/admin/members.html" class="nav-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="nav-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Tiers
+        </a>
+        <a href="/admin/moderation.html" class="nav-link active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Moderation
+        </a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Community Moderation</h1>
+        <p class="page-subtitle">Review reports, manage members, and maintain community standards</p>
+      </header>
+
+      <div class="content-area">
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Pending Reports</div>
+            <div class="stat-value warning" id="stat-pending">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Banned Members</div>
+            <div class="stat-value danger" id="stat-banned">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Muted Members</div>
+            <div class="stat-value" id="stat-muted">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Deleted Posts</div>
+            <div class="stat-value" id="stat-deleted">-</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showTab('reports')">Reports</button>
+          <button class="tab-btn" onclick="showTab('log')">Moderation Log</button>
+          <button class="tab-btn" onclick="showTab('badges')">Badges</button>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="tab-reports" class="tab-content active">
+          <div id="reports-list" class="reports-list">
+            <div class="loading-spinner"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Moderation Log Tab -->
+        <div id="tab-log" class="tab-content">
+          <div id="log-container">
+            <div class="loading-spinner"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Badges Tab -->
+        <div id="tab-badges" class="tab-content">
+          <div style="margin-bottom: var(--space-4);">
+            <button class="btn btn-primary" onclick="showCreateBadgeModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Badge
+            </button>
+          </div>
+          <div id="badges-list" class="reports-list">
+            <div class="loading-spinner"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="/admin/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        Home
+      </a>
+      <a href="/admin/members.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        Members
+      </a>
+      <a href="/admin/moderation.html" class="bottom-nav-link active">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        Moderation
+      </a>
+      <a href="/admin/settings.html" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </nav>
+  </div>
+
+  <!-- Action Modal -->
+  <div id="action-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Take Action</h2>
+        <button class="modal-close" onclick="hideActionModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Action</label>
+          <select id="action-type" class="form-select">
+            <option value="dismiss">Dismiss Report</option>
+            <option value="warn">Issue Warning</option>
+            <option value="delete">Delete Content</option>
+            <option value="mute">Mute Member (7 days)</option>
+            <option value="ban">Ban Member</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <textarea id="action-notes" class="form-textarea" placeholder="Add notes about this action..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideActionModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAction()">Take Action</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Badge Modal -->
+  <div id="badge-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Badge</h2>
+        <button class="modal-close" onclick="hideBadgeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" id="badge-name" class="form-input" placeholder="e.g., Top Contributor">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="badge-description" class="form-textarea" placeholder="What this badge represents..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon (emoji)</label>
+          <input type="text" id="badge-icon" class="form-input" placeholder="e.g., star or trophy">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" id="badge-color" class="form-input" value="#6366f1" style="height: 44px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideBadgeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createBadge()">Create Badge</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentReportId = null;
+
+    async function init() {
+      await checkAuth();
+      loadStats();
+      loadReports();
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = '/login.html';
+          return;
+        }
+        const data = await res.json();
+        if (data.type !== 'user') {
+          window.location.href = '/login.html';
+          return;
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '/login.html';
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/v1/community/admin/moderation/stats', {
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load stats');
+
+        const stats = await res.json();
+        document.getElementById('stat-pending').textContent = stats.pending_reports || 0;
+        document.getElementById('stat-banned').textContent = stats.banned_members || 0;
+        document.getElementById('stat-muted').textContent = stats.muted_members || 0;
+        document.getElementById('stat-deleted').textContent = stats.deleted_posts || 0;
+      } catch (err) {
+        console.error('Load stats error:', err);
+      }
+    }
+
+    async function loadReports() {
+      try {
+        const res = await fetch('/api/v1/community/admin/moderation/reports', {
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load reports');
+
+        const data = await res.json();
+        renderReports(data.reports || []);
+      } catch (err) {
+        console.error('Load reports error:', err);
+        document.getElementById('reports-list').innerHTML =
+          '<div class="empty-state"><p>Failed to load reports</p></div>';
+      }
+    }
+
+    function renderReports(reports) {
+      const container = document.getElementById('reports-list');
+
+      if (reports.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h3>No pending reports</h3>
+            <p>Your community is in good standing</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = reports.map(r => {
+        const reporterName = r.reporter_first_name
+          ? `${r.reporter_first_name} ${r.reporter_last_name}`
+          : 'Anonymous';
+        const timeAgo = formatTimeAgo(r.created_at);
+
+        return `
+          <div class="report-card" data-report-id="${r.id}">
+            <div class="report-header">
+              <div class="report-type">
+                <span class="report-type-badge badge-${r.target_type}">${r.target_type}</span>
+                <span class="reason-badge">${r.reason}</span>
+              </div>
+              <div class="report-meta">
+                Reported by ${escapeHtml(reporterName)} &middot; ${timeAgo}
+              </div>
+            </div>
+
+            ${r.details ? `
+              <div class="report-content">
+                <div class="report-content-label">Details</div>
+                <p>${escapeHtml(r.details)}</p>
+              </div>
+            ` : ''}
+
+            <div class="report-actions">
+              <button class="btn btn-secondary" onclick="viewReport('${r.id}')">View Details</button>
+              <button class="btn btn-primary" onclick="showActionModal('${r.id}')">Take Action</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadLog() {
+      try {
+        const res = await fetch('/api/v1/community/admin/moderation/log', {
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load log');
+
+        const data = await res.json();
+        renderLog(data.log || []);
+      } catch (err) {
+        console.error('Load log error:', err);
+        document.getElementById('log-container').innerHTML =
+          '<div class="empty-state"><p>Failed to load moderation log</p></div>';
+      }
+    }
+
+    function renderLog(log) {
+      const container = document.getElementById('log-container');
+
+      if (log.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No moderation actions yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Moderator</th>
+              <th>Reason</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${log.map(entry => {
+              const actionClass = getActionClass(entry.action);
+              return `
+                <tr>
+                  <td><span class="action-badge ${actionClass}">${formatAction(entry.action)}</span></td>
+                  <td>${entry.target_type}: ${entry.target_id.substring(0, 8)}...</td>
+                  <td>${escapeHtml(entry.moderator_email || 'System')}</td>
+                  <td>${escapeHtml(entry.reason || '-')}</td>
+                  <td>${formatTimeAgo(entry.created_at)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function loadBadges() {
+      try {
+        const res = await fetch('/api/v1/community/admin/badges', {
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load badges');
+
+        const data = await res.json();
+        renderBadges(data.badges || []);
+      } catch (err) {
+        console.error('Load badges error:', err);
+        document.getElementById('badges-list').innerHTML =
+          '<div class="empty-state"><p>Failed to load badges</p></div>';
+      }
+    }
+
+    function renderBadges(badges) {
+      const container = document.getElementById('badges-list');
+
+      if (badges.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No badges created yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = badges.map(b => `
+        <div class="report-card">
+          <div style="display: flex; align-items: center; gap: var(--space-4);">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: ${b.color}20; color: ${b.color}; display: flex; align-items: center; justify-content: center; font-size: var(--text-xl);">
+              ${b.icon || 'star'}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: var(--font-semibold);">${escapeHtml(b.name)}</div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);">
+                ${escapeHtml(b.description || 'No description')}
+              </div>
+              <div style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-1);">
+                Awarded to ${b.awarded_count || 0} members
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      if (tab === 'log') loadLog();
+      if (tab === 'badges') loadBadges();
+    }
+
+    function showActionModal(reportId) {
+      currentReportId = reportId;
+      document.getElementById('action-modal').classList.remove('hidden');
+    }
+
+    function hideActionModal() {
+      currentReportId = null;
+      document.getElementById('action-modal').classList.add('hidden');
+      document.getElementById('action-type').value = 'dismiss';
+      document.getElementById('action-notes').value = '';
+    }
+
+    async function submitAction() {
+      const action = document.getElementById('action-type').value;
+      const notes = document.getElementById('action-notes').value;
+
+      try {
+        const res = await fetch(`/api/v1/community/admin/moderation/reports/${currentReportId}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ action, notes })
+        });
+
+        if (!res.ok) throw new Error('Failed to take action');
+
+        hideActionModal();
+        loadStats();
+        loadReports();
+        alert('Action taken successfully');
+      } catch (err) {
+        console.error('Action error:', err);
+        alert('Failed to take action');
+      }
+    }
+
+    async function viewReport(reportId) {
+      try {
+        const res = await fetch(`/api/v1/community/admin/moderation/reports/${reportId}`, {
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load report');
+
+        const data = await res.json();
+        console.log('Report details:', data);
+        alert(`Report details:\n\nType: ${data.report.target_type}\nReason: ${data.report.reason}\n\nTarget: ${JSON.stringify(data.target, null, 2)}`);
+      } catch (err) {
+        console.error('View report error:', err);
+      }
+    }
+
+    function showCreateBadgeModal() {
+      document.getElementById('badge-modal').classList.remove('hidden');
+    }
+
+    function hideBadgeModal() {
+      document.getElementById('badge-modal').classList.add('hidden');
+      document.getElementById('badge-name').value = '';
+      document.getElementById('badge-description').value = '';
+      document.getElementById('badge-icon').value = '';
+    }
+
+    async function createBadge() {
+      const name = document.getElementById('badge-name').value.trim();
+      const description = document.getElementById('badge-description').value.trim();
+      const icon = document.getElementById('badge-icon').value.trim();
+      const color = document.getElementById('badge-color').value;
+
+      if (!name) {
+        alert('Name is required');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/community/admin/badges', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, description, icon, color })
+        });
+
+        if (!res.ok) throw new Error('Failed to create badge');
+
+        hideBadgeModal();
+        loadBadges();
+        alert('Badge created successfully');
+      } catch (err) {
+        console.error('Create badge error:', err);
+        alert('Failed to create badge');
+      }
+    }
+
+    function getActionClass(action) {
+      if (action.includes('ban')) return 'action-ban';
+      if (action.includes('mute')) return 'action-mute';
+      if (action.includes('delete')) return 'action-delete';
+      if (action.includes('lock')) return 'action-lock';
+      if (action.includes('dismiss')) return 'action-dismiss';
+      return '';
+    }
+
+    function formatAction(action) {
+      return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const past = new Date(date);
+      const diffMs = now - past;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffMins < 1) return 'just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      return past.toLocaleDateString();
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>
