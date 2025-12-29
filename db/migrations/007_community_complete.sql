@@ -320,8 +320,8 @@ CREATE TABLE IF NOT EXISTS typing_indicators (
   UNIQUE(thread_id, member_id)
 );
 
--- Clean up old typing indicators periodically
-CREATE INDEX idx_typing_old ON typing_indicators(started_at) WHERE started_at < NOW() - INTERVAL '10 seconds';
+-- Clean up old typing indicators periodically (done via scheduled job, no index needed)
+CREATE INDEX IF NOT EXISTS idx_typing_started ON typing_indicators(started_at);
 
 
 -- ============================================
