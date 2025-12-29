@@ -106,6 +106,9 @@ app.use('/api/v1/dev', require('./routes/dev'));
 // Community routes (member-facing: forums, messages, notifications)
 app.use('/api/v1/community', require('./routes/community'));
 
+// CEU routes (admin + member portal)
+app.use('/api/v1/ceu', require('./routes/ceu'));
+
 // Page routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

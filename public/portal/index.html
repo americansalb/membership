@@ -311,22 +311,26 @@
         </div>
 
         <!-- CEU Progress -->
-        <div class="card card-shadow">
-          <div class="card-header">
+        <div class="card card-shadow" id="ceu-card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h4>CEU Progress</h4>
+            <a href="/portal/ceu/" class="btn btn-primary btn-sm" id="view-ceu-link">View Details</a>
           </div>
           <div class="card-body">
             <div class="ceu-progress">
               <div class="flex justify-between mb-4">
-                <span class="font-semibold">12.5 / 20 credits</span>
-                <span class="text-muted">62.5%</span>
+                <span class="font-semibold" id="ceu-credits-text">Loading...</span>
+                <span class="text-muted" id="ceu-percent-text">--</span>
               </div>
               <div class="progress-bar">
-                <div class="progress-fill" style="width: 62.5%;"></div>
+                <div class="progress-fill" id="ceu-progress-bar" style="width: 0%;"></div>
               </div>
             </div>
-            <p class="text-sm text-muted">7.5 credits needed by December 2024</p>
-            <button class="btn btn-secondary btn-sm mt-4" disabled style="opacity: 0.6;">CEU Tracking (Coming Soon)</button>
+            <p class="text-sm text-muted" id="ceu-deadline-text">Loading CEU progress...</p>
+            <a href="/portal/ceu/submit.html" class="btn btn-secondary btn-sm mt-4" id="submit-ceu-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Submit Credit
+            </a>
           </div>
         </div>
 
@@ -436,8 +440,61 @@
         // Load unread message count
         loadUnreadMessages();
 
+        // Load CEU progress
+        loadCEUProgress();
+
       } catch (err) {
         window.location.href = portalBase + '/login';
+      }
+    }
+
+    async function loadCEUProgress() {
+      try {
+        const res = await fetch('/api/v1/ceu/member/progress', { credentials: 'include' });
+        if (!res.ok) {
+          // CEU not enabled or error - hide card
+          document.getElementById('ceu-card').style.display = 'none';
+          return;
+        }
+
+        const data = await res.json();
+        const earned = data.earned || 0;
+        const required = data.required || 0;
+        const progress = required > 0 ? Math.min((earned / required) * 100, 100) : 0;
+
+        // Update text
+        document.getElementById('ceu-credits-text').textContent = `${earned} / ${required} credits`;
+        document.getElementById('ceu-percent-text').textContent = `${Math.round(progress)}%`;
+
+        // Update progress bar
+        const bar = document.getElementById('ceu-progress-bar');
+        bar.style.width = `${progress}%`;
+
+        // Color based on status
+        if (data.status === 'critical' || data.status === 'overdue') {
+          bar.style.backgroundColor = 'var(--error)';
+        } else if (data.status === 'warning') {
+          bar.style.backgroundColor = 'var(--terra-500)';
+        } else if (data.status === 'complete') {
+          bar.style.backgroundColor = 'var(--green-600)';
+        }
+
+        // Deadline text
+        const deadlineEl = document.getElementById('ceu-deadline-text');
+        if (required === 0) {
+          deadlineEl.textContent = 'No CEU requirements for your tier';
+        } else if (progress >= 100) {
+          deadlineEl.innerHTML = '<span style="color: var(--green-600);">Requirements complete!</span>';
+        } else if (data.daysRemaining !== null && data.daysRemaining >= 0) {
+          const remaining = required - earned;
+          deadlineEl.textContent = `${remaining} credits needed in ${data.daysRemaining} days`;
+        } else if (data.daysRemaining !== null && data.daysRemaining < 0) {
+          deadlineEl.innerHTML = `<span style="color: var(--error);">${required - earned} credits overdue</span>`;
+        }
+
+      } catch (err) {
+        console.error('Failed to load CEU progress:', err);
+        document.getElementById('ceu-deadline-text').textContent = 'Unable to load CEU data';
       }
     }
 
