@@ -81,6 +81,45 @@ router.put('/orgs/:id/plan', async (req, res) => {
   }
 });
 
+// Create default forums for an org that doesn't have any
+router.post('/orgs/:id/setup-forums', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if org exists
+    const orgResult = await db.query('SELECT id, name FROM organizations WHERE id = $1', [id]);
+    if (orgResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Check if org already has forums
+    const forumsResult = await db.query(
+      'SELECT COUNT(*) FROM community_forums WHERE org_id = $1',
+      [id]
+    );
+    const existingCount = parseInt(forumsResult.rows[0].count);
+
+    if (existingCount > 0) {
+      return res.status(400).json({ error: `Organization already has ${existingCount} forums` });
+    }
+
+    // Create default forums
+    await db.query(
+      `INSERT INTO community_forums (org_id, name, slug, icon, description, allow_member_posts, sort_order)
+       VALUES
+         ($1, 'Announcements', 'announcements', '📢', 'Official updates and announcements', false, 0),
+         ($1, 'General', 'general', '💬', 'General discussion and chat', true, 1),
+         ($1, 'Introductions', 'introductions', '👋', 'Introduce yourself to the community', true, 2)`,
+      [id]
+    );
+
+    res.json({ success: true, message: 'Default forums created', forums: 3 });
+  } catch (err) {
+    console.error('Setup forums error:', err);
+    res.status(500).json({ error: 'Failed to create forums' });
+  }
+});
+
 // ============================================
 // STATS
 // ============================================
