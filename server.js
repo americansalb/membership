@@ -26,6 +26,9 @@ migrate()
   .then(() => runSeeds())
   .catch(console.error);
 
+// Trust proxy (needed for Render/Heroku to get correct client IP)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false // Adjust for development
