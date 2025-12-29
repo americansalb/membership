@@ -556,33 +556,42 @@ router.post('/resend-verification', async (req, res) => {
 
 router.get('/me', async (req, res) => {
   try {
-    // Debug logging
-    console.log('[auth/me] Cookies received:', Object.keys(req.cookies));
+    // Allow specifying which session type to check via query param
+    // e.g., /auth/me?type=user will only check user sessions
+    const requestedType = req.query.type;
+    console.log('[auth/me] Cookies received:', Object.keys(req.cookies), 'requested type:', requestedType || 'any');
 
-    // Check for developer session first
-    const devToken = req.cookies.dev_session;
-    const devId = req.cookies.dev_id;
+    // Check for developer session (only if not requesting specific non-dev type)
+    if (!requestedType || requestedType === 'developer') {
+      const devToken = req.cookies.dev_session;
+      const devId = req.cookies.dev_id;
 
-    if (devToken && devId) {
-      const tokenHash = auth.hashToken(devToken);
-      const devSession = await db.query(
-        `SELECT ds.developer_id, d.email, d.name
-         FROM dev_sessions ds
-         JOIN developers d ON ds.developer_id = d.id
-         WHERE ds.token_hash = $1
-         AND ds.expires_at > NOW()
-         AND d.is_active = true`,
-        [tokenHash]
-      );
+      if (devToken && devId) {
+        const tokenHash = auth.hashToken(devToken);
+        const devSession = await db.query(
+          `SELECT ds.developer_id, d.email, d.name
+           FROM dev_sessions ds
+           JOIN developers d ON ds.developer_id = d.id
+           WHERE ds.token_hash = $1
+           AND ds.expires_at > NOW()
+           AND d.is_active = true`,
+          [tokenHash]
+        );
 
-      if (devSession.rows.length > 0) {
-        const dev = devSession.rows[0];
-        return res.json({
-          type: 'developer',
-          id: dev.developer_id,
-          email: dev.email,
-          name: dev.name
-        });
+        if (devSession.rows.length > 0) {
+          const dev = devSession.rows[0];
+          return res.json({
+            type: 'developer',
+            id: dev.developer_id,
+            email: dev.email,
+            name: dev.name
+          });
+        }
+      }
+
+      // If specifically requesting developer type but no valid session
+      if (requestedType === 'developer') {
+        return res.status(401).json({ error: 'Not authenticated' });
       }
     }
 
@@ -604,6 +613,12 @@ router.get('/me', async (req, res) => {
     }
 
     console.log('[auth/me] Session valid, type:', session.type);
+
+    // If requesting specific type, verify it matches
+    if (requestedType && session.type !== requestedType) {
+      console.log('[auth/me] Type mismatch - requested:', requestedType, 'got:', session.type);
+      return res.status(401).json({ error: 'Not authenticated as ' + requestedType });
+    }
 
     // Get full org info including logo
     const orgResult = await db.query(

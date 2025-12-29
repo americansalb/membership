@@ -121,7 +121,7 @@
 
     async function checkAuth() {
       try {
-        const res = await fetch('/auth/me', { credentials: 'include' });
+        const res = await fetch('/auth/me?type=developer', { credentials: 'include' });
         if (!res.ok) { window.location.href = '/dev/login.html'; return; }
         const data = await res.json();
         if (data.type !== 'developer') {

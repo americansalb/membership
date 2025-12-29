@@ -318,28 +318,10 @@
 
     async function checkAuth() {
       try {
-        console.log('[checkAuth] Checking cookies:', document.cookie);
-        const res = await fetch('/auth/me', { credentials: 'include' });
-        console.log('[checkAuth] Response status:', res.status);
-
-        if (!res.ok) {
-          const text = await res.text();
-          console.log('[checkAuth] Response not OK:', text);
-          alert('Auth failed: ' + res.status + ' - ' + text);
-          // window.location.href = '/login';
-          return;
-        }
-
+        // Request specifically a user session (ignores dev sessions)
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login'; return; }
         const data = await res.json();
-        console.log('[checkAuth] Response data:', JSON.stringify(data));
-
-        if (data.type !== 'user') {
-          console.log('[checkAuth] Type mismatch. Expected "user", got:', data.type);
-          alert('Type mismatch: expected "user", got "' + data.type + '"');
-          // window.location.href = '/login';
-          return;
-        }
-
         currentUser = data;
         currentOrg = data.org;
 
@@ -364,9 +346,7 @@
           loadModerationStats()
         ]);
       } catch (err) {
-        console.log('[checkAuth] Error:', err);
-        alert('Auth error: ' + err.message);
-        // window.location.href = '/login';
+        window.location.href = '/login';
       }
     }
 
