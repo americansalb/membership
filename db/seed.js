@@ -138,10 +138,46 @@ async function seedPlatformPlans() {
   }
 }
 
+async function seedDefaultForums() {
+  try {
+    // Find orgs without any forums
+    const orgsWithoutForums = await db.query(`
+      SELECT o.id, o.name
+      FROM organizations o
+      LEFT JOIN community_forums cf ON cf.org_id = o.id
+      WHERE cf.id IS NULL
+    `);
+
+    if (orgsWithoutForums.rows.length === 0) {
+      return;
+    }
+
+    for (const org of orgsWithoutForums.rows) {
+      await db.query(
+        `INSERT INTO community_forums (org_id, name, slug, icon, description, allow_member_posts, sort_order)
+         VALUES
+           ($1, 'Announcements', 'announcements', '📢', 'Official updates and announcements', false, 0),
+           ($1, 'General', 'general', '💬', 'General discussion and chat', true, 1),
+           ($1, 'Introductions', 'introductions', '👋', 'Introduce yourself to the community', true, 2)`,
+        [org.id]
+      );
+      console.log(`[Seed] Created default forums for org: ${org.name}`);
+    }
+
+  } catch (err) {
+    if (err.code === '42P01') {
+      // Table doesn't exist yet
+    } else {
+      console.error('[Seed] Error seeding forums:', err.message);
+    }
+  }
+}
+
 async function runSeeds() {
   console.log('[Seed] Running database seeds...');
   await seedPlatformPlans();
   await seedDeveloper();
+  await seedDefaultForums();
   console.log('[Seed] Seeding complete');
 }
 
