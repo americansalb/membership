@@ -84,6 +84,96 @@
       color: var(--text-secondary);
     }
 
+    /* Portal Dropdown */
+    .portal-dropdown {
+      position: relative;
+    }
+
+    .portal-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .portal-menu {
+      position: absolute;
+      top: calc(100% + var(--space-2));
+      right: 0;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      min-width: 280px;
+      display: none;
+      z-index: 200;
+      overflow: hidden;
+    }
+
+    .portal-menu.show {
+      display: block;
+    }
+
+    .portal-option {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      text-decoration: none;
+      transition: background var(--transition-fast);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .portal-option:last-child {
+      border-bottom: none;
+    }
+
+    .portal-option:hover {
+      background: var(--bg-secondary);
+    }
+
+    .portal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-bold);
+      font-size: var(--text-sm);
+      flex-shrink: 0;
+    }
+
+    .portal-icon.org {
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+
+    .portal-icon.member {
+      background: var(--terra-100);
+      color: var(--terra-700);
+    }
+
+    .portal-icon.dev {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .portal-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .portal-info strong {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--gray-900);
+    }
+
+    .portal-info span {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
     /* Hero */
     .hero {
       padding: var(--space-20) var(--space-8) var(--space-16);
@@ -651,11 +741,11 @@
     }
 
     .footer-content {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: var(--space-12);
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: var(--space-10);
     }
 
     @media (max-width: 768px) {
@@ -767,7 +857,35 @@
       <a href="/docs">Docs</a>
     </nav>
     <div class="header-actions">
-      <a href="/login" class="btn btn-ghost">Sign In</a>
+      <div class="portal-dropdown">
+        <button class="btn btn-ghost portal-btn" onclick="togglePortalMenu()">
+          Sign In
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="portal-menu" id="portal-menu">
+          <a href="/login" class="portal-option">
+            <div class="portal-icon org">O</div>
+            <div class="portal-info">
+              <strong>Organization Admin</strong>
+              <span>Manage members, tiers & settings</span>
+            </div>
+          </a>
+          <a href="/portal/login" class="portal-option">
+            <div class="portal-icon member">M</div>
+            <div class="portal-info">
+              <strong>Member Portal</strong>
+              <span>Access your membership & community</span>
+            </div>
+          </a>
+          <a href="/dev/login" class="portal-option">
+            <div class="portal-icon dev">D</div>
+            <div class="portal-info">
+              <strong>Platform Developer</strong>
+              <span>VillageMembers platform admin</span>
+            </div>
+          </a>
+        </div>
+      </div>
       <a href="/signup" class="btn btn-primary">Get Started</a>
     </div>
   </header>
@@ -1230,14 +1348,34 @@
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
       </div>
+      <div class="footer-column">
+        <h4>Sign In</h4>
+        <a href="/login">Organization Admin</a>
+        <a href="/portal/login">Member Portal</a>
+        <a href="/dev/login">Platform Developer</a>
+      </div>
     </div>
     <div class="footer-bottom">
       <p>&copy; 2025 VillageMembers. All rights reserved.</p>
-      <a href="/dev/login">Platform Admin</a>
     </div>
   </footer>
 
   <script>
+    // Portal dropdown functionality
+    function togglePortalMenu() {
+      const menu = document.getElementById('portal-menu');
+      menu.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.querySelector('.portal-dropdown');
+      const menu = document.getElementById('portal-menu');
+      if (dropdown && !dropdown.contains(e.target)) {
+        menu.classList.remove('show');
+      }
+    });
+
     // Billing toggle functionality
     const billingToggle = document.getElementById('billing-toggle');
     const monthlyLabel = document.getElementById('monthly-label');
