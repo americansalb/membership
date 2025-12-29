@@ -254,6 +254,7 @@
         const res = await fetch('/auth/me', { credentials: 'include' });
         if (!res.ok) { window.location.href = '/login'; return; }
         const data = await res.json();
+        if (data.type !== 'user') { window.location.href = '/login'; return; }
         currentUser = data;
         currentOrg = data.org;
         document.getElementById('org-name').textContent = currentOrg?.name || 'Organization';
