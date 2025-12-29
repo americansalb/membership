@@ -8,6 +8,7 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
+  path: '/',
   maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
 };
 
@@ -166,6 +167,7 @@ router.post('/login', async (req, res) => {
     });
 
     // Set cookie
+    console.log('[login] Setting session cookie for user:', user.id, 'secure:', COOKIE_OPTIONS.secure);
     res.cookie('session', token, COOKIE_OPTIONS);
 
     res.json({
@@ -554,6 +556,9 @@ router.post('/resend-verification', async (req, res) => {
 
 router.get('/me', async (req, res) => {
   try {
+    // Debug logging
+    console.log('[auth/me] Cookies received:', Object.keys(req.cookies));
+
     // Check for developer session first
     const devToken = req.cookies.dev_session;
     const devId = req.cookies.dev_id;
@@ -585,15 +590,20 @@ router.get('/me', async (req, res) => {
     const token = req.cookies.session;
 
     if (!token) {
+      console.log('[auth/me] No session cookie found');
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    console.log('[auth/me] Session token found, validating...');
     const session = await auth.validateSession(token);
 
     if (!session) {
-      res.clearCookie('session');
+      console.log('[auth/me] Session validation failed - token invalid or expired');
+      res.clearCookie('session', { path: '/' });
       return res.status(401).json({ error: 'Session expired' });
     }
+
+    console.log('[auth/me] Session valid, type:', session.type);
 
     // Get full org info including logo
     const orgResult = await db.query(
