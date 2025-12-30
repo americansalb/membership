@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { requireUser } = require('../middleware/auth');
+const { requireUser } = require('../lib/middleware');
 
 // ============================================
 // ADMIN: Credential Management
