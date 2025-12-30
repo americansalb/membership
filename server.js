@@ -109,6 +109,9 @@ app.use('/api/v1/community', require('./routes/community'));
 // CEU routes (admin + member portal)
 app.use('/api/v1/ceu', require('./routes/ceu'));
 
+// Credentials routes (credential-based CEU system)
+app.use('/api/v1/credentials', require('./routes/credentials'));
+
 // Page routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
