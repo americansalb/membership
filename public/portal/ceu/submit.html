@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit CEU Credit - Member Portal</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .portal-layout {
+      min-height: 100vh;
+      background-color: var(--bg-secondary);
+    }
+
+    .portal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+    }
+
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+
+    .portal-logo {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--green-700);
+    }
+
+    .portal-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .page-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-2);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    .form-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-5);
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-2);
+    }
+
+    .label .required {
+      color: var(--error);
+    }
+
+    .input {
+      display: block;
+      width: 100%;
+      padding: var(--space-3);
+      font-size: var(--text-base);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .input:focus {
+      border-color: var(--green-500);
+      box-shadow: 0 0 0 3px rgba(74, 124, 74, 0.15);
+      outline: none;
+    }
+
+    textarea.input {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .helper-text {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      margin-top: var(--space-1);
+    }
+
+    /* File upload */
+    .file-upload {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .file-upload:hover {
+      border-color: var(--green-400);
+      background: var(--green-50);
+    }
+
+    .file-upload.dragging {
+      border-color: var(--green-500);
+      background: var(--green-100);
+    }
+
+    .file-upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto var(--space-3);
+      color: var(--gray-400);
+    }
+
+    .file-upload-text {
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-1);
+    }
+
+    .file-upload-hint {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    .file-preview {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--green-50);
+      border: 1px solid var(--green-200);
+      border-radius: var(--radius-lg);
+      margin-top: var(--space-3);
+    }
+
+    .file-preview-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--green-100);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green-600);
+    }
+
+    .file-preview-info {
+      flex: 1;
+    }
+
+    .file-preview-name {
+      font-weight: var(--font-medium);
+    }
+
+    .file-preview-size {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .file-remove {
+      color: var(--error);
+      cursor: pointer;
+      padding: var(--space-2);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin: var(--space-4) 0;
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    /* Form actions */
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-top: var(--space-6);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Success message */
+    .success-message {
+      text-align: center;
+      padding: var(--space-8);
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--green-100);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+      color: var(--green-600);
+    }
+
+    .success-title {
+      font-size: var(--text-xl);
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-2);
+    }
+
+    .success-text {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Error toast */
+    .error-toast {
+      position: fixed;
+      top: var(--space-4);
+      right: var(--space-4);
+      background: var(--bg-primary);
+      border: 1px solid var(--error);
+      border-left: 4px solid var(--error);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Hidden file input */
+    .hidden-input {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-layout">
+    <!-- Header -->
+    <header class="portal-header">
+      <a href="" class="back-link" id="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Back to CEU Progress
+      </a>
+      <span id="org-name" class="portal-logo">VillageMembers</span>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </header>
+
+    <main class="portal-content">
+      <div id="form-view">
+        <h1 class="page-title">Submit CEU Credit</h1>
+        <p class="page-subtitle">Complete the form below to submit continuing education credits for verification.</p>
+
+        <div class="form-card">
+          <form id="credit-form" onsubmit="submitCredit(event)">
+            <div class="form-group">
+              <label class="label">Course/Activity Title <span class="required">*</span></label>
+              <input type="text" id="title" class="input" placeholder="e.g., Medical Ethics in Healthcare Settings" required>
+            </div>
+
+            <div class="form-group">
+              <label class="label">Provider/Organization <span class="required">*</span></label>
+              <input type="text" id="provider" class="input" placeholder="e.g., American Medical Interpreters Association" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="label">Credits Earned <span class="required">*</span></label>
+                <input type="number" id="credits" class="input" value="1" min="0.25" max="100" step="0.25" required>
+              </div>
+              <div class="form-group">
+                <label class="label">Category <span class="required">*</span></label>
+                <select id="category" class="input" required>
+                  <option value="">Select category...</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="label">Completion Date <span class="required">*</span></label>
+              <input type="date" id="completed-at" class="input" required>
+            </div>
+
+            <div class="form-group">
+              <label class="label">Certificate/Proof</label>
+              <div class="file-upload" id="file-dropzone" onclick="document.getElementById('file-input').click()">
+                <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <div class="file-upload-text">Click to upload or drag and drop</div>
+                <div class="file-upload-hint">PDF, JPG, or PNG up to 10MB</div>
+              </div>
+              <input type="file" id="file-input" class="hidden-input" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+              <div id="file-preview" style="display: none;"></div>
+            </div>
+
+            <div class="divider">or</div>
+
+            <div class="form-group">
+              <label class="label">Certificate Number</label>
+              <input type="text" id="cert-number" class="input" placeholder="Enter certificate ID if available">
+              <p class="helper-text">If you have a certificate number, enter it here instead of uploading</p>
+            </div>
+
+            <div class="form-group">
+              <label class="label">Additional Notes</label>
+              <textarea id="description" class="input" placeholder="Any additional information about this credit..."></textarea>
+            </div>
+
+            <div class="form-actions">
+              <a href="" class="btn btn-ghost" id="cancel-link">Cancel</a>
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                Submit for Review
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="success-view" style="display: none;">
+        <div class="form-card">
+          <div class="success-message">
+            <div class="success-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h2 class="success-title">Credit Submitted!</h2>
+            <p class="success-text">Your CEU credit has been submitted for review. You'll be notified once it's approved.</p>
+            <div style="display: flex; gap: var(--space-3); justify-content: center;">
+              <a href="" class="btn btn-primary" id="view-progress-link">View Progress</a>
+              <button onclick="submitAnother()" class="btn btn-secondary">Submit Another</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="error-toast" class="error-toast" style="display: none;"></div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Get org slug from URL
+    const pathMatch = window.location.pathname.match(/^\/p\/([^\/]+)/);
+    const orgSlug = pathMatch ? pathMatch[1] : null;
+    const portalBase = orgSlug ? `/p/${orgSlug}` : '/portal';
+
+    let selectedFile = null;
+
+    function updateLinks() {
+      document.getElementById('back-link').href = portalBase + '/ceu/';
+      document.getElementById('cancel-link').href = portalBase + '/ceu/';
+      document.getElementById('view-progress-link').href = portalBase + '/ceu/';
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=member', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = portalBase + '/login';
+          return;
+        }
+        const data = await res.json();
+        if (data.type !== 'member') {
+          window.location.href = portalBase + '/login';
+          return;
+        }
+
+        if (data.orgName) {
+          document.getElementById('org-name').textContent = data.orgName;
+        }
+
+        updateLinks();
+        loadCategories();
+
+        // Set default date to today
+        document.getElementById('completed-at').value = new Date().toISOString().split('T')[0];
+      } catch (err) {
+        window.location.href = portalBase + '/login';
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/v1/ceu/member/categories', { credentials: 'include' });
+        const data = await res.json();
+        const categories = data.categories || [];
+
+        const select = document.getElementById('category');
+        select.innerHTML = '<option value="">Select category...</option>' +
+          categories.map(c => `<option value="${c.id}">${c.icon || '📚'} ${escapeHtml(c.name)}</option>`).join('');
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    }
+
+    // File handling
+    const dropzone = document.getElementById('file-dropzone');
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragging');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragging');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragging');
+
+      if (e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleFileSelect(event) {
+      if (event.target.files.length > 0) {
+        handleFile(event.target.files[0]);
+      }
+    }
+
+    function handleFile(file) {
+      // Validate file type
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!validTypes.includes(file.type)) {
+        showError('Please upload a PDF, JPG, or PNG file');
+        return;
+      }
+
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showError('File is too large. Maximum size is 10MB');
+        return;
+      }
+
+      selectedFile = file;
+      showFilePreview(file);
+    }
+
+    function showFilePreview(file) {
+      const preview = document.getElementById('file-preview');
+      const size = file.size < 1024 * 1024
+        ? (file.size / 1024).toFixed(1) + ' KB'
+        : (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+      preview.innerHTML = `
+        <div class="file-preview">
+          <div class="file-preview-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          </div>
+          <div class="file-preview-info">
+            <div class="file-preview-name">${escapeHtml(file.name)}</div>
+            <div class="file-preview-size">${size}</div>
+          </div>
+          <button type="button" class="file-remove" onclick="removeFile()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      `;
+      preview.style.display = 'block';
+      document.getElementById('file-dropzone').style.display = 'none';
+    }
+
+    function removeFile() {
+      selectedFile = null;
+      document.getElementById('file-preview').style.display = 'none';
+      document.getElementById('file-dropzone').style.display = 'block';
+      document.getElementById('file-input').value = '';
+    }
+
+    async function submitCredit(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('title').value.trim();
+      const provider = document.getElementById('provider').value.trim();
+      const credits = parseFloat(document.getElementById('credits').value);
+      const categoryId = document.getElementById('category').value;
+      const completedAt = document.getElementById('completed-at').value;
+      const certNumber = document.getElementById('cert-number').value.trim();
+      const description = document.getElementById('description').value.trim();
+
+      if (!title || !provider || !credits || !categoryId || !completedAt) {
+        showError('Please fill in all required fields');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        // For now, we won't handle file upload - just submit the credit data
+        // In a full implementation, you'd upload the file first and get a URL
+        const res = await fetch('/api/v1/ceu/member/credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            title,
+            credits,
+            category_id: categoryId,
+            provider,
+            completed_at: completedAt,
+            description,
+            certificate_number: certNumber
+            // certificate_url would come from file upload
+          })
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to submit credit');
+        }
+
+        // Show success
+        document.getElementById('form-view').style.display = 'none';
+        document.getElementById('success-view').style.display = 'block';
+
+      } catch (err) {
+        showError(err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit for Review';
+      }
+    }
+
+    function submitAnother() {
+      // Reset form
+      document.getElementById('credit-form').reset();
+      document.getElementById('completed-at').value = new Date().toISOString().split('T')[0];
+      removeFile();
+
+      // Show form
+      document.getElementById('form-view').style.display = 'block';
+      document.getElementById('success-view').style.display = 'none';
+
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('submit-btn').textContent = 'Submit for Review';
+    }
+
+    function showError(message) {
+      const toast = document.getElementById('error-toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 5000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = portalBase + '/login';
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

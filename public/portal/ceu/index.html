@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEU Progress - Member Portal</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .portal-layout {
+      min-height: 100vh;
+      background-color: var(--bg-secondary);
+    }
+
+    .portal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+    }
+
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+
+    .portal-logo {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--green-700);
+    }
+
+    .portal-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    /* Hero section with progress ring */
+    .progress-hero {
+      background: linear-gradient(135deg, var(--green-50) 0%, var(--bg-primary) 100%);
+      border: 1px solid var(--green-200);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      margin-bottom: var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      align-items: center;
+    }
+
+    @media (max-width: 640px) {
+      .progress-hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: var(--space-6);
+      }
+    }
+
+    .progress-ring-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .progress-ring {
+      width: 200px;
+      height: 200px;
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--gray-200);
+      stroke-width: 12;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--green-500);
+      stroke-width: 12;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+    }
+
+    .progress-ring-fill.warning {
+      stroke: var(--terra-500);
+    }
+
+    .progress-ring-fill.critical {
+      stroke: var(--error);
+    }
+
+    .progress-ring-fill.complete {
+      stroke: var(--green-600);
+    }
+
+    .progress-text {
+      font-size: var(--text-4xl);
+      font-weight: var(--font-bold);
+      fill: var(--text-primary);
+    }
+
+    .progress-divider {
+      font-size: var(--text-sm);
+      fill: var(--text-secondary);
+    }
+
+    .progress-total {
+      font-size: var(--text-xl);
+      fill: var(--text-secondary);
+    }
+
+    .progress-label {
+      font-size: var(--text-sm);
+      fill: var(--text-muted);
+    }
+
+    .progress-info h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-2);
+    }
+
+    .status-message {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-full);
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-4);
+    }
+
+    .status-message.on_track {
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+
+    .status-message.warning {
+      background: var(--terra-100);
+      color: var(--terra-700);
+    }
+
+    .status-message.critical {
+      background: var(--error-light);
+      color: var(--error);
+    }
+
+    .status-message.complete {
+      background: var(--green-500);
+      color: white;
+    }
+
+    .deadline-info {
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-4);
+    }
+
+    .deadline-info strong {
+      color: var(--text-primary);
+      font-size: var(--text-base);
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      .cta-buttons {
+        justify-content: center;
+      }
+    }
+
+    /* Category progress section */
+    .section-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .categories-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      margin-bottom: var(--space-6);
+    }
+
+    .category-item {
+      margin-bottom: var(--space-4);
+    }
+
+    .category-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-2);
+    }
+
+    .category-name {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-weight: var(--font-medium);
+    }
+
+    .category-icon {
+      font-size: var(--text-lg);
+    }
+
+    .category-count {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .category-bar {
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .category-fill {
+      height: 100%;
+      background: var(--green-500);
+      border-radius: var(--radius-full);
+      transition: width 0.5s ease;
+    }
+
+    .category-fill.complete {
+      background: var(--green-600);
+    }
+
+    .required-badge {
+      font-size: var(--text-xs);
+      color: var(--terra-600);
+      background: var(--terra-100);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    /* Recent credits */
+    .credits-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .credits-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .credits-list {
+      list-style: none;
+    }
+
+    .credit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .credit-item:last-child {
+      border-bottom: none;
+    }
+
+    .credit-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .credit-icon.verified {
+      background: var(--green-100);
+      color: var(--green-600);
+    }
+
+    .credit-icon.pending {
+      background: var(--terra-100);
+      color: var(--terra-600);
+    }
+
+    .credit-icon.rejected {
+      background: var(--error-light);
+      color: var(--error);
+    }
+
+    .credit-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .credit-title {
+      font-weight: var(--font-medium);
+      margin-bottom: var(--space-1);
+    }
+
+    .credit-meta {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .credit-amount {
+      font-weight: var(--font-semibold);
+      font-size: var(--text-lg);
+      color: var(--green-600);
+      white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-10);
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-4);
+      opacity: 0.5;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
+      z-index: var(--z-sticky);
+    }
+
+    @media (max-width: 768px) {
+      .bottom-nav {
+        display: flex;
+      }
+
+      .portal-content {
+        padding-bottom: 5rem;
+      }
+    }
+
+    .bottom-nav-link {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-2) var(--space-1);
+      font-size: var(--text-xs);
+      color: var(--gray-500);
+      transition: color var(--transition-fast);
+    }
+
+    .bottom-nav-link:hover,
+    .bottom-nav-link.active {
+      color: var(--green-600);
+    }
+
+    .bottom-nav-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      margin-bottom: var(--space-1);
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-layout">
+    <!-- Header -->
+    <header class="portal-header">
+      <a href="" class="back-link" id="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Back to Portal
+      </a>
+      <span id="org-name" class="portal-logo">VillageMembers</span>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </header>
+
+    <main class="portal-content">
+      <!-- Progress Hero -->
+      <div class="progress-hero">
+        <div class="progress-ring-container">
+          <svg class="progress-ring" viewBox="0 0 100 100">
+            <!-- Background circle -->
+            <circle class="progress-ring-bg" cx="50" cy="50" r="40"/>
+            <!-- Progress arc -->
+            <circle id="progress-arc" class="progress-ring-fill" cx="50" cy="50" r="40"
+              stroke-dasharray="251.2"
+              stroke-dashoffset="251.2"/>
+            <!-- Center text -->
+            <text x="50" y="42" text-anchor="middle" class="progress-text" id="earned-text">0</text>
+            <text x="50" y="52" text-anchor="middle" class="progress-divider">of</text>
+            <text x="50" y="66" text-anchor="middle" class="progress-total" id="required-text">0</text>
+            <text x="50" y="80" text-anchor="middle" class="progress-label">credits</text>
+          </svg>
+        </div>
+
+        <div class="progress-info">
+          <h1>CEU Progress</h1>
+          <div id="status-badge" class="status-message on_track">
+            <span id="status-text">Loading...</span>
+          </div>
+          <div class="deadline-info" id="deadline-info">
+            <!-- Deadline info loaded dynamically -->
+          </div>
+          <div class="cta-buttons">
+            <a href="" class="btn btn-primary" id="submit-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Submit Credit
+            </a>
+            <a href="" class="btn btn-secondary" id="credits-link">
+              View All Credits
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Progress -->
+      <div class="categories-card" id="categories-section">
+        <h2 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          Credits by Category
+        </h2>
+        <div id="categories-list">
+          <!-- Categories loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Recent Credits -->
+      <div class="credits-card">
+        <div class="credits-header">
+          <h2 class="section-title" style="margin: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            Recent Credits
+          </h2>
+          <a href="" class="btn btn-ghost btn-sm" id="view-all-link">View All</a>
+        </div>
+        <ul class="credits-list" id="credits-list">
+          <!-- Credits loaded dynamically -->
+        </ul>
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="" class="bottom-nav-link" id="nav-home">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+      </a>
+      <a href="" class="bottom-nav-link active" id="nav-ceu">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        CEU
+      </a>
+      <a href="" class="bottom-nav-link" id="nav-community">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Community
+      </a>
+      <a href="" class="bottom-nav-link" id="nav-settings">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </nav>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Get org slug from URL
+    const pathMatch = window.location.pathname.match(/^\/p\/([^\/]+)/);
+    const orgSlug = pathMatch ? pathMatch[1] : null;
+    const portalBase = orgSlug ? `/p/${orgSlug}` : '/portal';
+
+    // Update all links
+    function updateLinks() {
+      document.getElementById('back-link').href = portalBase + '/';
+      document.getElementById('submit-link').href = portalBase + '/ceu/submit.html';
+      document.getElementById('credits-link').href = portalBase + '/ceu/credits.html';
+      document.getElementById('view-all-link').href = portalBase + '/ceu/credits.html';
+      document.getElementById('nav-home').href = portalBase + '/';
+      document.getElementById('nav-ceu').href = portalBase + '/ceu/';
+      document.getElementById('nav-community').href = portalBase + '/community/';
+      document.getElementById('nav-settings').href = portalBase + '/settings/';
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=member', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = portalBase + '/login';
+          return;
+        }
+        const data = await res.json();
+        if (data.type !== 'member') {
+          window.location.href = portalBase + '/login';
+          return;
+        }
+
+        if (data.orgName) {
+          document.getElementById('org-name').textContent = data.orgName;
+        }
+
+        updateLinks();
+        loadProgress();
+      } catch (err) {
+        window.location.href = portalBase + '/login';
+      }
+    }
+
+    async function loadProgress() {
+      try {
+        const res = await fetch('/api/v1/ceu/member/progress', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load progress');
+
+        const data = await res.json();
+        renderProgress(data);
+        renderCategories(data.byCategory || []);
+        renderRecentCredits(data.recentCredits || []);
+      } catch (err) {
+        console.error('Failed to load CEU progress:', err);
+      }
+    }
+
+    function renderProgress(data) {
+      const earned = data.earned || 0;
+      const required = data.required || 0;
+      const progress = required > 0 ? Math.min((earned / required) * 100, 100) : 100;
+      const status = data.status || 'on_track';
+
+      // Update text
+      document.getElementById('earned-text').textContent = earned;
+      document.getElementById('required-text').textContent = required;
+
+      // Animate progress ring
+      const arc = document.getElementById('progress-arc');
+      const circumference = 251.2; // 2 * PI * 40
+      const offset = circumference * (1 - progress / 100);
+      arc.style.strokeDashoffset = offset;
+
+      // Set color based on status
+      arc.classList.remove('warning', 'critical', 'complete');
+      if (status === 'complete') {
+        arc.classList.add('complete');
+      } else if (status === 'critical') {
+        arc.classList.add('critical');
+      } else if (status === 'warning') {
+        arc.classList.add('warning');
+      }
+
+      // Status badge
+      const statusBadge = document.getElementById('status-badge');
+      const statusText = document.getElementById('status-text');
+      statusBadge.className = 'status-message ' + status;
+
+      const statusMessages = {
+        'complete': 'Requirement Complete!',
+        'on_track': "You're on track!",
+        'warning': 'Getting close to deadline',
+        'critical': 'Action needed soon!',
+        'overdue': 'Deadline passed'
+      };
+      statusText.textContent = statusMessages[status] || statusMessages.on_track;
+
+      // Deadline info
+      const deadlineInfo = document.getElementById('deadline-info');
+      if (data.periodEnd && required > 0) {
+        const remaining = required - earned;
+        const days = data.daysRemaining;
+
+        if (progress >= 100) {
+          deadlineInfo.innerHTML = `<strong>All done!</strong> You've completed your CEU requirements.`;
+        } else if (days !== null && days >= 0) {
+          deadlineInfo.innerHTML = `<strong>${remaining} credits needed</strong> by ${formatDate(data.periodEnd)}<br><span style="color: var(--text-muted);">${days} days remaining</span>`;
+        } else if (days !== null && days < 0) {
+          deadlineInfo.innerHTML = `<strong>${remaining} credits still needed</strong><br><span style="color: var(--error);">Deadline was ${Math.abs(days)} days ago</span>`;
+        }
+      } else if (required === 0) {
+        deadlineInfo.innerHTML = '<span style="color: var(--text-muted);">No CEU requirements for your membership tier</span>';
+      }
+    }
+
+    function renderCategories(categories) {
+      const container = document.getElementById('categories-list');
+
+      if (categories.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: var(--space-4);">No categories configured</p>';
+        return;
+      }
+
+      container.innerHTML = categories.map(cat => {
+        const earned = parseFloat(cat.earned) || 0;
+        // For now, we'll show just progress without specific requirements per category
+        const percent = Math.min(earned * 10, 100); // Simple visual representation
+
+        return `
+          <div class="category-item">
+            <div class="category-header">
+              <span class="category-name">
+                <span class="category-icon">${cat.icon || '📚'}</span>
+                ${escapeHtml(cat.name)}
+              </span>
+              <span class="category-count">${earned} credits</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-fill ${percent >= 100 ? 'complete' : ''}" style="width: ${Math.min(percent, 100)}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRecentCredits(credits) {
+      const container = document.getElementById('credits-list');
+
+      if (credits.length === 0) {
+        container.innerHTML = `
+          <li class="empty-state">
+            <div class="empty-icon">📚</div>
+            <p>No credits yet. Submit your first CEU credit!</p>
+          </li>
+        `;
+        return;
+      }
+
+      container.innerHTML = credits.map(credit => {
+        const isPending = !credit.verified && !credit.rejection_reason;
+        const isVerified = credit.verified;
+        const isRejected = !!credit.rejection_reason;
+
+        let iconClass = 'verified';
+        let iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+        if (isPending) {
+          iconClass = 'pending';
+          iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+        } else if (isRejected) {
+          iconClass = 'rejected';
+          iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        }
+
+        let statusLabel = '';
+        if (isPending) statusLabel = '<span class="badge badge-warning">Pending</span>';
+        else if (isRejected) statusLabel = '<span class="badge badge-error">Rejected</span>';
+
+        return `
+          <li class="credit-item">
+            <div class="credit-icon ${iconClass}">
+              ${iconSvg}
+            </div>
+            <div class="credit-details">
+              <div class="credit-title">${escapeHtml(credit.title)}</div>
+              <div class="credit-meta">
+                ${credit.category_name ? `<span>${credit.category_icon || '📚'} ${escapeHtml(credit.category_name)}</span>` : ''}
+                <span>${formatDate(credit.completed_at || credit.created_at)}</span>
+                ${statusLabel}
+              </div>
+            </div>
+            <div class="credit-amount">${credit.credits}</div>
+          </li>
+        `;
+      }).join('');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = portalBase + '/login';
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

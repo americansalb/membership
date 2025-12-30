@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEU Settings - VillageMembers Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; } }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-content {
+      padding: var(--space-6);
+      max-width: 900px;
+    }
+
+    /* Settings sections */
+    .settings-section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-6);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-header h2 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .section-header p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin: var(--space-1) 0 0;
+    }
+
+    .section-body {
+      padding: var(--space-5);
+    }
+
+    /* Toggle switch */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+
+    .toggle-info h3 {
+      font-size: var(--text-base);
+      font-weight: var(--font-medium);
+      margin: 0 0 var(--space-1);
+    }
+
+    .toggle-info p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--gray-300);
+      border-radius: 26px;
+      transition: var(--transition-normal);
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: var(--green-500);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(22px);
+    }
+
+    /* Radio group */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .radio-option:hover {
+      background: var(--bg-secondary);
+    }
+
+    .radio-option.selected {
+      border-color: var(--green-500);
+      background: var(--green-50);
+    }
+
+    .radio-option input {
+      margin-top: 2px;
+      accent-color: var(--green-500);
+    }
+
+    .radio-label {
+      font-weight: var(--font-medium);
+    }
+
+    .radio-desc {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-top: var(--space-1);
+    }
+
+    /* Category cards */
+    .category-grid {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .category-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .category-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .category-icon {
+      font-size: var(--text-2xl);
+      width: 40px;
+      text-align: center;
+    }
+
+    .category-name {
+      font-weight: var(--font-medium);
+    }
+
+    .category-desc {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .category-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    /* Tier requirements table */
+    .tier-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tier-table th {
+      text-align: left;
+      padding: var(--space-3);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tier-table td {
+      padding: var(--space-3);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tier-table input {
+      width: 80px;
+      padding: var(--space-2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+
+    .tier-name {
+      font-weight: var(--font-medium);
+    }
+
+    /* Add category form */
+    .add-category-form {
+      display: none;
+      padding: var(--space-4);
+      background: var(--green-50);
+      border-radius: var(--radius-lg);
+      margin-top: var(--space-4);
+    }
+
+    .add-category-form.visible {
+      display: block;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--border-color);
+      margin-top: var(--space-4);
+    }
+
+    /* Status messages */
+    .success-banner {
+      background: var(--success-light);
+      color: var(--green-700);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      display: none;
+    }
+
+    .error-banner {
+      background: var(--error-light);
+      color: var(--error);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      display: none;
+    }
+
+    /* Disabled state */
+    .disabled-overlay {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-8);
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-4);
+      opacity: 0.5;
+    }
+
+    /* Icon picker */
+    .icon-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+
+    .icon-option {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-lg);
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .icon-option:hover {
+      border-color: var(--green-400);
+      background: var(--green-50);
+    }
+
+    .icon-option.selected {
+      border-color: var(--green-500);
+      background: var(--green-100);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      display: none;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 500px;
+      margin: var(--space-4);
+      max-height: calc(100vh - var(--space-8));
+      overflow: auto;
+    }
+
+    .modal-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .modal-body {
+      padding: var(--space-5);
+    }
+
+    .modal-footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Dashboard
+        </a>
+        <a href="/admin/members.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Tiers
+        </a>
+        <div class="sidebar-section">Credentials & CEU</div>
+        <a href="/admin/credentials.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+          Credentials
+        </a>
+        <a href="/admin/ceu-credits.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          Review Credits
+        </a>
+        <div class="sidebar-section">Community</div>
+        <a href="/admin/moderation.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Moderation
+        </a>
+        <div class="sidebar-section">Settings</div>
+        <a href="/admin/settings.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div>
+          <h1 style="font-size: var(--text-xl); font-weight: var(--font-bold);">CEU Settings</h1>
+          <p style="color: var(--text-secondary); font-size: var(--text-sm);">Configure continuing education tracking for your members</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm text-muted"></span>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div id="success-banner" class="success-banner"></div>
+        <div id="error-banner" class="error-banner"></div>
+
+        <!-- Enable CEU -->
+        <div class="settings-section">
+          <div class="section-header">
+            <div>
+              <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                CEU Tracking
+              </h2>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h3>Enable CEU Tracking</h3>
+                <p>Track continuing education credits for your members. Members can view progress and submit credits for review.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="ceu-enabled" onchange="toggleCEU()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tracking Period (shown when enabled) -->
+        <div id="ceu-settings" class="disabled-overlay">
+          <div class="settings-section">
+            <div class="section-header">
+              <div>
+                <h2>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  Tracking Period
+                </h2>
+                <p>How CEU requirements are calculated for members</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="radio-group" id="period-options">
+                <label class="radio-option" data-value="annual">
+                  <input type="radio" name="tracking-period" value="annual">
+                  <div>
+                    <div class="radio-label">Annual (from join date)</div>
+                    <div class="radio-desc">Each member's period starts from their membership join date</div>
+                  </div>
+                </label>
+                <label class="radio-option" data-value="calendar_year">
+                  <input type="radio" name="tracking-period" value="calendar_year">
+                  <div>
+                    <div class="radio-label">Calendar Year (Jan - Dec)</div>
+                    <div class="radio-desc">All members follow the same January to December cycle</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credit Categories -->
+          <div class="settings-section">
+            <div class="section-header">
+              <div>
+                <h2>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  Credit Categories
+                </h2>
+                <p>Define types of CEU credits (e.g., Ethics, Medical, Legal)</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="showAddCategory()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add Category
+              </button>
+            </div>
+            <div class="section-body">
+              <div id="categories-list" class="category-grid">
+                <!-- Categories loaded dynamically -->
+              </div>
+
+              <div id="add-category-form" class="add-category-form">
+                <h3 style="margin-bottom: var(--space-4); font-weight: var(--font-semibold);">Add New Category</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="label">Category Name</label>
+                    <input type="text" id="new-category-name" class="input" placeholder="e.g., Ethics">
+                  </div>
+                  <div class="form-group">
+                    <label class="label">Icon</label>
+                    <div class="icon-picker" id="icon-picker">
+                      <div class="icon-option selected" data-icon="📚">📚</div>
+                      <div class="icon-option" data-icon="⚖️">⚖️</div>
+                      <div class="icon-option" data-icon="🏥">🏥</div>
+                      <div class="icon-option" data-icon="💼">💼</div>
+                      <div class="icon-option" data-icon="🎓">🎓</div>
+                      <div class="icon-option" data-icon="🔬">🔬</div>
+                      <div class="icon-option" data-icon="💻">💻</div>
+                      <div class="icon-option" data-icon="🗣️">🗣️</div>
+                      <div class="icon-option" data-icon="📝">📝</div>
+                      <div class="icon-option" data-icon="🌍">🌍</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="label">Description (optional)</label>
+                  <input type="text" id="new-category-desc" class="input" placeholder="Brief description of this category">
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-ghost" onclick="hideAddCategory()">Cancel</button>
+                  <button class="btn btn-primary" onclick="saveCategory()">Save Category</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier Requirements -->
+          <div class="settings-section">
+            <div class="section-header">
+              <div>
+                <h2>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                  Tier Requirements
+                </h2>
+                <p>Set CEU requirements for each membership tier</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="saveTierRequirements()">
+                Save Requirements
+              </button>
+            </div>
+            <div class="section-body">
+              <table class="tier-table" id="tier-table">
+                <thead>
+                  <tr>
+                    <th>Tier</th>
+                    <th>Total Required</th>
+                    <th>Ethics Min</th>
+                  </tr>
+                </thead>
+                <tbody id="tier-requirements">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Category Modal -->
+  <div id="edit-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Category</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeEditModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-category-id">
+        <div class="form-group">
+          <label class="label">Category Name</label>
+          <input type="text" id="edit-category-name" class="input">
+        </div>
+        <div class="form-group">
+          <label class="label">Icon</label>
+          <div class="icon-picker" id="edit-icon-picker">
+            <div class="icon-option" data-icon="📚">📚</div>
+            <div class="icon-option" data-icon="⚖️">⚖️</div>
+            <div class="icon-option" data-icon="🏥">🏥</div>
+            <div class="icon-option" data-icon="💼">💼</div>
+            <div class="icon-option" data-icon="🎓">🎓</div>
+            <div class="icon-option" data-icon="🔬">🔬</div>
+            <div class="icon-option" data-icon="💻">💻</div>
+            <div class="icon-option" data-icon="🗣️">🗣️</div>
+            <div class="icon-option" data-icon="📝">📝</div>
+            <div class="icon-option" data-icon="🌍">🌍</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="label">Description</label>
+          <input type="text" id="edit-category-desc" class="input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="updateCategory()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let currentUser = null;
+    let categories = [];
+    let tiers = [];
+    let tierRequirements = {};
+    let selectedIcon = '📚';
+    let editSelectedIcon = '📚';
+
+    // Icon picker handlers
+    document.getElementById('icon-picker').addEventListener('click', (e) => {
+      const option = e.target.closest('.icon-option');
+      if (option) {
+        document.querySelectorAll('#icon-picker .icon-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedIcon = option.dataset.icon;
+      }
+    });
+
+    document.getElementById('edit-icon-picker').addEventListener('click', (e) => {
+      const option = e.target.closest('.icon-option');
+      if (option) {
+        document.querySelectorAll('#edit-icon-picker .icon-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        editSelectedIcon = option.dataset.icon;
+      }
+    });
+
+    // Radio option handlers
+    document.getElementById('period-options').addEventListener('click', (e) => {
+      const option = e.target.closest('.radio-option');
+      if (option) {
+        document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        option.querySelector('input').checked = true;
+        saveTrackingPeriod();
+      }
+    });
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        currentUser = data;
+        document.getElementById('user-name').textContent = currentUser?.name || currentUser?.email || '';
+        loadSettings();
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        // Load CEU settings
+        const settingsRes = await fetch('/api/v1/ceu/settings', { credentials: 'include' });
+        const settingsData = await settingsRes.json();
+
+        document.getElementById('ceu-enabled').checked = settingsData.enabled;
+        updateCEUVisibility(settingsData.enabled);
+
+        // Set tracking period
+        const period = settingsData.trackingPeriod || 'annual';
+        document.querySelector(`input[value="${period}"]`).checked = true;
+        document.querySelector(`.radio-option[data-value="${period}"]`).classList.add('selected');
+
+        // Load categories
+        await loadCategories();
+
+        // Load tiers
+        await loadTiers();
+
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+        showError('Failed to load settings');
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/v1/ceu/categories', { credentials: 'include' });
+        const data = await res.json();
+        categories = data.categories || [];
+        renderCategories();
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('categories-list');
+
+      if (categories.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📚</div>
+            <p>No categories yet. Add your first category above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = categories.map(cat => `
+        <div class="category-card" data-id="${cat.id}">
+          <div class="category-info">
+            <div class="category-icon">${cat.icon || '📚'}</div>
+            <div>
+              <div class="category-name">${escapeHtml(cat.name)}</div>
+              ${cat.description ? `<div class="category-desc">${escapeHtml(cat.description)}</div>` : ''}
+            </div>
+          </div>
+          <div class="category-actions">
+            <button class="btn btn-ghost btn-sm" onclick="editCategory('${cat.id}')">Edit</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);" onclick="deleteCategory('${cat.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadTiers() {
+      try {
+        // Get tiers
+        const tiersRes = await fetch('/api/v1/tiers', { credentials: 'include' });
+        const tiersData = await tiersRes.json();
+        tiers = tiersData.tiers || [];
+
+        // Get tier requirements
+        const reqRes = await fetch('/api/v1/ceu/tier-requirements', { credentials: 'include' });
+        const reqData = await reqRes.json();
+
+        tierRequirements = {};
+        (reqData.requirements || []).forEach(r => {
+          tierRequirements[r.tier_id] = r;
+        });
+
+        renderTierRequirements();
+      } catch (err) {
+        console.error('Failed to load tiers:', err);
+      }
+    }
+
+    function renderTierRequirements() {
+      const container = document.getElementById('tier-requirements');
+
+      if (tiers.length === 0) {
+        container.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align: center; padding: var(--space-6); color: var(--text-secondary);">
+              No tiers configured. <a href="/admin/tiers.html">Create tiers first</a>.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      container.innerHTML = tiers.map(tier => {
+        const req = tierRequirements[tier.id] || {};
+        const mins = req.category_minimums || {};
+        return `
+          <tr data-tier-id="${tier.id}">
+            <td>
+              <span class="tier-name">${escapeHtml(tier.name)}</span>
+            </td>
+            <td>
+              <input type="number" class="total-required" value="${req.total_required || 0}" min="0" step="0.5" placeholder="0">
+            </td>
+            <td>
+              <input type="number" class="ethics-min" value="${mins.ethics || 0}" min="0" step="0.5" placeholder="0">
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateCEUVisibility(enabled) {
+      const settings = document.getElementById('ceu-settings');
+      if (enabled) {
+        settings.classList.remove('disabled-overlay');
+      } else {
+        settings.classList.add('disabled-overlay');
+      }
+    }
+
+    async function toggleCEU() {
+      const enabled = document.getElementById('ceu-enabled').checked;
+
+      try {
+        await fetch('/api/v1/ceu/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ enabled })
+        });
+
+        updateCEUVisibility(enabled);
+
+        if (enabled) {
+          showSuccess('CEU tracking enabled');
+          // Reload categories in case defaults were created
+          await loadCategories();
+        } else {
+          showSuccess('CEU tracking disabled');
+        }
+      } catch (err) {
+        showError('Failed to update setting');
+        document.getElementById('ceu-enabled').checked = !enabled;
+      }
+    }
+
+    async function saveTrackingPeriod() {
+      const period = document.querySelector('input[name="tracking-period"]:checked').value;
+
+      try {
+        await fetch('/api/v1/ceu/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ trackingPeriod: period })
+        });
+        showSuccess('Tracking period updated');
+      } catch (err) {
+        showError('Failed to update tracking period');
+      }
+    }
+
+    function showAddCategory() {
+      document.getElementById('add-category-form').classList.add('visible');
+      document.getElementById('new-category-name').focus();
+    }
+
+    function hideAddCategory() {
+      document.getElementById('add-category-form').classList.remove('visible');
+      document.getElementById('new-category-name').value = '';
+      document.getElementById('new-category-desc').value = '';
+      document.querySelectorAll('#icon-picker .icon-option').forEach(o => o.classList.remove('selected'));
+      document.querySelector('#icon-picker .icon-option').classList.add('selected');
+      selectedIcon = '📚';
+    }
+
+    async function saveCategory() {
+      const name = document.getElementById('new-category-name').value.trim();
+      const description = document.getElementById('new-category-desc').value.trim();
+
+      if (!name) {
+        showError('Category name is required');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/ceu/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, description, icon: selectedIcon })
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to create category');
+        }
+
+        hideAddCategory();
+        await loadCategories();
+        showSuccess('Category created');
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function editCategory(id) {
+      const cat = categories.find(c => c.id === id);
+      if (!cat) return;
+
+      document.getElementById('edit-category-id').value = id;
+      document.getElementById('edit-category-name').value = cat.name;
+      document.getElementById('edit-category-desc').value = cat.description || '';
+
+      // Set icon
+      editSelectedIcon = cat.icon || '📚';
+      document.querySelectorAll('#edit-icon-picker .icon-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.icon === editSelectedIcon);
+      });
+
+      document.getElementById('edit-modal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('open');
+    }
+
+    async function updateCategory() {
+      const id = document.getElementById('edit-category-id').value;
+      const name = document.getElementById('edit-category-name').value.trim();
+      const description = document.getElementById('edit-category-desc').value.trim();
+
+      if (!name) {
+        showError('Category name is required');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/ceu/categories/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, description, icon: editSelectedIcon })
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to update category');
+        }
+
+        closeEditModal();
+        await loadCategories();
+        showSuccess('Category updated');
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    async function deleteCategory(id) {
+      const cat = categories.find(c => c.id === id);
+      if (!confirm(`Delete category "${cat.name}"? This cannot be undone.`)) return;
+
+      try {
+        const res = await fetch(`/api/v1/ceu/categories/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to delete category');
+        }
+
+        await loadCategories();
+        showSuccess('Category deleted');
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    async function saveTierRequirements() {
+      const rows = document.querySelectorAll('#tier-requirements tr[data-tier-id]');
+      let saved = 0;
+
+      for (const row of rows) {
+        const tierId = row.dataset.tierId;
+        const totalRequired = parseFloat(row.querySelector('.total-required').value) || 0;
+        const ethicsMin = parseFloat(row.querySelector('.ethics-min').value) || 0;
+
+        try {
+          await fetch(`/api/v1/ceu/tier-requirements/${tierId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              total_required: totalRequired,
+              category_minimums: ethicsMin > 0 ? { ethics: ethicsMin } : {}
+            })
+          });
+          saved++;
+        } catch (err) {
+          console.error(`Failed to save requirements for tier ${tierId}:`, err);
+        }
+      }
+
+      if (saved === rows.length) {
+        showSuccess('Tier requirements saved');
+      } else {
+        showError('Some requirements failed to save');
+      }
+    }
+
+    function showSuccess(msg) {
+      const banner = document.getElementById('success-banner');
+      banner.textContent = msg;
+      banner.style.display = 'block';
+      document.getElementById('error-banner').style.display = 'none';
+      setTimeout(() => { banner.style.display = 'none'; }, 3000);
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('error-banner');
+      banner.textContent = msg;
+      banner.style.display = 'block';
+      document.getElementById('success-banner').style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>
