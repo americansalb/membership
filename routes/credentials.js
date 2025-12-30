@@ -10,6 +10,20 @@ const { requireUser } = require('../lib/middleware');
 // Get all credentials for org
 router.get('/', requireUser, async (req, res) => {
   try {
+    // Check if credentials table exists first
+    const tableCheck = await db.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'credentials'
+      )
+    `);
+
+    if (!tableCheck.rows[0].exists) {
+      // Table doesn't exist - return empty array
+      console.log('Credentials table does not exist yet - migrations may not have run');
+      return res.json({ credentials: [] });
+    }
+
     const result = await db.query(`
       SELECT c.*,
         (SELECT COUNT(*) FROM member_credentials mc WHERE mc.credential_id = c.id) AS member_count,
@@ -22,7 +36,7 @@ router.get('/', requireUser, async (req, res) => {
     res.json({ credentials: result.rows });
   } catch (err) {
     console.error('Error fetching credentials:', err);
-    res.status(500).json({ error: 'Failed to fetch credentials' });
+    res.status(500).json({ error: 'Failed to fetch credentials: ' + err.message });
   }
 });
 
@@ -79,6 +93,20 @@ router.post('/', requireUser, async (req, res) => {
   }
 
   try {
+    // Ensure credentials table exists
+    const tableCheck = await db.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'credentials'
+      )
+    `);
+
+    if (!tableCheck.rows[0].exists) {
+      return res.status(500).json({
+        error: 'Database not ready. Please wait for migrations to complete and try again.'
+      });
+    }
+
     const result = await db.query(`
       INSERT INTO credentials (
         org_id, name, short_name, description,
@@ -102,7 +130,7 @@ router.post('/', requireUser, async (req, res) => {
     res.status(201).json({ credential: result.rows[0] });
   } catch (err) {
     console.error('Error creating credential:', err);
-    res.status(500).json({ error: 'Failed to create credential' });
+    res.status(500).json({ error: 'Failed to create credential: ' + err.message });
   }
 });
 
