@@ -376,6 +376,48 @@ router.get('/members/:id/full', requireUser, async (req, res) => {
   }
 });
 
+// Get member's credentials with progress
+router.get('/members/:id/credentials', requireUser, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const orgId = req.user.orgId;
+
+    // Verify member belongs to org
+    const memberCheck = await db.query(
+      'SELECT id FROM members WHERE id = $1 AND org_id = $2',
+      [memberId, orgId]
+    );
+    if (memberCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const result = await db.query(`
+      SELECT
+        mc.*,
+        c.name AS credential_name,
+        c.short_name AS credential_short_name,
+        c.total_credits_required,
+        COALESCE(
+          (SELECT SUM(cc.credits) FROM ceu_credits cc
+           WHERE cc.member_credential_id = mc.id
+           AND cc.status = 'verified'
+           AND cc.completed_at >= mc.current_period_start
+           AND cc.completed_at <= mc.current_period_end),
+          0
+        ) AS credits_earned
+      FROM member_credentials mc
+      JOIN credentials c ON c.id = mc.credential_id
+      WHERE mc.member_id = $1 AND c.org_id = $2
+      ORDER BY mc.current_period_end ASC
+    `, [memberId, orgId]);
+
+    res.json({ memberCredentials: result.rows });
+  } catch (err) {
+    console.error('Error fetching member credentials:', err);
+    res.status(500).json({ error: 'Failed to get member credentials' });
+  }
+});
+
 // Log activity for a member
 router.post('/members/:id/activity', requireUser, async (req, res) => {
   try {

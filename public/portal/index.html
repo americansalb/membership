@@ -236,6 +236,7 @@
       <a href="/portal/" class="portal-logo" id="org-name">VillageMembers</a>
       <nav class="portal-nav">
         <a href="/portal/" class="active">Home</a>
+        <a href="/portal/credentials/">Credentials</a>
         <a href="/portal/community/">Community</a>
         <a href="/portal/community/members/">Members</a>
         <a href="/portal/community/messages/" style="position: relative;">
@@ -310,27 +311,19 @@
           </div>
         </div>
 
-        <!-- CEU Progress -->
-        <div class="card card-shadow" id="ceu-card">
+        <!-- Credentials & CEU Progress -->
+        <div class="card card-shadow" id="credentials-card">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h4>CEU Progress</h4>
-            <a href="/portal/ceu/" class="btn btn-primary btn-sm" id="view-ceu-link">View Details</a>
+            <h4 style="display: flex; align-items: center; gap: var(--space-2);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green-600)" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              My Credentials
+            </h4>
+            <a href="/portal/credentials/" class="btn btn-primary btn-sm" id="view-credentials-link">View All</a>
           </div>
-          <div class="card-body">
-            <div class="ceu-progress">
-              <div class="flex justify-between mb-4">
-                <span class="font-semibold" id="ceu-credits-text">Loading...</span>
-                <span class="text-muted" id="ceu-percent-text">--</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="ceu-progress-bar" style="width: 0%;"></div>
-              </div>
+          <div class="card-body" id="credentials-content">
+            <div style="display: flex; justify-content: center; padding: var(--space-4);">
+              <div class="loading-spinner" style="width: 24px; height: 24px; border-width: 2px;"></div>
             </div>
-            <p class="text-sm text-muted" id="ceu-deadline-text">Loading CEU progress...</p>
-            <a href="/portal/ceu/submit.html" class="btn btn-secondary btn-sm mt-4" id="submit-ceu-link">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              Submit Credit
-            </a>
           </div>
         </div>
 
@@ -378,6 +371,10 @@
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
       </a>
+      <a href="/portal/credentials/" class="bottom-nav-link">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+        Credentials
+      </a>
       <a href="/portal/community/" class="bottom-nav-link">
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         Community
@@ -386,10 +383,6 @@
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         Messages
         <span id="mobile-msg-badge" class="notif-badge" style="display:none; position: absolute; top: 4px; right: calc(50% - 24px);">0</span>
-      </a>
-      <a href="/portal/settings/" class="bottom-nav-link">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        Settings
       </a>
     </nav>
   </div>
@@ -440,62 +433,109 @@
         // Load unread message count
         loadUnreadMessages();
 
-        // Load CEU progress
-        loadCEUProgress();
+        // Load credentials progress
+        loadCredentialsProgress();
 
       } catch (err) {
         window.location.href = portalBase + '/login';
       }
     }
 
-    async function loadCEUProgress() {
+    async function loadCredentialsProgress() {
+      const container = document.getElementById('credentials-content');
       try {
-        const res = await fetch('/api/v1/ceu/member/progress', { credentials: 'include' });
+        const res = await fetch('/api/v1/credentials/member/my-credentials', { credentials: 'include' });
         if (!res.ok) {
-          // CEU not enabled or error - hide card
-          document.getElementById('ceu-card').style.display = 'none';
+          container.innerHTML = renderEmptyCredentials();
           return;
         }
 
         const data = await res.json();
-        const earned = data.earned || 0;
-        const required = data.required || 0;
-        const progress = required > 0 ? Math.min((earned / required) * 100, 100) : 0;
+        const credentials = data.credentials || [];
 
-        // Update text
-        document.getElementById('ceu-credits-text').textContent = `${earned} / ${required} credits`;
-        document.getElementById('ceu-percent-text').textContent = `${Math.round(progress)}%`;
-
-        // Update progress bar
-        const bar = document.getElementById('ceu-progress-bar');
-        bar.style.width = `${progress}%`;
-
-        // Color based on status
-        if (data.status === 'critical' || data.status === 'overdue') {
-          bar.style.backgroundColor = 'var(--error)';
-        } else if (data.status === 'warning') {
-          bar.style.backgroundColor = 'var(--terra-500)';
-        } else if (data.status === 'complete') {
-          bar.style.backgroundColor = 'var(--green-600)';
+        if (credentials.length === 0) {
+          container.innerHTML = renderEmptyCredentials();
+          return;
         }
 
-        // Deadline text
-        const deadlineEl = document.getElementById('ceu-deadline-text');
-        if (required === 0) {
-          deadlineEl.textContent = 'No CEU requirements for your tier';
-        } else if (progress >= 100) {
-          deadlineEl.innerHTML = '<span style="color: var(--green-600);">Requirements complete!</span>';
-        } else if (data.daysRemaining !== null && data.daysRemaining >= 0) {
-          const remaining = required - earned;
-          deadlineEl.textContent = `${remaining} credits needed in ${data.daysRemaining} days`;
-        } else if (data.daysRemaining !== null && data.daysRemaining < 0) {
-          deadlineEl.innerHTML = `<span style="color: var(--error);">${required - earned} credits overdue</span>`;
-        }
+        // Show up to 2 credentials on dashboard with mini progress rings
+        container.innerHTML = credentials.slice(0, 2).map(cred => {
+          const total = parseFloat(cred.total_credits_required) || 0;
+          const earned = parseFloat(cred.credits_earned) || 0;
+          const pct = total > 0 ? Math.min(100, Math.round((earned / total) * 100)) : 100;
+          const daysUntilExpiry = Math.ceil((new Date(cred.current_period_end) - new Date()) / (1000 * 60 * 60 * 24));
+
+          // Status color
+          let progressColor = 'var(--green-500)';
+          let statusText = '';
+          if (pct >= 100) {
+            progressColor = 'var(--green-600)';
+            statusText = '<span style="color: var(--green-600);">Complete!</span>';
+          } else if (daysUntilExpiry < 0) {
+            progressColor = 'var(--error)';
+            statusText = '<span style="color: var(--error);">Expired</span>';
+          } else if (daysUntilExpiry <= 30) {
+            progressColor = 'var(--warning)';
+            statusText = `<span style="color: var(--warning);">${daysUntilExpiry} days left</span>`;
+          } else {
+            statusText = `${daysUntilExpiry} days left`;
+          }
+
+          // SVG mini ring
+          const radius = 28;
+          const circumference = 2 * Math.PI * radius;
+          const offset = circumference - (pct / 100) * circumference;
+
+          return `
+            <div style="display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-lg); margin-bottom: var(--space-3);">
+              <div style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
+                <svg width="64" height="64" viewBox="0 0 64 64" style="transform: rotate(-90deg);">
+                  <circle cx="32" cy="32" r="${radius}" fill="none" stroke="var(--gray-200)" stroke-width="5"/>
+                  <circle cx="32" cy="32" r="${radius}" fill="none" stroke="${progressColor}" stroke-width="5"
+                    stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+                </svg>
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 14px; font-weight: 700;">${pct}%</span>
+                </div>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: var(--font-semibold); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  ${escapeHtml(cred.credential_short_name || cred.credential_name)}
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--text-secondary);">
+                  ${earned}/${total} CEUs · ${statusText}
+                </div>
+              </div>
+              <a href="${portalBase}/credentials/" class="btn btn-ghost btn-sm" style="flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </div>
+          `;
+        }).join('') + (credentials.length > 2 ? `
+          <div style="text-align: center; padding-top: var(--space-2);">
+            <a href="${portalBase}/credentials/" style="font-size: var(--text-sm); color: var(--green-600);">
+              +${credentials.length - 2} more credential${credentials.length - 2 > 1 ? 's' : ''}
+            </a>
+          </div>
+        ` : '');
 
       } catch (err) {
-        console.error('Failed to load CEU progress:', err);
-        document.getElementById('ceu-deadline-text').textContent = 'Unable to load CEU data';
+        console.error('Failed to load credentials:', err);
+        container.innerHTML = renderEmptyCredentials();
       }
+    }
+
+    function renderEmptyCredentials() {
+      return `
+        <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto var(--space-3); opacity: 0.5;">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+          <p style="margin-bottom: var(--space-2); font-weight: var(--font-medium);">No credentials assigned yet</p>
+          <p style="font-size: var(--text-sm);">Your organization will assign your professional credentials and CEU requirements.</p>
+        </div>
+      `;
     }
 
     async function loadUnreadMessages() {

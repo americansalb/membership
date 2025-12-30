@@ -226,20 +226,14 @@
                 </div>
               </div>
 
-              <!-- CEU Progress (if applicable) -->
-              <div id="ceu-section" class="detail-card" style="display: none;">
+              <!-- Credentials & CEU Progress -->
+              <div id="credentials-section" class="detail-card">
                 <div class="detail-card-header">
-                  <h2>CEU Progress</h2>
-                  <span id="ceu-status" class="status-badge status-active">On Track</span>
+                  <h2>Credentials & CEU</h2>
+                  <button onclick="openAssignCredentialModal()" class="btn btn-primary btn-sm">+ Assign Credential</button>
                 </div>
-                <div class="detail-card-body">
-                  <div class="ceu-progress">
-                    <div class="ceu-bar-container">
-                      <div id="ceu-bar" class="ceu-bar" style="width: 0%"></div>
-                      <span id="ceu-bar-label" class="ceu-bar-label">0 / 0 CEUs</span>
-                    </div>
-                    <div id="ceu-deadline" class="ceu-deadline"></div>
-                  </div>
+                <div class="detail-card-body" id="credentials-list">
+                  <div class="text-muted" style="text-align: center; padding: var(--space-4);">Loading credentials...</div>
                 </div>
               </div>
 
@@ -293,13 +287,13 @@
                         <div class="quick-action-desc">Record check or cash payment</div>
                       </div>
                     </button>
-                    <button class="quick-action" onclick="addCEUCredits()">
+                    <button class="quick-action" onclick="scrollToCredentials()">
                       <div class="quick-action-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                       </div>
                       <div class="quick-action-text">
-                        <div class="quick-action-title">Add CEU Credits</div>
-                        <div class="quick-action-desc">Record continuing education</div>
+                        <div class="quick-action-title">Manage Credentials</div>
+                        <div class="quick-action-desc">Add credentials & CEU credits</div>
                       </div>
                     </button>
                   </div>
@@ -495,57 +489,92 @@
     </form>
   </div>
 
-  <!-- CEU Credits Modal -->
-  <div id="ceu-modal-backdrop" class="modal-backdrop" onclick="closeModal('ceu-modal')"></div>
-  <div id="ceu-modal" class="modal" style="max-width: 500px;">
+  <!-- Assign Credential Modal -->
+  <div id="assign-credential-modal-backdrop" class="modal-backdrop" onclick="closeModal('assign-credential-modal')"></div>
+  <div id="assign-credential-modal" class="modal" style="max-width: 500px;">
     <div class="modal-header">
-      <h3 class="modal-title">Add CEU Credits</h3>
-      <button class="modal-close" onclick="closeModal('ceu-modal')">
+      <h3 class="modal-title">Assign Credential</h3>
+      <button class="modal-close" onclick="closeModal('assign-credential-modal')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
-    <form onsubmit="saveCEUCredits(event)">
+    <form onsubmit="saveAssignCredential(event)">
       <div class="modal-body">
+        <div id="no-credentials-msg" style="display: none; text-align: center; padding: var(--space-4);">
+          <p class="text-muted" style="margin-bottom: var(--space-3);">No credentials have been created yet.</p>
+          <a href="/admin/credentials.html" class="btn btn-primary">Create Credentials</a>
+        </div>
+        <div id="credential-form-fields">
+          <div class="form-group">
+            <label class="label">Credential *</label>
+            <select id="assign-credential-id" class="input" required>
+              <option value="">Select credential...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="label">Date Earned *</label>
+            <input type="date" id="assign-earned-date" class="input" required>
+          </div>
+          <div class="form-group">
+            <label class="label">Credential Number</label>
+            <input type="text" id="assign-credential-number" class="input" placeholder="e.g., CMI-12345">
+          </div>
+          <div class="form-group">
+            <label class="label">Notes</label>
+            <textarea id="assign-notes" class="input" rows="2" placeholder="Optional notes about this credential"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" id="credential-form-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('assign-credential-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Assign Credential</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Add CEU Credits Modal (for member credentials) -->
+  <div id="add-ceu-modal-backdrop" class="modal-backdrop" onclick="closeModal('add-ceu-modal')"></div>
+  <div id="add-ceu-modal" class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Add CEU Credits</h3>
+      <button class="modal-close" onclick="closeModal('add-ceu-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form onsubmit="saveAddCEU(event)">
+      <div class="modal-body">
+        <input type="hidden" id="add-ceu-member-credential-id">
         <div class="form-group">
           <label class="label">Course/Activity Title *</label>
-          <input type="text" id="ceu-title" class="input" required placeholder="e.g., Annual Conference 2024">
+          <input type="text" id="add-ceu-title" class="input" required placeholder="e.g., Annual Conference 2024">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
           <div class="form-group">
             <label class="label">Credits *</label>
-            <input type="number" id="ceu-credits" class="input" step="0.25" min="0.25" required placeholder="0.00">
+            <input type="number" id="add-ceu-credits" class="input" step="0.25" min="0.25" required placeholder="0.00">
           </div>
           <div class="form-group">
             <label class="label">Category</label>
-            <select id="ceu-category" class="input">
+            <select id="add-ceu-category" class="input">
               <option value="">General</option>
-              <option value="ethics">Ethics</option>
-              <option value="medical">Medical</option>
-              <option value="legal">Legal</option>
-              <option value="technology">Technology</option>
-              <option value="communication">Communication</option>
             </select>
           </div>
         </div>
         <div class="form-group">
           <label class="label">Provider</label>
-          <input type="text" id="ceu-provider" class="input" placeholder="Organization that provided the training">
+          <input type="text" id="add-ceu-provider" class="input" placeholder="Organization that provided the training">
         </div>
         <div class="form-group">
           <label class="label">Completion Date</label>
-          <input type="date" id="ceu-date" class="input">
+          <input type="date" id="add-ceu-date" class="input">
         </div>
         <div class="form-group">
           <label class="label">Certificate Number</label>
-          <input type="text" id="ceu-certificate" class="input" placeholder="Optional">
-        </div>
-        <div class="form-group">
-          <label class="label">Notes</label>
-          <textarea id="ceu-notes" class="input" rows="2" placeholder="Additional details"></textarea>
+          <input type="text" id="add-ceu-certificate" class="input" placeholder="Optional">
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('ceu-modal')">Cancel</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('add-ceu-modal')">Cancel</button>
         <button type="submit" class="btn btn-primary">Add Credits</button>
       </div>
     </form>
@@ -609,6 +638,7 @@
         document.getElementById('member-content').style.display = 'block';
 
         renderMember(data);
+        loadMemberCredentials();
       } catch (err) {
         console.error('Load member error:', err);
         toast.error('Failed to load member');
@@ -1068,6 +1098,248 @@
     function editNotes() {
       // Could open a notes editing modal
       openEditModal();
+    }
+
+    // ============================================
+    // Credentials Management
+    // ============================================
+    let availableCredentials = [];
+    let memberCredentials = [];
+
+    async function loadMemberCredentials() {
+      try {
+        // Load available credentials for org
+        const credRes = await fetch('/api/v1/credentials', { credentials: 'include' });
+        if (credRes.ok) {
+          const data = await credRes.json();
+          availableCredentials = data.credentials || [];
+        }
+
+        // Load member's assigned credentials
+        const mcRes = await fetch(`/api/v1/members/${memberId}/credentials`, { credentials: 'include' });
+        if (mcRes.ok) {
+          const data = await mcRes.json();
+          memberCredentials = data.memberCredentials || [];
+        }
+
+        renderMemberCredentials();
+      } catch (err) {
+        console.error('Failed to load credentials:', err);
+        document.getElementById('credentials-list').innerHTML = `
+          <div class="text-muted" style="text-align: center; padding: var(--space-4);">
+            Failed to load credentials
+          </div>
+        `;
+      }
+    }
+
+    function renderMemberCredentials() {
+      const container = document.getElementById('credentials-list');
+
+      if (memberCredentials.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: var(--space-4);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5" style="margin-bottom: var(--space-3);">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+            <p class="text-muted" style="margin-bottom: var(--space-2);">No credentials assigned</p>
+            <p class="text-sm text-muted">Click "+ Assign Credential" to add their professional certifications.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = memberCredentials.map(mc => {
+        const total = parseFloat(mc.total_credits_required) || 0;
+        const earned = parseFloat(mc.credits_earned) || 0;
+        const pct = total > 0 ? Math.min(100, Math.round((earned / total) * 100)) : 100;
+        const daysRemaining = mc.current_period_end ?
+          Math.ceil((new Date(mc.current_period_end) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+
+        let statusClass = 'status-active';
+        let statusText = 'Active';
+        if (pct >= 100) {
+          statusText = 'Complete';
+        } else if (daysRemaining !== null && daysRemaining < 0) {
+          statusClass = 'status-expired';
+          statusText = 'Expired';
+        } else if (daysRemaining !== null && daysRemaining <= 30) {
+          statusClass = 'status-pending';
+          statusText = `${daysRemaining} days left`;
+        }
+
+        return `
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-3);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+              <div>
+                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-1);">${escapeHtml(mc.credential_name)}</div>
+                ${mc.credential_short_name ? `<span class="badge badge-navy">${escapeHtml(mc.credential_short_name)}</span>` : ''}
+              </div>
+              <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+
+            <div class="ceu-bar-container" style="height: 16px; margin-bottom: var(--space-2);">
+              <div class="ceu-bar ${pct < 50 ? 'warning' : ''} ${daysRemaining !== null && daysRemaining < 0 ? 'danger' : ''}"
+                   style="width: ${pct}%"></div>
+              <span class="ceu-bar-label" style="font-size: 11px;">${earned}/${total} CEUs</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="text-sm text-muted">
+                Renews: ${mc.current_period_end ? new Date(mc.current_period_end).toLocaleDateString() : 'N/A'}
+              </span>
+              <button onclick="openAddCEUModal('${mc.id}', '${mc.credential_id}')" class="btn btn-ghost btn-sm">
+                + Add CEUs
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function openAssignCredentialModal() {
+      // Populate credential dropdown
+      const select = document.getElementById('assign-credential-id');
+
+      // Filter out already assigned credentials
+      const assignedIds = memberCredentials.map(mc => mc.credential_id);
+      const available = availableCredentials.filter(c => !assignedIds.includes(c.id) && c.is_active !== false);
+
+      if (available.length === 0 && availableCredentials.length === 0) {
+        document.getElementById('no-credentials-msg').style.display = 'block';
+        document.getElementById('credential-form-fields').style.display = 'none';
+        document.getElementById('credential-form-footer').style.display = 'none';
+      } else if (available.length === 0) {
+        document.getElementById('no-credentials-msg').innerHTML = `
+          <p class="text-muted" style="margin-bottom: var(--space-3);">This member already has all available credentials.</p>
+        `;
+        document.getElementById('no-credentials-msg').style.display = 'block';
+        document.getElementById('credential-form-fields').style.display = 'none';
+        document.getElementById('credential-form-footer').style.display = 'none';
+      } else {
+        document.getElementById('no-credentials-msg').style.display = 'none';
+        document.getElementById('credential-form-fields').style.display = 'block';
+        document.getElementById('credential-form-footer').style.display = 'flex';
+
+        select.innerHTML = '<option value="">Select credential...</option>' +
+          available.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.short_name ? ` (${c.short_name})` : ''}</option>`).join('');
+      }
+
+      document.getElementById('assign-earned-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('assign-credential-number').value = '';
+      document.getElementById('assign-notes').value = '';
+
+      openModal('assign-credential-modal');
+    }
+
+    async function saveAssignCredential(e) {
+      e.preventDefault();
+
+      const data = {
+        member_id: memberId,
+        credential_id: document.getElementById('assign-credential-id').value,
+        earned_date: document.getElementById('assign-earned-date').value,
+        credential_number: document.getElementById('assign-credential-number').value || null,
+        notes: document.getElementById('assign-notes').value || null
+      };
+
+      try {
+        const res = await fetch('/api/v1/credentials/assign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to assign credential');
+        }
+
+        closeModal('assign-credential-modal');
+        toast.success('Credential assigned successfully');
+        loadMemberCredentials();
+      } catch (err) {
+        toast.error(err.message);
+      }
+    }
+
+    async function openAddCEUModal(memberCredentialId, credentialId) {
+      document.getElementById('add-ceu-member-credential-id').value = memberCredentialId;
+      document.getElementById('add-ceu-title').value = '';
+      document.getElementById('add-ceu-credits').value = '';
+      document.getElementById('add-ceu-provider').value = '';
+      document.getElementById('add-ceu-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('add-ceu-certificate').value = '';
+
+      // Load categories for this credential
+      try {
+        const res = await fetch(`/api/v1/credentials/${credentialId}`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          const categories = data.categories || [];
+          const select = document.getElementById('add-ceu-category');
+          select.innerHTML = '<option value="">General</option>' +
+            categories.filter(c => c.is_active !== false).map(c =>
+              `<option value="${c.id}">${escapeHtml(c.name)}${c.required_credits > 0 ? ` (${c.required_credits} req)` : ''}</option>`
+            ).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+
+      openModal('add-ceu-modal');
+    }
+
+    async function saveAddCEU(e) {
+      e.preventDefault();
+
+      const memberCredentialId = document.getElementById('add-ceu-member-credential-id').value;
+      const data = {
+        title: document.getElementById('add-ceu-title').value,
+        credits: parseFloat(document.getElementById('add-ceu-credits').value),
+        credential_category_id: document.getElementById('add-ceu-category').value || null,
+        provider: document.getElementById('add-ceu-provider').value || null,
+        completed_at: document.getElementById('add-ceu-date').value || null,
+        certificate_number: document.getElementById('add-ceu-certificate').value || null,
+        status: 'verified' // Admin-added credits are auto-verified
+      };
+
+      try {
+        const res = await fetch(`/api/v1/credentials/member-credentials/${memberCredentialId}/credits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to add credits');
+        }
+
+        closeModal('add-ceu-modal');
+        toast.success(`Added ${data.credits} CEU credits`);
+        loadMemberCredentials();
+      } catch (err) {
+        toast.error(err.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function scrollToCredentials() {
+      const section = document.getElementById('credentials-section');
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Highlight the section briefly
+      section.style.boxShadow = '0 0 0 3px var(--primary-light)';
+      setTimeout(() => {
+        section.style.boxShadow = '';
+      }, 2000);
     }
 
     // Initialize
