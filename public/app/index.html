@@ -2813,24 +2813,45 @@
     // ===========================================
 
     async function init() {
-      // Fetch data in parallel
-      const [members, tiers] = await Promise.all([
-        fetchMembers(),
-        fetchTiers()
-      ]);
+      try {
+        // Show loading state immediately
+        elements.memberCount.textContent = 'Loading...';
 
-      state.members = members;
-      state.tiers = tiers;
-      state.loading = false;
+        // Fetch with 5-second timeout
+        const fetchWithTimeout = async (promise) => {
+          const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('timeout')), 5000)
+          );
+          return Promise.race([promise, timeout]);
+        };
 
-      filterMembers();
-      renderAttentionBar();
-      setupInlineEditing();
+        const [members, tiers] = await Promise.all([
+          fetchWithTimeout(fetchMembers()),
+          fetchWithTimeout(fetchTiers())
+        ]);
 
-      // Set up command palette member search
-      elements.searchInput.addEventListener('focus', () => {
-        // Focus enhances with larger search if needed
-      });
+        state.members = members;
+        state.tiers = tiers;
+        state.loading = false;
+
+        filterMembers();
+        renderAttentionBar();
+        setupInlineEditing();
+      } catch (error) {
+        console.error('Init error:', error);
+        state.loading = false;
+        elements.memberTableBody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <h3 class="empty-title">Could not load members</h3>
+                <p class="empty-text">Make sure you're <a href="/admin/login.html">logged in</a> as an admin.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        elements.memberCount.textContent = 'Not connected';
+      }
     }
 
     init();
