@@ -381,6 +381,58 @@
     }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* Bulk Action Bar */
+    .bulk-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-phi-sm) var(--space-phi-lg);
+      background: var(--green-100);
+      border-bottom: 1px solid var(--green-200);
+    }
+    .bulk-bar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-phi-md);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--green-800);
+    }
+    .bulk-bar-actions {
+      display: flex;
+      gap: var(--space-phi-xs);
+    }
+
+    /* Checkbox styling */
+    .row-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--green-600);
+    }
+    .data-table th input[type="checkbox"],
+    .data-table td input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--green-600);
+    }
+    .data-table tbody tr.selected {
+      background: var(--green-50);
+    }
+
+    /* Member name link */
+    .member-name-link {
+      color: var(--gray-900);
+      font-weight: var(--font-semibold);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .member-name-link:hover {
+      color: var(--green-700);
+      text-decoration: underline;
+    }
+
     /* Empty State - Welcoming */
     .empty-state {
       padding: var(--space-phi-2xl) var(--space-phi-xl);
@@ -1050,10 +1102,30 @@
               <button class="filter-pill" data-filter="expired">Expired</button>
               <button class="filter-pill" data-filter="pending">Pending</button>
             </div>
-            <div class="toolbar-actions">
-              <button class="toolbar-btn" id="bulkActionsBtn" style="display:none">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                Bulk Actions
+          </div>
+
+          <!-- Bulk Action Bar (hidden by default) -->
+          <div class="bulk-bar" id="bulkBar" style="display:none">
+            <div class="bulk-bar-left">
+              <span id="bulkCount">0</span> selected
+              <button class="btn btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
+            </div>
+            <div class="bulk-bar-actions">
+              <button class="btn btn-secondary btn-sm" onclick="bulkExport()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="bulkChangeStatus('active')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Mark Active
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="bulkChangeStatus('expired')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                Mark Expired
+              </button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="bulkDelete()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Delete
               </button>
             </div>
           </div>
@@ -1061,6 +1133,9 @@
           <table class="data-table">
             <thead>
               <tr>
+                <th style="width:40px;padding-left:var(--space-phi-md)">
+                  <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)">
+                </th>
                 <th data-sort="name" class="sorted">Member</th>
                 <th data-sort="status">Status</th>
                 <th data-sort="tier">Tier</th>
@@ -1070,7 +1145,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="6" style="text-align:center;padding:var(--space-phi-xl);color:var(--gray-400)">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:var(--space-phi-xl);color:var(--gray-400)">Loading...</td></tr>
             </tbody>
           </table>
 
@@ -1323,6 +1398,7 @@
       page: 1,
       perPage: 20,
       selected: null,
+      selectedIds: [],  // For bulk selection
       importData: null,
       importMap: {},
       dup: null,
@@ -1466,7 +1542,7 @@
 
       if (slice.length === 0) {
         $('tableBody').innerHTML = `
-          <tr><td colspan="6">
+          <tr><td colspan="7">
             <div class="empty-state">
               <div class="empty-icon">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1486,16 +1562,20 @@
         $('tableBody').innerHTML = slice.map(m => {
           const status = getStatus(m.status, m.expires_at);
           const hasCustom = m.custom_fields && Object.keys(m.custom_fields).length > 0;
+          const isSelected = state.selectedIds.includes(m.id);
           return `
-            <tr onclick="location.href='/admin/member.html?id=${m.id}'">
+            <tr class="${isSelected ? 'selected' : ''}" onclick="handleRowClick(event, '${m.id}')">
+              <td style="padding-left:var(--space-phi-md)" onclick="event.stopPropagation()">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${m.id}', this.checked)">
+              </td>
               <td>
                 <div class="member-cell">
                   <div class="member-avatar">${initials(m.first_name, m.last_name)}</div>
                   <div class="member-info">
-                    <div class="member-name">
+                    <a href="/admin/member.html?id=${m.id}" class="member-name-link" onclick="event.stopPropagation()">
                       ${m.first_name||''} ${m.last_name||''}
                       ${hasCustom ? `<span class="custom-indicator" title="Has custom fields">+${Object.keys(m.custom_fields).length}</span>` : ''}
-                    </div>
+                    </a>
                     <div class="member-email">${m.email||''}</div>
                   </div>
                 </div>
@@ -1508,6 +1588,14 @@
             </tr>
           `;
         }).join('');
+      }
+
+      // Update select all checkbox
+      const selectAllEl = $('selectAll');
+      if (selectAllEl) {
+        const pageIds = slice.map(m => m.id);
+        const allSelected = pageIds.length > 0 && pageIds.every(id => state.selectedIds.includes(id));
+        selectAllEl.checked = allSelected;
       }
 
       const total = state.filtered.length;
@@ -1968,6 +2056,123 @@
       a.download = `members-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       showToast(`Exported ${state.filtered.length} member${state.filtered.length !== 1 ? 's' : ''}`);
+    }
+
+    // Row click handler - opens quick panel
+    function handleRowClick(event, id) {
+      openPanel(id);
+    }
+
+    // Selection functions
+    function toggleSelect(id, checked) {
+      if (checked) {
+        if (!state.selectedIds.includes(id)) state.selectedIds.push(id);
+      } else {
+        state.selectedIds = state.selectedIds.filter(x => x !== id);
+      }
+      updateBulkBar();
+      render();
+    }
+
+    function toggleSelectAll(checked) {
+      const start = (state.page - 1) * state.perPage;
+      const end = start + state.perPage;
+      const pageIds = state.filtered.slice(start, end).map(m => m.id);
+
+      if (checked) {
+        pageIds.forEach(id => {
+          if (!state.selectedIds.includes(id)) state.selectedIds.push(id);
+        });
+      } else {
+        state.selectedIds = state.selectedIds.filter(id => !pageIds.includes(id));
+      }
+      updateBulkBar();
+      render();
+    }
+
+    function clearSelection() {
+      state.selectedIds = [];
+      updateBulkBar();
+      render();
+    }
+
+    function updateBulkBar() {
+      const bulkBar = $('bulkBar');
+      const bulkCount = $('bulkCount');
+      if (state.selectedIds.length > 0) {
+        bulkBar.style.display = 'flex';
+        bulkCount.textContent = state.selectedIds.length;
+      } else {
+        bulkBar.style.display = 'none';
+      }
+    }
+
+    // Bulk actions
+    function bulkExport() {
+      const selected = state.members.filter(m => state.selectedIds.includes(m.id));
+      if (!selected.length) return;
+
+      const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Status', 'Tier', 'Joined', 'Expires'];
+      const rows = selected.map(m => [
+        m.first_name || '', m.last_name || '', m.email || '', m.phone || '',
+        m.status || '', m.tier_name || '',
+        m.created_at?.split('T')[0] || '', m.expires_at?.split('T')[0] || ''
+      ]);
+      const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      a.download = `members-selected-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      showToast(`Exported ${selected.length} member${selected.length !== 1 ? 's' : ''}`);
+    }
+
+    async function bulkChangeStatus(newStatus) {
+      if (!state.selectedIds.length) return;
+      if (!confirm(`Change status to "${newStatus}" for ${state.selectedIds.length} member${state.selectedIds.length !== 1 ? 's' : ''}?`)) return;
+
+      let success = 0, failed = 0;
+      for (const id of state.selectedIds) {
+        try {
+          const r = await fetch(`/api/v1/members/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (r.ok) success++; else failed++;
+        } catch { failed++; }
+      }
+
+      if (success > 0) {
+        showToast(`Updated ${success} member${success !== 1 ? 's' : ''}`);
+        state.members = await fetchMembers();
+        clearSelection();
+        updateInsights();
+        applyFilter();
+      }
+      if (failed > 0) showToast(`Failed to update ${failed} member${failed !== 1 ? 's' : ''}`, 'error');
+    }
+
+    async function bulkDelete() {
+      if (!state.selectedIds.length) return;
+      if (!confirm(`Delete ${state.selectedIds.length} member${state.selectedIds.length !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+      let success = 0, failed = 0;
+      for (const id of state.selectedIds) {
+        try {
+          const r = await fetch(`/api/v1/members/${id}`, { method: 'DELETE', credentials: 'include' });
+          if (r.ok) success++; else failed++;
+        } catch { failed++; }
+      }
+
+      if (success > 0) {
+        showToast(`Deleted ${success} member${success !== 1 ? 's' : ''}`);
+        state.members = await fetchMembers();
+        clearSelection();
+        updateInsights();
+        applyFilter();
+      }
+      if (failed > 0) showToast(`Failed to delete ${failed} member${failed !== 1 ? 's' : ''}`, 'error');
     }
 
     // Events
