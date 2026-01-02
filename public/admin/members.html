@@ -1487,7 +1487,7 @@
           const status = getStatus(m.status, m.expires_at);
           const hasCustom = m.custom_fields && Object.keys(m.custom_fields).length > 0;
           return `
-            <tr onclick="openPanel('${m.id}')">
+            <tr onclick="location.href='/admin/member.html?id=${m.id}'">
               <td>
                 <div class="member-cell">
                   <div class="member-avatar">${initials(m.first_name, m.last_name)}</div>
@@ -1591,7 +1591,7 @@
       if (members.length) {
         h += '<div class="cmd-section">Members</div>';
         members.forEach(m => {
-          h += `<div class="cmd-item" onclick="openPanel('${m.id}');closeCmd()">
+          h += `<div class="cmd-item" onclick="location.href='/admin/member.html?id=${m.id}'">
             <div class="cmd-item-avatar">${initials(m.first_name, m.last_name)}</div>
             <div class="cmd-item-text">
               <div class="cmd-item-title">${m.first_name||''} ${m.last_name||''}</div>
