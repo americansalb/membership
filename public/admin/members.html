@@ -421,16 +421,10 @@
       background: var(--green-50);
     }
 
-    /* Member name link */
-    .member-name-link {
+    /* Member name */
+    .member-name {
       color: var(--gray-900);
       font-weight: var(--font-semibold);
-      text-decoration: none;
-      transition: color 0.15s ease;
-    }
-    .member-name-link:hover {
-      color: var(--green-700);
-      text-decoration: underline;
     }
 
     /* Empty State - Welcoming */
@@ -1564,7 +1558,7 @@
           const hasCustom = m.custom_fields && Object.keys(m.custom_fields).length > 0;
           const isSelected = state.selectedIds.includes(m.id);
           return `
-            <tr class="${isSelected ? 'selected' : ''}" onclick="handleRowClick(event, '${m.id}')">
+            <tr class="${isSelected ? 'selected' : ''}" onclick="goToMember(event, '${m.id}')" style="cursor:pointer">
               <td style="padding-left:var(--space-phi-md)" onclick="event.stopPropagation()">
                 <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${m.id}', this.checked)">
               </td>
@@ -1572,10 +1566,10 @@
                 <div class="member-cell">
                   <div class="member-avatar">${initials(m.first_name, m.last_name)}</div>
                   <div class="member-info">
-                    <a href="/admin/member.html?id=${m.id}" class="member-name-link" onclick="event.stopPropagation()">
+                    <span class="member-name">
                       ${m.first_name||''} ${m.last_name||''}
                       ${hasCustom ? `<span class="custom-indicator" title="Has custom fields">+${Object.keys(m.custom_fields).length}</span>` : ''}
-                    </a>
+                    </span>
                     <div class="member-email">${m.email||''}</div>
                   </div>
                 </div>
@@ -2058,9 +2052,12 @@
       showToast(`Exported ${state.filtered.length} member${state.filtered.length !== 1 ? 's' : ''}`);
     }
 
-    // Row click handler - opens quick panel
-    function handleRowClick(event, id) {
-      openPanel(id);
+    // Row click handler - navigates to member profile
+    function goToMember(event, id) {
+      // Only navigate if not clicking on checkbox
+      if (event.target.type !== 'checkbox') {
+        window.location.href = `/admin/member.html?id=${id}`;
+      }
     }
 
     // Selection functions
