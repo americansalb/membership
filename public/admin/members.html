@@ -1310,9 +1310,6 @@
     </div>
   </div>
 
-  <!-- Toasts -->
-  <div class="toast-stack" id="toasts"></div>
-
   <script src="/js/app.js"></script>
   <script>
     const state = {
@@ -1393,12 +1390,9 @@
       return { cls: 'active', label: 'Active' };
     }
 
-    function toast(msg, type = 'success') {
-      const t = document.createElement('div');
-      t.className = `toast ${type}`;
-      t.textContent = msg;
-      $('toasts').appendChild(t);
-      setTimeout(() => t.remove(), 4000);
+    function showToast(msg, type = 'success') {
+      if (type === 'success') toast.success(msg);
+      else toast.error(msg);
     }
 
     // Insights
@@ -1682,12 +1676,12 @@
           body: JSON.stringify(data)
         });
         if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
-        toast('Member added successfully');
+        showToast('Member added successfully');
         closeAdd();
         state.members = await fetchMembers();
         updateInsights();
         applyFilter();
-      } catch (e) { toast(e.message, 'error'); }
+      } catch (e) { showToast(e.message, 'error'); }
     }
 
     // Import Modal
@@ -1719,7 +1713,7 @@
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
       a.download = 'member-import-template.csv';
       a.click();
-      toast('Template downloaded');
+      showToast('Template downloaded');
     }
 
     function parseCSV(txt) {
@@ -1739,11 +1733,11 @@
     }
 
     function handleFile(f) {
-      if (!f || !f.name.endsWith('.csv')) { toast('Please select a CSV file', 'error'); return; }
+      if (!f || !f.name.endsWith('.csv')) { showToast('Please select a CSV file', 'error'); return; }
       const reader = new FileReader();
       reader.onload = e => {
         const { h, r } = parseCSV(e.target.result);
-        if (!h.length || !r.length) { toast('Invalid CSV file', 'error'); return; }
+        if (!h.length || !r.length) { showToast('Invalid CSV file', 'error'); return; }
         state.importData = { h, r };
         showImportPreview();
       };
@@ -1758,7 +1752,8 @@
       $('previewHead').innerHTML = `<tr>${h.map(x => `<th>${x}</th>`).join('')}</tr>`;
       $('previewBody').innerHTML = r.slice(0, 3).map(row => `<tr>${row.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
 
-      const fields = [
+      // Standard member fields
+      const standardFields = [
         { k: 'first_name', l: 'First Name' },
         { k: 'last_name', l: 'Last Name' },
         { k: 'email', l: 'Email' },
@@ -1767,25 +1762,51 @@
         { k: 'expires_at', l: 'Expires' }
       ];
 
-      // Auto-map
+      // Auto-map columns to fields
       h.forEach((col, i) => {
         const cl = col.toLowerCase().replace(/[^a-z]/g, '');
-        for (const f of fields) {
+
+        // First try standard fields
+        let matched = false;
+        for (const f of standardFields) {
           const fl = f.l.toLowerCase().replace(/[^a-z]/g, '');
-          if (cl.includes(fl) || fl.includes(cl)) { state.importMap[i] = f.k; break; }
+          if (cl.includes(fl) || fl.includes(cl) || cl === f.k.replace(/_/g, '')) {
+            state.importMap[i] = f.k;
+            matched = true;
+            break;
+          }
+        }
+
+        // If no standard match, map as custom field (using original column name)
+        if (!matched && col.trim()) {
+          state.importMap[i] = `custom:${col.trim()}`;
         }
       });
 
-      $('mappingRows').innerHTML = h.map((col, i) => `
+      $('mappingRows').innerHTML = h.map((col, i) => {
+        const currentVal = state.importMap[i] || '';
+        const isCustom = currentVal.startsWith('custom:');
+
+        return `
         <div class="mapping-row">
           <span class="mapping-col">${col}</span>
           <span class="mapping-arrow">→</span>
-          <select class="mapping-select" onchange="state.importMap[${i}]=this.value;checkImportReady()">
-            <option value="">Skip</option>
-            ${fields.map(f => `<option value="${f.k}" ${state.importMap[i]===f.k?'selected':''}>${f.l}</option>`).join('')}
+          <select class="mapping-select" onchange="updateMapping(${i}, this.value)">
+            <option value="">Skip this column</option>
+            <optgroup label="Standard Fields">
+              ${standardFields.map(f => `<option value="${f.k}" ${currentVal===f.k?'selected':''}>${f.l}</option>`).join('')}
+            </optgroup>
+            <optgroup label="Custom Field">
+              <option value="custom:${col.trim()}" ${isCustom?'selected':''}>Save as "${col.trim()}"</option>
+            </optgroup>
           </select>
         </div>
-      `).join('');
+      `}).join('');
+      checkImportReady();
+    }
+
+    function updateMapping(idx, val) {
+      state.importMap[idx] = val;
       checkImportReady();
     }
 
@@ -1796,13 +1817,34 @@
     async function doImport() {
       if (!state.importData) return;
       const { h, r } = state.importData;
+
       const members = r.map(row => {
-        const m = {};
-        h.forEach((_, i) => { const k = state.importMap[i]; if (k && row[i]) m[k] = row[i]; });
+        const m = { custom_fields: {} };
+
+        h.forEach((_, i) => {
+          const mapping = state.importMap[i];
+          const value = row[i]?.trim();
+          if (!mapping || !value) return;
+
+          if (mapping.startsWith('custom:')) {
+            // Custom field - extract the field name and store in custom_fields
+            const fieldName = mapping.substring(7);
+            m.custom_fields[fieldName] = value;
+          } else {
+            // Standard field
+            m[mapping] = value;
+          }
+        });
+
+        // Only keep custom_fields if it has values
+        if (Object.keys(m.custom_fields).length === 0) {
+          delete m.custom_fields;
+        }
+
         return m;
       }).filter(m => m.email);
 
-      if (!members.length) { toast('No valid rows to import', 'error'); return; }
+      if (!members.length) { showToast('No valid rows to import', 'error'); return; }
 
       try {
         const res = await fetch('/api/v1/members/import', {
@@ -1812,12 +1854,16 @@
           body: JSON.stringify({ members })
         });
         const d = await res.json();
-        toast(`Imported ${d.imported} member${d.imported !== 1 ? 's' : ''}${d.skipped ? `, ${d.skipped} skipped` : ''}`);
+        const customCount = members.filter(m => m.custom_fields).length;
+        let msg = `Imported ${d.imported} member${d.imported !== 1 ? 's' : ''}`;
+        if (d.skipped) msg += `, ${d.skipped} skipped`;
+        if (customCount) msg += ` (${customCount} with custom fields)`;
+        showToast(msg);
         closeImport();
         state.members = await fetchMembers();
         updateInsights();
         applyFilter();
-      } catch { toast('Import failed', 'error'); }
+      } catch { showToast('Import failed', 'error'); }
     }
 
     // Member Panel
@@ -1884,13 +1930,13 @@
       try {
         const r = await fetch(`/api/v1/members/${state.selected.id}`, { method: 'DELETE', credentials: 'include' });
         if (r.ok) {
-          toast('Member deleted');
+          showToast('Member deleted');
           closePanel();
           state.members = await fetchMembers();
           updateInsights();
           applyFilter();
-        } else { toast('Failed to delete member', 'error'); }
-      } catch { toast('Failed to delete member', 'error'); }
+        } else { showToast('Failed to delete member', 'error'); }
+      } catch { showToast('Failed to delete member', 'error'); }
     }
 
     function addNote() {
@@ -1905,7 +1951,7 @@
         </div>
       `);
       $('noteInput').value = '';
-      toast('Note added');
+      showToast('Note added');
     }
 
     // Export
@@ -1921,7 +1967,7 @@
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
       a.download = `members-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
-      toast(`Exported ${state.filtered.length} member${state.filtered.length !== 1 ? 's' : ''}`);
+      showToast(`Exported ${state.filtered.length} member${state.filtered.length !== 1 ? 's' : ''}`);
     }
 
     // Events
