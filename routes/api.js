@@ -516,6 +516,97 @@ router.post('/members', requireUser, requireAdmin, async (req, res) => {
   }
 });
 
+// Bulk import members
+router.post('/members/import', requireUser, requireAdmin, async (req, res) => {
+  try {
+    const { members } = req.body;
+    const orgId = req.user.orgId;
+
+    if (!members || !Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'Members array is required' });
+    }
+
+    if (members.length > 500) {
+      return res.status(400).json({ error: 'Maximum 500 members per import' });
+    }
+
+    const results = {
+      imported: 0,
+      skipped: 0,
+      errors: []
+    };
+
+    for (const memberData of members) {
+      try {
+        if (!memberData.email) {
+          results.skipped++;
+          continue;
+        }
+
+        const email = memberData.email.toLowerCase().trim();
+
+        // Check if member already exists
+        const existing = await db.query(
+          'SELECT id FROM members WHERE email = $1 AND org_id = $2',
+          [email, orgId]
+        );
+
+        if (existing.rows.length > 0) {
+          results.skipped++;
+          continue;
+        }
+
+        // Insert new member
+        await db.query(
+          `INSERT INTO members (
+            org_id, email, first_name, last_name, phone,
+            address_line1, city, state, postal_code,
+            status, expires_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          [
+            orgId,
+            email,
+            memberData.first_name || null,
+            memberData.last_name || null,
+            memberData.phone || null,
+            memberData.address || memberData.address_line1 || null,
+            memberData.city || null,
+            memberData.state || null,
+            memberData.zip || memberData.postal_code || null,
+            memberData.status || 'active',
+            memberData.expires_at || null
+          ]
+        );
+
+        results.imported++;
+      } catch (err) {
+        results.errors.push({
+          email: memberData.email,
+          error: err.message
+        });
+      }
+    }
+
+    // Log activity
+    await db.query(
+      `INSERT INTO member_activity (org_id, member_id, type, title, caused_by_user_id, metadata)
+       VALUES ($1, NULL, 'bulk_import', $2, $3, $4)`,
+      [
+        orgId,
+        `Imported ${results.imported} members`,
+        req.user.id,
+        JSON.stringify({ imported: results.imported, skipped: results.skipped })
+      ]
+    );
+
+    res.json(results);
+
+  } catch (err) {
+    console.error('Bulk import error:', err);
+    res.status(500).json({ error: 'Failed to import members' });
+  }
+});
+
 // Update member
 router.put('/members/:id', requireUser, requireAdmin, async (req, res) => {
   try {
