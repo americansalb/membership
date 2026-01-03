@@ -977,6 +977,28 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
+    /* Quick Action Button */
+    .quick-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--gray-400);
+      transition: all 0.15s ease;
+    }
+    .quick-action-btn:hover {
+      background: var(--gray-100);
+      color: var(--gray-600);
+    }
+    .data-table tbody tr:hover .quick-action-btn {
+      color: var(--gray-500);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .admin-content { padding: var(--space-phi-lg); }
@@ -1136,10 +1158,11 @@
                 <th data-sort="phone">Phone</th>
                 <th data-sort="expires">Expires</th>
                 <th data-sort="joined">Joined</th>
+                <th style="width:50px;"></th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="7" style="text-align:center;padding:var(--space-phi-xl);color:var(--gray-400)">Loading...</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:var(--space-phi-xl);color:var(--gray-400)">Loading...</td></tr>
             </tbody>
           </table>
 
@@ -1380,6 +1403,7 @@
   </div>
 
   <script src="/js/app.js"></script>
+  <script src="/js/ui-utils.js"></script>
   <script>
     const state = {
       members: [],
@@ -1404,6 +1428,14 @@
     // Initialize
     async function init() {
       if (!await checkAuth()) return;
+
+      // Show skeleton loading while fetching data
+      $('tableBody').innerHTML = skeleton.tableRows(8, 7);
+      $('insightTotal').innerHTML = '<span class="skeleton" style="display:inline-block;width:32px;height:24px;"></span>';
+      $('insightActive').innerHTML = '<span class="skeleton" style="display:inline-block;width:32px;height:24px;"></span>';
+      $('insightExpiring').innerHTML = '<span class="skeleton" style="display:inline-block;width:32px;height:24px;"></span>';
+      $('insightExpired').innerHTML = '<span class="skeleton" style="display:inline-block;width:32px;height:24px;"></span>';
+
       const [members, tiers] = await Promise.all([fetchMembers(), fetchTiers()]);
       state.members = members;
       state.tiers = tiers;
@@ -1536,7 +1568,7 @@
 
       if (slice.length === 0) {
         $('tableBody').innerHTML = `
-          <tr><td colspan="7">
+          <tr><td colspan="8">
             <div class="empty-state">
               <div class="empty-icon">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1579,6 +1611,13 @@
               <td>${fmtPhone(m.phone)}</td>
               <td>${fmtDate(m.expires_at)}</td>
               <td>${fmtDate(m.created_at)}</td>
+              <td onclick="event.stopPropagation()">
+                <button class="quick-action-btn" onclick="showQuickActions(event, '${m.id}')" title="Actions">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                  </svg>
+                </button>
+              </td>
             </tr>
           `;
         }).join('');
@@ -2205,6 +2244,78 @@
       $('dropzone').ondragover = e => { e.preventDefault(); $('dropzone').classList.add('dragover'); };
       $('dropzone').ondragleave = () => $('dropzone').classList.remove('dragover');
       $('dropzone').ondrop = e => { e.preventDefault(); $('dropzone').classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); };
+    }
+
+    // Quick Actions Menu
+    function showQuickActions(event, memberId) {
+      const member = state.members.find(m => m.id == memberId);
+      if (!member) return;
+
+      quickActions.show(event, [
+        {
+          label: 'View Profile',
+          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+          onClick: () => window.location.href = `/admin/member.html?id=${memberId}`
+        },
+        {
+          label: 'Send Email',
+          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+          onClick: () => window.location.href = `mailto:${member.email}`
+        },
+        {
+          label: member.status === 'active' ? 'Mark as Expired' : 'Mark as Active',
+          icon: member.status === 'active'
+            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+            : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+          onClick: async () => {
+            const newStatus = member.status === 'active' ? 'expired' : 'active';
+            try {
+              const r = await fetch(`/api/v1/members/${memberId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status: newStatus })
+              });
+              if (r.ok) {
+                toast.success(`Member marked as ${newStatus}`);
+                state.members = await fetchMembers();
+                updateInsights();
+                applyFilter();
+              } else {
+                toast.error('Failed to update member');
+              }
+            } catch {
+              toast.error('Failed to update member');
+            }
+          }
+        },
+        { divider: true },
+        {
+          label: 'Delete',
+          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+          danger: true,
+          onClick: async () => {
+            const confirmed = await confirm2.danger(
+              'Delete Member?',
+              `This will permanently delete ${member.first_name} ${member.last_name} and all their data. This action cannot be undone.`
+            );
+            if (!confirmed) return;
+            try {
+              const r = await fetch(`/api/v1/members/${memberId}`, { method: 'DELETE', credentials: 'include' });
+              if (r.ok) {
+                toast.success('Member deleted');
+                state.members = await fetchMembers();
+                updateInsights();
+                applyFilter();
+              } else {
+                toast.error('Failed to delete member');
+              }
+            } catch {
+              toast.error('Failed to delete member');
+            }
+          }
+        }
+      ]);
     }
 
     init();

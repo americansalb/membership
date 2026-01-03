@@ -278,6 +278,21 @@
         </div>
       </div>
 
+      <!-- Action Items Banner -->
+      <div id="action-items" style="display: none; margin-bottom: var(--space-6);">
+        <div style="background: linear-gradient(135deg, var(--warning-light) 0%, var(--terra-50) 100%); border: 1px solid var(--terra-200); border-radius: var(--radius-lg); padding: var(--space-4);">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--terra-600)" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span style="font-weight: var(--font-semibold); color: var(--terra-700);" id="action-count">Items needing attention</span>
+          </div>
+          <div id="action-list" style="display: flex; flex-direction: column; gap: var(--space-2);"></div>
+        </div>
+      </div>
+
       <!-- Dashboard Grid -->
       <div class="dashboard-grid">
         <!-- Community Hub Card -->
@@ -332,33 +347,9 @@
           <div class="card-header">
             <h4>Recent Activity</h4>
           </div>
-          <div class="card-body">
-            <div class="activity-item">
-              <div class="activity-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              </div>
-              <div>
-                <p class="font-medium">Completed "Ethics in Interpreting"</p>
-                <p class="text-sm text-muted">Earned 2.0 CEU credits - Dec 15</p>
-              </div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-icon" style="background-color: var(--info-light); color: var(--info);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              </div>
-              <div>
-                <p class="font-medium">Certificate issued</p>
-                <p class="text-sm text-muted">Medical Terminology Course - Dec 10</p>
-              </div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-icon" style="background-color: var(--orange-100); color: var(--orange-600);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-              </div>
-              <div>
-                <p class="font-medium">Membership renewed</p>
-                <p class="text-sm text-muted">Annual - $150.00 - Dec 1</p>
-              </div>
+          <div class="card-body" id="activity-content">
+            <div style="display: flex; justify-content: center; padding: var(--space-4);">
+              <div class="loading-spinner" style="width: 24px; height: 24px; border-width: 2px;"></div>
             </div>
           </div>
         </div>
@@ -436,9 +427,162 @@
         // Load credentials progress
         loadCredentialsProgress();
 
+        // Load action items
+        loadActionItems();
+
+        // Load real activity
+        loadRecentActivity();
+
       } catch (err) {
         window.location.href = portalBase + '/login';
       }
+    }
+
+    async function loadActionItems() {
+      const actionItems = [];
+
+      // Check credentials for pending actions
+      try {
+        const res = await fetch('/api/v1/credentials/member/my-credentials', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          const credentials = data.credentials || [];
+
+          credentials.forEach(cred => {
+            const total = parseFloat(cred.total_credits_required) || 0;
+            const earned = parseFloat(cred.credits_earned) || 0;
+            const daysUntilExpiry = Math.ceil((new Date(cred.current_period_end) - new Date()) / (1000 * 60 * 60 * 24));
+
+            if (daysUntilExpiry > 0 && daysUntilExpiry <= 30 && earned < total) {
+              const needed = total - earned;
+              actionItems.push({
+                type: 'ceu',
+                title: `Complete ${needed.toFixed(1)} more CEU credits for ${cred.credential_short_name || cred.credential_name}`,
+                subtitle: `Due in ${daysUntilExpiry} days`,
+                link: portalBase + '/credentials/',
+                urgent: daysUntilExpiry <= 7
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed to check credential actions:', err);
+      }
+
+      // Check for unread messages
+      try {
+        const res = await fetch('/api/v1/community/threads', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          const unread = (data.threads || []).filter(t => t.unread_count > 0).length;
+          if (unread > 0) {
+            actionItems.push({
+              type: 'message',
+              title: `You have ${unread} unread message${unread > 1 ? 's' : ''}`,
+              subtitle: 'Check your inbox',
+              link: portalBase + '/community/messages/'
+            });
+          }
+        }
+      } catch (err) {}
+
+      // Display action items
+      const container = document.getElementById('action-items');
+      const list = document.getElementById('action-list');
+
+      if (actionItems.length > 0) {
+        container.style.display = 'block';
+        document.getElementById('action-count').textContent = `${actionItems.length} item${actionItems.length > 1 ? 's' : ''} needing attention`;
+
+        list.innerHTML = actionItems.map(item => `
+          <a href="${item.link}" style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: white; border-radius: var(--radius-md); text-decoration: none; color: inherit; border: 1px solid ${item.urgent ? 'var(--error)' : 'var(--border-light)'};">
+            <span style="color: ${item.urgent ? 'var(--error)' : 'var(--terra-600)'};">•</span>
+            <div style="flex: 1;">
+              <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">${escapeHtml(item.title)}</div>
+              ${item.subtitle ? `<div style="font-size: var(--text-xs); color: var(--text-secondary);">${escapeHtml(item.subtitle)}</div>` : ''}
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        `).join('');
+      }
+    }
+
+    async function loadRecentActivity() {
+      const container = document.getElementById('activity-content');
+
+      try {
+        const res = await fetch('/api/v1/credentials/member/my-activity', { credentials: 'include' });
+
+        if (!res.ok) {
+          container.innerHTML = renderEmptyActivity();
+          return;
+        }
+
+        const data = await res.json();
+        const activities = data.activities || [];
+
+        if (activities.length === 0) {
+          container.innerHTML = renderEmptyActivity();
+          return;
+        }
+
+        container.innerHTML = activities.slice(0, 5).map(activity => {
+          const iconStyle = getActivityIcon(activity.type);
+          return `
+            <div class="activity-item">
+              <div class="activity-icon" style="background-color: ${iconStyle.bg}; color: ${iconStyle.color};">
+                ${iconStyle.svg}
+              </div>
+              <div>
+                <p class="font-medium">${escapeHtml(activity.title)}</p>
+                <p class="text-sm text-muted">${escapeHtml(activity.description || '')} ${activity.description ? '·' : ''} ${timeAgo(new Date(activity.created_at))}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('Failed to load activity:', err);
+        container.innerHTML = renderEmptyActivity();
+      }
+    }
+
+    function renderEmptyActivity() {
+      return `
+        <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto var(--space-2); opacity: 0.5;">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <p style="font-size: var(--text-sm);">No recent activity</p>
+        </div>
+      `;
+    }
+
+    function getActivityIcon(type) {
+      const icons = {
+        ceu_earned: {
+          bg: 'var(--success-light)',
+          color: 'var(--success)',
+          svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        },
+        credential_earned: {
+          bg: 'var(--info-light)',
+          color: 'var(--info)',
+          svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
+        },
+        payment_success: {
+          bg: 'var(--orange-100)',
+          color: 'var(--orange-600)',
+          svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+        },
+        login: {
+          bg: 'var(--gray-100)',
+          color: 'var(--gray-600)',
+          svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>'
+        }
+      };
+      return icons[type] || icons.ceu_earned;
     }
 
     async function loadCredentialsProgress() {
