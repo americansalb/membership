@@ -1646,4 +1646,221 @@ router.post('/members/:id/renewal-reminder', requireUser, requireAdmin, async (r
   }
 });
 
+// ============================================================================
+// ANALYTICS - Strategic insights and trend data
+// ============================================================================
+
+router.get('/analytics/overview', requireUser, async (req, res) => {
+  try {
+    const orgId = req.user.orgId;
+
+    const [
+      membershipTrend,
+      revenueTrend,
+      retentionData,
+      tierBreakdown,
+      engagementMetrics,
+      ceuCompliance,
+      lifetimeValue
+    ] = await Promise.all([
+      // Membership growth trend (last 12 months)
+      db.query(`
+        WITH months AS (
+          SELECT generate_series(
+            DATE_TRUNC('month', NOW() - INTERVAL '11 months'),
+            DATE_TRUNC('month', NOW()),
+            '1 month'
+          )::date as month
+        )
+        SELECT
+          m.month,
+          COUNT(mem.id) FILTER (WHERE mem.created_at < m.month + INTERVAL '1 month') as total_members,
+          COUNT(mem.id) FILTER (WHERE DATE_TRUNC('month', mem.created_at) = m.month) as new_members,
+          COUNT(mem.id) FILTER (WHERE mem.status = 'active' AND mem.created_at < m.month + INTERVAL '1 month') as active_members
+        FROM months m
+        LEFT JOIN members mem ON mem.org_id = $1
+        GROUP BY m.month
+        ORDER BY m.month
+      `, [orgId]),
+
+      // Revenue trend (last 12 months)
+      db.query(`
+        WITH months AS (
+          SELECT generate_series(
+            DATE_TRUNC('month', NOW() - INTERVAL '11 months'),
+            DATE_TRUNC('month', NOW()),
+            '1 month'
+          )::date as month
+        )
+        SELECT
+          m.month,
+          COALESCE(SUM(t.amount_cents), 0) as revenue_cents,
+          COUNT(t.id) as transaction_count
+        FROM months m
+        LEFT JOIN transactions t ON t.org_id = $1
+          AND DATE_TRUNC('month', t.created_at) = m.month
+          AND t.status = 'completed'
+        GROUP BY m.month
+        ORDER BY m.month
+      `, [orgId]),
+
+      // Retention data (renewals vs expirations last 6 months)
+      db.query(`
+        WITH periods AS (
+          SELECT generate_series(
+            DATE_TRUNC('month', NOW() - INTERVAL '5 months'),
+            DATE_TRUNC('month', NOW()),
+            '1 month'
+          )::date as month
+        )
+        SELECT
+          p.month,
+          COUNT(m.id) FILTER (WHERE DATE_TRUNC('month', m.expires_at) = p.month) as expired_count,
+          COUNT(m.id) FILTER (WHERE DATE_TRUNC('month', m.expires_at) = p.month AND m.status = 'active') as renewed_count
+        FROM periods p
+        LEFT JOIN members m ON m.org_id = $1
+        GROUP BY p.month
+        ORDER BY p.month
+      `, [orgId]),
+
+      // Revenue and members by tier
+      db.query(`
+        SELECT
+          t.id,
+          t.name,
+          t.price_cents,
+          COUNT(m.id) as member_count,
+          COUNT(m.id) FILTER (WHERE m.status = 'active') as active_count,
+          COALESCE(SUM(CASE WHEN m.status = 'active' THEN t.price_cents ELSE 0 END), 0) as monthly_revenue_cents
+        FROM tiers t
+        LEFT JOIN members m ON m.tier_id = t.id AND m.org_id = $1
+        WHERE t.org_id = $1 AND t.is_active = true
+        GROUP BY t.id, t.name, t.price_cents
+        ORDER BY monthly_revenue_cents DESC
+      `, [orgId]),
+
+      // Engagement metrics
+      db.query(`
+        SELECT
+          COUNT(DISTINCT m.id) as total_members,
+          COUNT(DISTINCT m.id) FILTER (WHERE m.last_login_at > NOW() - INTERVAL '30 days') as active_30d,
+          COUNT(DISTINCT m.id) FILTER (WHERE m.last_login_at > NOW() - INTERVAL '7 days') as active_7d,
+          COUNT(DISTINCT m.id) FILTER (WHERE m.last_login_at IS NULL OR m.last_login_at < NOW() - INTERVAL '90 days') as inactive_90d,
+          (SELECT COUNT(*) FROM member_activity WHERE org_id = $1 AND created_at > NOW() - INTERVAL '30 days') as activities_30d
+        FROM members m
+        WHERE m.org_id = $1
+      `, [orgId]),
+
+      // CEU compliance rate
+      db.query(`
+        SELECT
+          COUNT(*) as total_with_ceu,
+          COUNT(*) FILTER (WHERE ceu_credits_earned >= ceu_credits_required) as compliant,
+          COUNT(*) FILTER (WHERE ceu_credits_earned < ceu_credits_required AND ceu_deadline < NOW() + INTERVAL '30 days') as at_risk
+        FROM members
+        WHERE org_id = $1 AND ceu_credits_required > 0
+      `, [orgId]),
+
+      // Average lifetime value
+      db.query(`
+        SELECT
+          AVG(lifetime_value) as avg_ltv,
+          MAX(lifetime_value) as max_ltv,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY lifetime_value) as median_ltv
+        FROM (
+          SELECT
+            m.id,
+            COALESCE(SUM(t.amount_cents), 0) as lifetime_value
+          FROM members m
+          LEFT JOIN transactions t ON t.member_id = m.id AND t.status = 'completed' AND t.org_id = $1
+          WHERE m.org_id = $1
+          GROUP BY m.id
+        ) member_ltv
+      `, [orgId])
+    ]);
+
+    // Calculate derived metrics
+    const currentMonth = membershipTrend.rows[membershipTrend.rows.length - 1] || {};
+    const prevMonth = membershipTrend.rows[membershipTrend.rows.length - 2] || {};
+    const growthRate = prevMonth.total_members > 0
+      ? ((currentMonth.total_members - prevMonth.total_members) / prevMonth.total_members * 100).toFixed(1)
+      : 0;
+
+    // Calculate churn rate (members lost / total at start of period)
+    const totalRetention = retentionData.rows.reduce((acc, r) => ({
+      expired: acc.expired + parseInt(r.expired_count || 0),
+      renewed: acc.renewed + parseInt(r.renewed_count || 0)
+    }), { expired: 0, renewed: 0 });
+    const retentionRate = totalRetention.expired > 0
+      ? ((totalRetention.renewed / totalRetention.expired) * 100).toFixed(1)
+      : 100;
+
+    // Calculate MRR (Monthly Recurring Revenue)
+    const mrr = tierBreakdown.rows.reduce((sum, t) => sum + parseInt(t.monthly_revenue_cents || 0), 0);
+
+    res.json({
+      summary: {
+        totalMembers: parseInt(currentMonth.total_members || 0),
+        activeMembers: parseInt(currentMonth.active_members || 0),
+        growthRate: parseFloat(growthRate),
+        retentionRate: parseFloat(retentionRate),
+        churnRate: (100 - parseFloat(retentionRate)).toFixed(1),
+        mrr: mrr,
+        avgLifetimeValue: parseInt(lifetimeValue.rows[0]?.avg_ltv || 0),
+        medianLifetimeValue: parseInt(lifetimeValue.rows[0]?.median_ltv || 0)
+      },
+      trends: {
+        membership: membershipTrend.rows.map(r => ({
+          month: r.month,
+          total: parseInt(r.total_members || 0),
+          new: parseInt(r.new_members || 0),
+          active: parseInt(r.active_members || 0)
+        })),
+        revenue: revenueTrend.rows.map(r => ({
+          month: r.month,
+          revenue: parseInt(r.revenue_cents || 0),
+          transactions: parseInt(r.transaction_count || 0)
+        })),
+        retention: retentionData.rows.map(r => ({
+          month: r.month,
+          expired: parseInt(r.expired_count || 0),
+          renewed: parseInt(r.renewed_count || 0)
+        }))
+      },
+      breakdown: {
+        byTier: tierBreakdown.rows.map(t => ({
+          id: t.id,
+          name: t.name,
+          pricePerMonth: parseInt(t.price_cents || 0),
+          memberCount: parseInt(t.member_count || 0),
+          activeCount: parseInt(t.active_count || 0),
+          monthlyRevenue: parseInt(t.monthly_revenue_cents || 0)
+        }))
+      },
+      engagement: {
+        totalMembers: parseInt(engagementMetrics.rows[0]?.total_members || 0),
+        active30d: parseInt(engagementMetrics.rows[0]?.active_30d || 0),
+        active7d: parseInt(engagementMetrics.rows[0]?.active_7d || 0),
+        inactive90d: parseInt(engagementMetrics.rows[0]?.inactive_90d || 0),
+        activities30d: parseInt(engagementMetrics.rows[0]?.activities_30d || 0),
+        engagementRate: engagementMetrics.rows[0]?.total_members > 0
+          ? ((engagementMetrics.rows[0].active_30d / engagementMetrics.rows[0].total_members) * 100).toFixed(1)
+          : 0
+      },
+      ceu: {
+        totalWithRequirements: parseInt(ceuCompliance.rows[0]?.total_with_ceu || 0),
+        compliant: parseInt(ceuCompliance.rows[0]?.compliant || 0),
+        atRisk: parseInt(ceuCompliance.rows[0]?.at_risk || 0),
+        complianceRate: ceuCompliance.rows[0]?.total_with_ceu > 0
+          ? ((ceuCompliance.rows[0].compliant / ceuCompliance.rows[0].total_with_ceu) * 100).toFixed(1)
+          : 100
+      }
+    });
+
+  } catch (err) {
+    console.error('Analytics overview error:', err);
+    res.status(500).json({ error: 'Failed to load analytics' });
+  }
+});
+
 module.exports = router;
