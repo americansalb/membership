@@ -303,6 +303,15 @@
       align-items: center;
       gap: var(--space-phi-xs);
     }
+    .member-name-link {
+      text-decoration: none;
+      color: inherit;
+      transition: color 0.15s ease;
+    }
+    .member-name-link:hover {
+      color: var(--terra-600);
+      text-decoration: underline;
+    }
     .member-email {
       font-size: 12px;
       color: var(--gray-400);
@@ -1590,7 +1599,7 @@
           const hasCustom = m.custom_fields && Object.keys(m.custom_fields).length > 0;
           const isSelected = state.selectedIds.includes(m.id);
           return `
-            <tr class="${isSelected ? 'selected' : ''}" onclick="goToMember(event, '${m.id}')" style="cursor:pointer">
+            <tr class="${isSelected ? 'selected' : ''}" onclick="openPanel('${m.id}')" style="cursor:pointer">
               <td style="padding-left:var(--space-phi-md)" onclick="event.stopPropagation()">
                 <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${m.id}', this.checked)">
               </td>
@@ -1598,10 +1607,10 @@
                 <div class="member-cell">
                   <div class="member-avatar">${initials(m.first_name, m.last_name)}</div>
                   <div class="member-info">
-                    <span class="member-name">
+                    <a href="/admin/member.html?id=${m.id}" class="member-name member-name-link" onclick="event.stopPropagation()">
                       ${m.first_name||''} ${m.last_name||''}
                       ${hasCustom ? `<span class="custom-indicator" title="Has custom fields">+${Object.keys(m.custom_fields).length}</span>` : ''}
-                    </span>
+                    </a>
                     <div class="member-email">${m.email||''}</div>
                   </div>
                 </div>
