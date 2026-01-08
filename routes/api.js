@@ -84,7 +84,7 @@ router.get('/access/check', async (req, res) => {
 // List members
 router.get('/members', requireUser, async (req, res) => {
   try {
-    const { status, tier_id, search, page = 1, limit = 50 } = req.query;
+    const { status, tier_id, search, tags, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
 
     let query = `
@@ -114,6 +114,19 @@ router.get('/members', requireUser, async (req, res) => {
       paramIndex++;
     }
 
+    // Filter by tags if provided
+    if (tags) {
+      const tagIds = tags.split(',').filter(id => id);
+      if (tagIds.length > 0) {
+        query += ` AND m.id IN (
+          SELECT member_id FROM member_tags
+          WHERE tag_id = ANY($${paramIndex}::uuid[])
+        )`;
+        params.push(tagIds);
+        paramIndex++;
+      }
+    }
+
     // Get total count
     const countResult = await db.query(
       query.replace('SELECT m.*, t.name as tier_name', 'SELECT COUNT(*)'),
@@ -127,8 +140,34 @@ router.get('/members', requireUser, async (req, res) => {
 
     const result = await db.query(query, params);
 
+    // Fetch tags for all members in the result
+    const memberIds = result.rows.map(m => m.id);
+    let tagsData = [];
+
+    if (memberIds.length > 0) {
+      const tagsResult = await db.query(
+        `SELECT mt.member_id, t.id, t.name, t.color
+         FROM member_tags mt
+         JOIN tags t ON mt.tag_id = t.id
+         WHERE mt.member_id = ANY($1::uuid[])
+         ORDER BY t.name`,
+        [memberIds]
+      );
+      tagsData = tagsResult.rows;
+    }
+
+    // Group tags by member
+    const members = result.rows.map(member => ({
+      ...member,
+      tags: tagsData.filter(tag => tag.member_id === member.id).map(tag => ({
+        id: tag.id,
+        name: tag.name,
+        color: tag.color
+      }))
+    }));
+
     res.json({
-      members: result.rows,
+      members,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -1860,6 +1899,291 @@ router.get('/analytics/overview', requireUser, async (req, res) => {
   } catch (err) {
     console.error('Analytics overview error:', err);
     res.status(500).json({ error: 'Failed to load analytics' });
+  }
+});
+
+// ============================================
+// TAGS SYSTEM
+// ============================================
+
+// List all tags for an organization
+router.get('/tags', requireUser, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT
+        t.*,
+        COUNT(mt.member_id) as member_count
+       FROM tags t
+       LEFT JOIN member_tags mt ON t.id = mt.tag_id
+       WHERE t.org_id = $1
+       GROUP BY t.id
+       ORDER BY t.name ASC`,
+      [req.user.orgId]
+    );
+
+    res.json({ tags: result.rows });
+
+  } catch (err) {
+    console.error('List tags error:', err);
+    res.status(500).json({ error: 'Failed to list tags' });
+  }
+});
+
+// Create a new tag
+router.post('/tags', requireAdmin, async (req, res) => {
+  try {
+    const { name, color, description } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Tag name is required' });
+    }
+
+    // Check if tag name already exists in this org
+    const existingTag = await db.query(
+      'SELECT id FROM tags WHERE org_id = $1 AND LOWER(name) = LOWER($2)',
+      [req.user.orgId, name.trim()]
+    );
+
+    if (existingTag.rows.length > 0) {
+      return res.status(409).json({ error: 'A tag with this name already exists' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO tags (org_id, name, color, description)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [
+        req.user.orgId,
+        name.trim(),
+        color || '#6366f1',
+        description || null
+      ]
+    );
+
+    res.status(201).json({
+      message: 'Tag created successfully',
+      tag: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error('Create tag error:', err);
+    res.status(500).json({ error: 'Failed to create tag' });
+  }
+});
+
+// Update a tag
+router.put('/tags/:id', requireAdmin, async (req, res) => {
+  try {
+    const { name, color, description } = req.body;
+
+    // Check tag exists and belongs to user's org
+    const existingTag = await db.query(
+      'SELECT id FROM tags WHERE id = $1 AND org_id = $2',
+      [req.params.id, req.user.orgId]
+    );
+
+    if (existingTag.rows.length === 0) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+
+    // If name is being changed, check for conflicts
+    if (name) {
+      const nameConflict = await db.query(
+        'SELECT id FROM tags WHERE org_id = $1 AND LOWER(name) = LOWER($2) AND id != $3',
+        [req.user.orgId, name.trim(), req.params.id]
+      );
+
+      if (nameConflict.rows.length > 0) {
+        return res.status(409).json({ error: 'A tag with this name already exists' });
+      }
+    }
+
+    const result = await db.query(
+      `UPDATE tags
+       SET name = COALESCE($1, name),
+           color = COALESCE($2, color),
+           description = $3
+       WHERE id = $4 AND org_id = $5
+       RETURNING *`,
+      [
+        name ? name.trim() : null,
+        color,
+        description !== undefined ? description : null,
+        req.params.id,
+        req.user.orgId
+      ]
+    );
+
+    res.json({
+      message: 'Tag updated successfully',
+      tag: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error('Update tag error:', err);
+    res.status(500).json({ error: 'Failed to update tag' });
+  }
+});
+
+// Delete a tag
+router.delete('/tags/:id', requireAdmin, async (req, res) => {
+  try {
+    // Check tag exists and belongs to user's org
+    const existingTag = await db.query(
+      'SELECT id FROM tags WHERE id = $1 AND org_id = $2',
+      [req.params.id, req.user.orgId]
+    );
+
+    if (existingTag.rows.length === 0) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+
+    // Delete tag (member_tags will cascade delete)
+    await db.query(
+      'DELETE FROM tags WHERE id = $1 AND org_id = $2',
+      [req.params.id, req.user.orgId]
+    );
+
+    res.json({ message: 'Tag deleted successfully' });
+
+  } catch (err) {
+    console.error('Delete tag error:', err);
+    res.status(500).json({ error: 'Failed to delete tag' });
+  }
+});
+
+// Add tags to a member
+router.post('/members/:memberId/tags', requireUser, async (req, res) => {
+  try {
+    const { tagIds } = req.body;
+
+    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+      return res.status(400).json({ error: 'tagIds array is required' });
+    }
+
+    // Verify member exists and belongs to user's org
+    const member = await db.query(
+      'SELECT id FROM members WHERE id = $1 AND org_id = $2',
+      [req.params.memberId, req.user.orgId]
+    );
+
+    if (member.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    // Verify all tags exist and belong to user's org
+    const tags = await db.query(
+      'SELECT id FROM tags WHERE id = ANY($1::uuid[]) AND org_id = $2',
+      [tagIds, req.user.orgId]
+    );
+
+    if (tags.rows.length !== tagIds.length) {
+      return res.status(404).json({ error: 'One or more tags not found' });
+    }
+
+    // Add tags (ON CONFLICT DO NOTHING to handle duplicates)
+    const values = tagIds.map(tagId =>
+      `('${req.params.memberId}', '${tagId}', NOW(), ${req.user.id ? `'${req.user.id}'` : 'NULL'})`
+    ).join(', ');
+
+    await db.query(
+      `INSERT INTO member_tags (member_id, tag_id, added_at, added_by)
+       VALUES ${values}
+       ON CONFLICT (member_id, tag_id) DO NOTHING`
+    );
+
+    res.json({ message: 'Tags added successfully' });
+
+  } catch (err) {
+    console.error('Add tags error:', err);
+    res.status(500).json({ error: 'Failed to add tags' });
+  }
+});
+
+// Remove tags from a member
+router.delete('/members/:memberId/tags', requireUser, async (req, res) => {
+  try {
+    const { tagIds } = req.body;
+
+    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+      return res.status(400).json({ error: 'tagIds array is required' });
+    }
+
+    // Verify member belongs to user's org
+    const member = await db.query(
+      'SELECT id FROM members WHERE id = $1 AND org_id = $2',
+      [req.params.memberId, req.user.orgId]
+    );
+
+    if (member.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    // Remove tags
+    await db.query(
+      'DELETE FROM member_tags WHERE member_id = $1 AND tag_id = ANY($2::uuid[])',
+      [req.params.memberId, tagIds]
+    );
+
+    res.json({ message: 'Tags removed successfully' });
+
+  } catch (err) {
+    console.error('Remove tags error:', err);
+    res.status(500).json({ error: 'Failed to remove tags' });
+  }
+});
+
+// Get members by tag(s)
+router.get('/tags/:tagId/members', requireUser, async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Verify tag belongs to user's org
+    const tag = await db.query(
+      'SELECT id FROM tags WHERE id = $1 AND org_id = $2',
+      [req.params.tagId, req.user.orgId]
+    );
+
+    if (tag.rows.length === 0) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+
+    // Get members with this tag
+    const result = await db.query(
+      `SELECT m.*, t.name as tier_name
+       FROM members m
+       LEFT JOIN tiers t ON m.tier_id = t.id
+       JOIN member_tags mt ON m.id = mt.member_id
+       WHERE mt.tag_id = $1 AND m.org_id = $2
+       ORDER BY m.created_at DESC
+       LIMIT $3 OFFSET $4`,
+      [req.params.tagId, req.user.orgId, limit, offset]
+    );
+
+    // Get total count
+    const countResult = await db.query(
+      `SELECT COUNT(*) FROM members m
+       JOIN member_tags mt ON m.id = mt.member_id
+       WHERE mt.tag_id = $1 AND m.org_id = $2`,
+      [req.params.tagId, req.user.orgId]
+    );
+
+    const total = parseInt(countResult.rows[0].count);
+
+    res.json({
+      members: result.rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+
+  } catch (err) {
+    console.error('Get members by tag error:', err);
+    res.status(500).json({ error: 'Failed to get members' });
   }
 });
 
