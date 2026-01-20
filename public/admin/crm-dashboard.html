@@ -124,6 +124,15 @@
           </div>
         </div>
 
+        <!-- My Tasks -->
+        <div class="crm-detail-card" style="margin-top: var(--space-6);">
+          <div class="crm-detail-card-title">My Tasks <span id="task-count" style="font-size: var(--text-sm); color: var(--text-secondary);"></span></div>
+          <div id="tasks-loading" class="crm-loading">Loading tasks...</div>
+          <div id="tasks-container" style="display: none;">
+            <div id="tasks-list"></div>
+          </div>
+        </div>
+
         <!-- Recent Contacts -->
         <div class="crm-detail-card" style="margin-top: var(--space-6);">
           <div class="crm-detail-card-title">Recent Contacts</div>
@@ -280,6 +289,53 @@
       } catch (err) {
         console.error('Load pipelines error:', err);
         document.getElementById('pipelines-loading').textContent = 'Failed to load pipelines';
+      }
+    }
+
+    async function loadTasks() {
+      try {
+        const response = await fetch('/api/v1/crm/activities/tasks?limit=10', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load tasks');
+
+        const data = await response.json();
+        const tasks = data.tasks || [];
+
+        document.getElementById('task-count').textContent = `(${tasks.length} pending)`;
+        document.getElementById('tasks-loading').style.display = 'none';
+        document.getElementById('tasks-container').style.display = 'block';
+
+        if (tasks.length === 0) {
+          document.getElementById('tasks-list').innerHTML = '<p style="color: var(--text-secondary); padding: var(--space-4);">No pending tasks</p>';
+          return;
+        }
+
+        const priorityColors = {
+          urgent: 'var(--error)',
+          high: 'var(--warning)',
+          medium: 'var(--primary)',
+          low: 'var(--text-secondary)'
+        };
+
+        document.getElementById('tasks-list').innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+            ${tasks.map(task => `
+              <div style="padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer;"
+                   onclick="window.location.href='/admin/crm-contact.html?id=${task.contact_id}'">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2);">
+                  <div style="font-weight: var(--font-medium);">${task.title}</div>
+                  <span style="color: ${priorityColors[task.priority]}; font-size: var(--text-xs); text-transform: uppercase;">${task.priority}</span>
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--text-secondary);">
+                  ${task.contact_first_name} ${task.contact_last_name} • ${task.contact_company || ''}
+                </div>
+                ${task.due_at ? `<div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-2);">Due: ${new Date(task.due_at).toLocaleDateString()}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        console.error('Load tasks error:', err);
+        document.getElementById('tasks-loading').textContent = 'Failed to load tasks';
       }
     }
 

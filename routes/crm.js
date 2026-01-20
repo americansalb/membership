@@ -12,5 +12,6 @@ router.use(requireUser);
 // Mount subrouters
 router.use('/contacts', contactsRouter);
 router.use('/pipelines', pipelinesRouter);
+router.use('/activities', require('./crm/activities'));
 
 module.exports = router;

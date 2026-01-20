@@ -112,6 +112,17 @@
                 </div>
               </div>
 
+              <!-- Activity Timeline -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>Activity Timeline</span>
+                  <button onclick="openActivityModal()" class="btn btn-primary btn-sm">+ Add Activity</button>
+                </div>
+                <div id="timeline-container" style="margin-top: var(--space-4);">
+                  <div class="crm-loading">Loading timeline...</div>
+                </div>
+              </div>
+
               <!-- Notes -->
               <div class="crm-detail-card">
                 <div class="crm-detail-card-title">Notes</div>
@@ -144,9 +155,10 @@
               <div class="crm-detail-card">
                 <div class="crm-detail-card-title">Quick Actions</div>
                 <div style="display: flex; flex-direction: column; gap: var(--space-2);">
-                  <button class="btn btn-ghost btn-sm">Send Email</button>
-                  <button class="btn btn-ghost btn-sm">Schedule Call</button>
-                  <button class="btn btn-ghost btn-sm">Add Note</button>
+                  <button onclick="quickAddActivity('email')" class="btn btn-ghost btn-sm">📧 Log Email</button>
+                  <button onclick="quickAddActivity('call')" class="btn btn-ghost btn-sm">📞 Log Call</button>
+                  <button onclick="quickAddActivity('note')" class="btn btn-ghost btn-sm">📝 Add Note</button>
+                  <button onclick="quickAddActivity('task')" class="btn btn-ghost btn-sm">✓ Create Task</button>
                 </div>
               </div>
             </div>
@@ -235,6 +247,7 @@
 
         displayContact(currentContact);
         displayStageHistory(data.stage_history || []);
+        loadTimeline();
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
@@ -376,6 +389,103 @@
 
     function openAssignModal() {
       toast.info('Assignment feature coming in Phase 2');
+    }
+
+    // ============================================
+    // ACTIVITY TIMELINE
+    // ============================================
+
+    async function loadTimeline() {
+      try {
+        const response = await fetch(`/api/v1/crm/activities/contact/${contactId}?limit=50`, {
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to load timeline');
+
+        const data = await response.json();
+        displayTimeline(data.activities || []);
+      } catch (err) {
+        console.error('Load timeline error:', err);
+        document.getElementById('timeline-container').innerHTML = '<p style="color: var(--text-secondary);">Failed to load timeline</p>';
+      }
+    }
+
+    function displayTimeline(activities) {
+      const container = document.getElementById('timeline-container');
+
+      if (activities.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); padding: var(--space-4);">No activities yet. Add your first note, call, or task!</p>';
+        return;
+      }
+
+      const activityIcons = {
+        note: '📝',
+        email: '📧',
+        call: '📞',
+        meeting: '🤝',
+        task: '✓',
+        system: '⚙️'
+      };
+
+      container.innerHTML = `
+        <div class="crm-timeline">
+          ${activities.map(activity => `
+            <div class="crm-timeline-item">
+              <div class="crm-timeline-icon">${activityIcons[activity.type] || '•'}</div>
+              <div class="crm-timeline-content">
+                <div class="crm-timeline-header">
+                  <div class="crm-timeline-title">${activity.title}</div>
+                  <div class="crm-timeline-date">${new Date(activity.created_at).toLocaleString()}</div>
+                </div>
+                ${activity.description ? `<div class="crm-timeline-description">${activity.description}</div>` : ''}
+                <div style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-2);">
+                  ${activity.created_by_name ? `By: ${activity.created_by_name}` : ''}
+                  ${activity.type === 'task' ? ` • Status: <span class="badge badge-${activity.status === 'completed' ? 'success' : 'info'}">${activity.status}</span>` : ''}
+                  ${activity.priority && activity.type === 'task' ? ` • Priority: ${activity.priority}` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function quickAddActivity(type) {
+      const title = prompt(`Log ${type} - Enter title:`);
+      if (!title) return;
+
+      const description = prompt('Enter description (optional):');
+
+      try {
+        const response = await fetch('/api/v1/crm/activities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            contact_id: contactId,
+            type,
+            title,
+            description,
+            status: type === 'task' ? 'pending' : 'completed'
+          })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to add activity');
+        }
+
+        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} logged successfully`);
+        loadTimeline(); // Reload timeline
+      } catch (err) {
+        console.error('Add activity error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    function openActivityModal() {
+      toast.info('Full activity modal coming soon - use Quick Actions for now!');
     }
 
     // Init

@@ -483,12 +483,140 @@ async function seedCRMTables() {
   }
 }
 
+async function seedCRMActivities() {
+  try {
+    console.log('[Seed] Checking CRM activities table...');
+
+    // Check if activities table exists
+    const tableCheck = await db.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'crm_activities'
+      );
+    `);
+
+    if (tableCheck.rows[0].exists) {
+      console.log('[Seed] CRM activities table already exists');
+      return;
+    }
+
+    console.log('[Seed] Creating CRM activities table...');
+
+    // Create activities table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS crm_activities (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        contact_id UUID NOT NULL REFERENCES crm_contacts(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL CHECK (type IN ('note', 'email', 'call', 'meeting', 'task', 'system')),
+        title VARCHAR(500) NOT NULL,
+        description TEXT,
+        related_type VARCHAR(100),
+        related_id UUID,
+        scheduled_at TIMESTAMPTZ,
+        completed_at TIMESTAMPTZ,
+        due_at TIMESTAMPTZ,
+        assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+        completed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+        priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+        status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
+        metadata JSONB DEFAULT '{}',
+        created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        is_visible_to_contact BOOLEAN DEFAULT false
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_org ON crm_activities(org_id);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_contact ON crm_activities(contact_id);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_type ON crm_activities(type);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_assigned ON crm_activities(assigned_to);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_status ON crm_activities(status);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_due ON crm_activities(due_at);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_scheduled ON crm_activities(scheduled_at);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_created ON crm_activities(created_at);
+      CREATE INDEX IF NOT EXISTS idx_crm_activities_related ON crm_activities(related_type, related_id);
+    `);
+
+    // Create update trigger
+    await db.query(`
+      DROP TRIGGER IF EXISTS update_crm_activities_updated_at ON crm_activities;
+      CREATE TRIGGER update_crm_activities_updated_at
+        BEFORE UPDATE ON crm_activities
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+    `);
+
+    // Helper function for logging activities
+    await db.query(`
+      CREATE OR REPLACE FUNCTION crm_log_activity(
+        p_org_id UUID,
+        p_contact_id UUID,
+        p_type VARCHAR,
+        p_title VARCHAR,
+        p_description TEXT DEFAULT NULL,
+        p_metadata JSONB DEFAULT NULL,
+        p_created_by UUID DEFAULT NULL
+      ) RETURNS UUID AS $$
+      DECLARE
+        v_activity_id UUID;
+      BEGIN
+        INSERT INTO crm_activities (
+          org_id, contact_id, type, title, description, metadata, created_by, status
+        ) VALUES (
+          p_org_id, p_contact_id, p_type, p_title, p_description,
+          COALESCE(p_metadata, '{}'::jsonb), p_created_by, 'completed'
+        )
+        RETURNING id INTO v_activity_id;
+
+        UPDATE crm_contacts SET last_contacted_at = NOW() WHERE id = p_contact_id;
+
+        RETURN v_activity_id;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    // Create activity summary view
+    await db.query(`
+      CREATE OR REPLACE VIEW crm_activity_summary AS
+      SELECT
+        a.id, a.org_id, a.contact_id, a.type, a.title, a.description,
+        a.scheduled_at, a.completed_at, a.due_at, a.assigned_to,
+        a.priority, a.status, a.metadata, a.created_by, a.created_at, a.updated_at,
+        a.is_visible_to_contact,
+        c.email AS contact_email, c.first_name AS contact_first_name,
+        c.last_name AS contact_last_name, c.company AS contact_company,
+        u_assigned.name AS assigned_user_name, u_assigned.email AS assigned_user_email,
+        u_created.name AS created_by_name, u_created.email AS created_by_email,
+        u_completed.name AS completed_by_name, u_completed.email AS completed_by_email
+      FROM crm_activities a
+      LEFT JOIN crm_contacts c ON c.id = a.contact_id
+      LEFT JOIN users u_assigned ON u_assigned.id = a.assigned_to
+      LEFT JOIN users u_created ON u_created.id = a.created_by
+      LEFT JOIN users u_completed ON u_completed.id = a.completed_by;
+    `);
+
+    console.log('[Seed] CRM activities table created successfully!');
+
+    // Mark migration as complete
+    await db.query(`
+      INSERT INTO _migrations (name, executed_at)
+      VALUES ('012_crm_activities.sql', NOW())
+      ON CONFLICT (name) DO NOTHING
+    `);
+
+  } catch (err) {
+    console.error('[Seed] Error creating CRM activities table:', err.message);
+    console.error('[Seed] Stack:', err.stack);
+  }
+}
+
 async function runSeeds() {
   console.log('[Seed] Running database seeds...');
   await seedPlatformPlans();
   await seedDeveloper();
   await seedDefaultForums();
   await seedCRMTables();
+  await seedCRMActivities();
   console.log('[Seed] Seeding complete');
 }
 
