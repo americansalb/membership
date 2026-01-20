@@ -88,8 +88,7 @@ router.get('/:id', async (req, res) => {
     const pipelineResult = await db.query(
       `SELECT
         p.*,
-        u.first_name AS created_by_first_name,
-        u.last_name AS created_by_last_name
+        u.name AS created_by_name
       FROM crm_pipelines p
       LEFT JOIN users u ON u.id = p.created_by
       WHERE p.id = $1 AND p.org_id = $2`,

@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
 
     // Build query dynamically
     let query = `
-      SELECT DISTINCT
+      SELECT
         c.*,
         cs.stage_id AS current_stage_id,
         cs.pipeline_id AS current_pipeline_id,
