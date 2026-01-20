@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipelines - CRM - VillageMembers Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/crm.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+
+    .pipeline-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      transition: all var(--transition-fast);
+    }
+
+    .pipeline-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--green-300);
+    }
+
+    .pipeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-4);
+    }
+
+    .pipeline-info {
+      flex: 1;
+    }
+
+    .pipeline-name {
+      font-size: var(--text-xl);
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-1);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .pipeline-meta {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      display: flex;
+      gap: var(--space-4);
+      margin-bottom: var(--space-2);
+    }
+
+    .pipeline-stages {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      margin-top: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .stage-badge {
+      padding: var(--space-2) var(--space-3);
+      background: var(--gray-50);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      border-left: 3px solid;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">Dashboard</a>
+        <div class="sidebar-section">CRM</div>
+        <a href="/admin/crm-dashboard.html" class="sidebar-link">CRM Dashboard</a>
+        <a href="/admin/crm-list.html" class="sidebar-link">Contacts List</a>
+        <a href="/admin/crm-pipelines.html" class="sidebar-link active">Pipelines</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="crm-header">
+        <div class="crm-header-title">Pipeline Management</div>
+        <div class="crm-header-actions">
+          <button onclick="openAddPipelineModal()" class="btn btn-primary btn-sm">+ Create Pipeline</button>
+        </div>
+      </div>
+
+      <div class="crm-content">
+        <div id="loading" class="crm-loading">Loading pipelines...</div>
+        <div id="pipelines-container" style="display: none;"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Pipeline Modal -->
+  <div id="add-pipeline-modal" class="crm-modal hidden">
+    <div class="crm-modal-content">
+      <div class="crm-modal-header">
+        <h2 class="crm-modal-title">Create Pipeline</h2>
+        <button class="crm-modal-close" onclick="closeAddPipelineModal()">&times;</button>
+      </div>
+      <div class="crm-modal-body">
+        <form id="add-pipeline-form">
+          <div class="crm-form-group">
+            <label class="crm-form-label">Pipeline Name *</label>
+            <input type="text" id="pipeline-name" class="crm-form-input" required>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Description</label>
+            <textarea id="pipeline-description" class="crm-form-textarea"></textarea>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Color</label>
+            <input type="color" id="pipeline-color" class="crm-form-input" value="#6366f1">
+          </div>
+        </form>
+      </div>
+      <div class="crm-modal-footer">
+        <button class="btn btn-ghost" onclick="closeAddPipelineModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="handleAddPipeline()">Create Pipeline</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Stage Modal -->
+  <div id="add-stage-modal" class="crm-modal hidden">
+    <div class="crm-modal-content">
+      <div class="crm-modal-header">
+        <h2 class="crm-modal-title">Add Stage</h2>
+        <button class="crm-modal-close" onclick="closeAddStageModal()">&times;</button>
+      </div>
+      <div class="crm-modal-body">
+        <form id="add-stage-form">
+          <div class="crm-form-group">
+            <label class="crm-form-label">Stage Name *</label>
+            <input type="text" id="stage-name" class="crm-form-input" required>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Description</label>
+            <textarea id="stage-description" class="crm-form-textarea"></textarea>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Color</label>
+            <input type="color" id="stage-color" class="crm-form-input" value="#6366f1">
+          </div>
+        </form>
+      </div>
+      <div class="crm-modal-footer">
+        <button class="btn btn-ghost" onclick="closeAddStageModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="handleAddStage()">Add Stage</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+  <script>
+    let pipelines = [];
+    let selectedPipelineId = null;
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login.html'; return; }
+        loadPipelines();
+      } catch (err) {
+        window.location.href = '/login.html';
+      }
+    }
+
+    async function loadPipelines() {
+      try {
+        const response = await fetch('/api/v1/crm/pipelines', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load pipelines');
+        const data = await response.json();
+        pipelines = data.pipelines || [];
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('pipelines-container').style.display = 'block';
+
+        displayPipelines();
+
+        // Load stages for each pipeline
+        await Promise.all(pipelines.map(p => loadPipelineStages(p.id)));
+      } catch (err) {
+        console.error('Load pipelines error:', err);
+        document.getElementById('loading').textContent = 'Failed to load pipelines';
+      }
+    }
+
+    async function loadPipelineStages(pipelineId) {
+      try {
+        const response = await fetch(`/api/v1/crm/pipelines/${pipelineId}`, { credentials: 'include' });
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const pipeline = pipelines.find(p => p.id === pipelineId);
+        if (pipeline) {
+          pipeline.stages = data.stages || [];
+          displayPipelines();
+        }
+      } catch (err) {
+        console.error(`Load stages for pipeline ${pipelineId} error:`, err);
+      }
+    }
+
+    function displayPipelines() {
+      const container = document.getElementById('pipelines-container');
+
+      if (pipelines.length === 0) {
+        container.innerHTML = `
+          <div class="crm-empty-state">
+            <div class="crm-empty-state-icon">📊</div>
+            <div class="crm-empty-state-title">No Pipelines Yet</div>
+            <div class="crm-empty-state-description">Create your first pipeline to start organizing contacts through stages.</div>
+            <button onclick="openAddPipelineModal()" class="btn btn-primary">+ Create Pipeline</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = pipelines.map(pipeline => `
+        <div class="pipeline-card">
+          <div class="pipeline-header">
+            <div class="pipeline-info">
+              <div class="pipeline-name">
+                <div style="width: 12px; height: 12px; border-radius: var(--radius-full); background: ${pipeline.color || '#6366f1'};"></div>
+                ${pipeline.name}
+                ${pipeline.is_default ? '<span class="badge badge-success">Default</span>' : ''}
+              </div>
+              ${pipeline.description ? `<p style="color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-2);">${pipeline.description}</p>` : ''}
+              <div class="pipeline-meta">
+                <span>${pipeline.contacts_count || 0} contacts</span>
+                <span>${(pipeline.stages || []).length} stages</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: var(--space-2);">
+              <button onclick="openAddStageModal('${pipeline.id}')" class="btn btn-secondary btn-sm">+ Add Stage</button>
+              <button onclick="deletePipeline('${pipeline.id}')" class="btn btn-ghost btn-sm" style="color: var(--error);">Delete</button>
+            </div>
+          </div>
+
+          <div class="pipeline-stages">
+            ${(pipeline.stages || []).map((stage, idx) => `
+              <div class="stage-badge" style="border-color: ${stage.color || '#6366f1'};">
+                <span style="color: var(--text-secondary);">${idx + 1}.</span>
+                ${stage.name}
+                <span style="color: var(--text-secondary);">(${stage.contacts_count || 0})</span>
+              </div>
+            `).join('')}
+            ${(pipeline.stages || []).length === 0 ? '<span style="color: var(--text-muted); font-size: var(--text-sm);">No stages yet. Add your first stage.</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddPipelineModal() {
+      document.getElementById('add-pipeline-modal').classList.remove('hidden');
+    }
+
+    function closeAddPipelineModal() {
+      document.getElementById('add-pipeline-modal').classList.add('hidden');
+      document.getElementById('add-pipeline-form').reset();
+    }
+
+    async function handleAddPipeline() {
+      const name = document.getElementById('pipeline-name').value;
+      const description = document.getElementById('pipeline-description').value;
+      const color = document.getElementById('pipeline-color').value;
+
+      if (!name) {
+        toast.error('Pipeline name is required');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/v1/crm/pipelines', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, description, color })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to create pipeline');
+        }
+
+        toast.success('Pipeline created successfully');
+        closeAddPipelineModal();
+        loadPipelines();
+      } catch (err) {
+        console.error('Create pipeline error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    function openAddStageModal(pipelineId) {
+      selectedPipelineId = pipelineId;
+      document.getElementById('add-stage-modal').classList.remove('hidden');
+    }
+
+    function closeAddStageModal() {
+      document.getElementById('add-stage-modal').classList.add('hidden');
+      document.getElementById('add-stage-form').reset();
+      selectedPipelineId = null;
+    }
+
+    async function handleAddStage() {
+      const name = document.getElementById('stage-name').value;
+      const description = document.getElementById('stage-description').value;
+      const color = document.getElementById('stage-color').value;
+
+      if (!name) {
+        toast.error('Stage name is required');
+        return;
+      }
+
+      if (!selectedPipelineId) {
+        toast.error('No pipeline selected');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/v1/crm/pipelines/${selectedPipelineId}/stages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, description, color })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to create stage');
+        }
+
+        toast.success('Stage created successfully');
+        closeAddStageModal();
+        loadPipelines();
+      } catch (err) {
+        console.error('Create stage error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    async function deletePipeline(pipelineId) {
+      if (!confirm('Are you sure you want to delete this pipeline? This will also delete all stages.')) return;
+
+      try {
+        const response = await fetch(`/api/v1/crm/pipelines/${pipelineId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to delete pipeline');
+        }
+
+        toast.success('Pipeline deleted successfully');
+        loadPipelines();
+      } catch (err) {
+        console.error('Delete pipeline error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    // Init
+    checkAuth();
+  </script>
+</body>
+</html>

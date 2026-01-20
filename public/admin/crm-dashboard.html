@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Dashboard - VillageMembers Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/crm.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar (Desktop) -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          Dashboard
+        </a>
+        <a href="/admin/analytics.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          Analytics
+        </a>
+        <a href="/admin/members.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Members
+        </a>
+        <a href="/admin/tiers.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Tiers
+        </a>
+        <div class="sidebar-section">CRM</div>
+        <a href="/admin/crm-dashboard.html" class="sidebar-link active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><circle cx="17" cy="7" r="4"></circle></svg>
+          CRM Dashboard
+        </a>
+        <a href="/admin/crm-list.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          Contacts List
+        </a>
+        <a href="/admin/crm-pipelines.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          Pipelines
+        </a>
+        <div class="sidebar-section">Credentials & CEU</div>
+        <a href="/admin/credentials.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+          Credentials
+        </a>
+        <a href="/admin/ceu-credits.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          Review Credits
+        </a>
+        <div class="sidebar-section">Community</div>
+        <a href="/admin/moderation.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Moderation
+        </a>
+        <div class="sidebar-section">Settings</div>
+        <a href="/admin/settings.html" class="sidebar-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path></svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="crm-header">
+        <div class="crm-header-title">
+          CRM Dashboard
+        </div>
+        <div class="crm-header-actions">
+          <button onclick="window.location.href='/admin/crm-list.html'" class="btn btn-secondary btn-sm">View All Contacts</button>
+          <button onclick="openAddContactModal()" class="btn btn-primary btn-sm">+ Add Contact</button>
+        </div>
+      </div>
+
+      <div class="crm-content">
+        <!-- Stats Grid -->
+        <div class="crm-stats-grid" id="stats-grid">
+          <div class="crm-stat-card">
+            <div class="crm-stat-label">Total Contacts</div>
+            <div class="crm-stat-value" id="stat-total">-</div>
+          </div>
+          <div class="crm-stat-card">
+            <div class="crm-stat-label">Active Prospects</div>
+            <div class="crm-stat-value" id="stat-prospects">-</div>
+          </div>
+          <div class="crm-stat-card">
+            <div class="crm-stat-label">Enrolled Members</div>
+            <div class="crm-stat-value" id="stat-members">-</div>
+          </div>
+          <div class="crm-stat-card">
+            <div class="crm-stat-label">Assigned to Me</div>
+            <div class="crm-stat-value" id="stat-assigned">-</div>
+          </div>
+        </div>
+
+        <!-- Pipeline Overview -->
+        <div class="crm-detail-card">
+          <div class="crm-detail-card-title">Pipeline Overview</div>
+          <div id="pipelines-loading" class="crm-loading">Loading pipelines...</div>
+          <div id="pipelines-container" style="display: none;">
+            <div id="pipelines-list"></div>
+          </div>
+        </div>
+
+        <!-- Recent Contacts -->
+        <div class="crm-detail-card" style="margin-top: var(--space-6);">
+          <div class="crm-detail-card-title">Recent Contacts</div>
+          <div id="recent-loading" class="crm-loading">Loading contacts...</div>
+          <div id="recent-container" style="display: none;">
+            <div class="crm-table-container">
+              <table class="crm-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Company</th>
+                    <th>Type</th>
+                    <th>Stage</th>
+                    <th>Assigned</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-contacts-tbody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Contact Modal -->
+  <div id="add-contact-modal" class="crm-modal hidden">
+    <div class="crm-modal-content">
+      <div class="crm-modal-header">
+        <h2 class="crm-modal-title">Add New Contact</h2>
+        <button class="crm-modal-close" onclick="closeAddContactModal()">&times;</button>
+      </div>
+      <div class="crm-modal-body">
+        <form id="add-contact-form">
+          <div class="crm-form-group">
+            <label class="crm-form-label">Email *</label>
+            <input type="email" id="contact-email" class="crm-form-input" required>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">First Name</label>
+            <input type="text" id="contact-first-name" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Last Name</label>
+            <input type="text" id="contact-last-name" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Company</label>
+            <input type="text" id="contact-company" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Phone</label>
+            <input type="tel" id="contact-phone" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Source</label>
+            <select id="contact-source" class="crm-form-select">
+              <option value="">Select source...</option>
+              <option value="Website">Website</option>
+              <option value="Referral">Referral</option>
+              <option value="Event">Event</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Import">Import</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="crm-modal-footer">
+        <button class="btn btn-ghost" onclick="closeAddContactModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="handleAddContact()">Add Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login.html'; return; }
+        const data = await res.json();
+        currentUser = data;
+        loadDashboard();
+      } catch (err) {
+        window.location.href = '/login.html';
+      }
+    }
+
+    async function loadDashboard() {
+      await Promise.all([
+        loadStats(),
+        loadPipelines(),
+        loadRecentContacts()
+      ]);
+    }
+
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/v1/crm/contacts?limit=1000', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load contacts');
+        const data = await response.json();
+        const contacts = data.contacts || [];
+
+        document.getElementById('stat-total').textContent = contacts.length;
+        document.getElementById('stat-prospects').textContent = contacts.filter(c => c.type === 'prospect').length;
+        document.getElementById('stat-members').textContent = contacts.filter(c => c.type === 'member').length;
+        document.getElementById('stat-assigned').textContent = contacts.filter(c => c.assigned_to === currentUser.id).length;
+      } catch (err) {
+        console.error('Load stats error:', err);
+      }
+    }
+
+    async function loadPipelines() {
+      try {
+        const response = await fetch('/api/v1/crm/pipelines', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load pipelines');
+        const data = await response.json();
+        const pipelines = data.pipelines || [];
+
+        document.getElementById('pipelines-loading').style.display = 'none';
+        document.getElementById('pipelines-container').style.display = 'block';
+
+        const container = document.getElementById('pipelines-list');
+
+        if (pipelines.length === 0) {
+          container.innerHTML = '<div class="crm-empty-state"><p>No pipelines yet. Create one to start organizing contacts.</p></div>';
+          return;
+        }
+
+        container.innerHTML = pipelines.map(pipeline => `
+          <div style="padding: var(--space-4); border-bottom: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: var(--space-2);">
+                <div style="width: 12px; height: 12px; border-radius: var(--radius-full); background: ${pipeline.color || '#6366f1'};"></div>
+                <strong>${pipeline.name}</strong>
+                ${pipeline.is_default ? '<span class="badge badge-success">Default</span>' : ''}
+              </div>
+              <div style="display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-sm); color: var(--text-secondary);">
+                <span>${pipeline.contacts_count || 0} contacts</span>
+                <span>${pipeline.active_stages_count || 0} stages</span>
+                <button onclick="window.location.href='/admin/crm-pipelines.html?id=${pipeline.id}'" class="btn btn-ghost btn-sm">View</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Load pipelines error:', err);
+        document.getElementById('pipelines-loading').textContent = 'Failed to load pipelines';
+      }
+    }
+
+    async function loadRecentContacts() {
+      try {
+        const response = await fetch('/api/v1/crm/contacts?limit=10', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load contacts');
+        const data = await response.json();
+        const contacts = data.contacts || [];
+
+        document.getElementById('recent-loading').style.display = 'none';
+        document.getElementById('recent-container').style.display = 'block';
+
+        const tbody = document.getElementById('recent-contacts-tbody');
+
+        if (contacts.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="crm-table-empty">No contacts yet. Add your first contact to get started.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = contacts.map(contact => `
+          <tr onclick="window.location.href='/admin/crm-contact.html?id=${contact.id}'" style="cursor: pointer;">
+            <td>${contact.first_name || ''} ${contact.last_name || ''}</td>
+            <td>${contact.email}</td>
+            <td>${contact.company || '-'}</td>
+            <td><span class="badge ${contact.type === 'prospect' ? 'badge-info' : 'badge-success'}">${contact.type}</span></td>
+            <td>${contact.current_stage_name ? `<span style="color: ${contact.current_stage_color}">${contact.current_stage_name}</span>` : '-'}</td>
+            <td>${contact.assigned_user_first_name ? `${contact.assigned_user_first_name} ${contact.assigned_user_last_name || ''}` : '-'}</td>
+            <td>${new Date(contact.created_at).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Load recent contacts error:', err);
+        document.getElementById('recent-loading').textContent = 'Failed to load contacts';
+      }
+    }
+
+    function openAddContactModal() {
+      document.getElementById('add-contact-modal').classList.remove('hidden');
+    }
+
+    function closeAddContactModal() {
+      document.getElementById('add-contact-modal').classList.add('hidden');
+      document.getElementById('add-contact-form').reset();
+    }
+
+    async function handleAddContact() {
+      const email = document.getElementById('contact-email').value;
+      const first_name = document.getElementById('contact-first-name').value;
+      const last_name = document.getElementById('contact-last-name').value;
+      const company = document.getElementById('contact-company').value;
+      const phone = document.getElementById('contact-phone').value;
+      const source = document.getElementById('contact-source').value;
+
+      if (!email) {
+        toast.error('Email is required');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/v1/crm/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, first_name, last_name, company, phone, source })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to create contact');
+        }
+
+        const data = await response.json();
+        toast.success('Contact created successfully');
+        closeAddContactModal();
+        loadDashboard();
+      } catch (err) {
+        console.error('Create contact error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    // Init
+    checkAuth();
+  </script>
+</body>
+</html>

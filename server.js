@@ -112,6 +112,9 @@ app.use('/api/v1/ceu', require('./routes/ceu'));
 // Credentials routes (credential-based CEU system)
 app.use('/api/v1/credentials', require('./routes/credentials'));
 
+// CRM routes
+app.use('/api/v1/crm', require('./routes/crm'));
+
 // Page routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

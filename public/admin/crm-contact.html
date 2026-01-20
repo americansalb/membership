@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Details - CRM - VillageMembers Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/crm.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar (simplified for brevity - same as other pages) -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin/" class="sidebar-link">Dashboard</a>
+        <div class="sidebar-section">CRM</div>
+        <a href="/admin/crm-dashboard.html" class="sidebar-link">CRM Dashboard</a>
+        <a href="/admin/crm-list.html" class="sidebar-link active">Contacts List</a>
+        <a href="/admin/crm-pipelines.html" class="sidebar-link">Pipelines</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="crm-header">
+        <div class="crm-header-title">
+          <button onclick="window.history.back()" class="btn btn-ghost btn-sm" style="margin-right: var(--space-3);">← Back</button>
+          Contact Details
+        </div>
+        <div class="crm-header-actions">
+          <button onclick="openEditModal()" class="btn btn-secondary btn-sm">Edit</button>
+          <button onclick="deleteContact()" class="btn btn-danger btn-sm">Delete</button>
+        </div>
+      </div>
+
+      <div class="crm-content">
+        <div id="loading" class="crm-loading">Loading contact...</div>
+        <div id="content" style="display: none;">
+          <!-- Contact Header -->
+          <div class="crm-detail-card">
+            <div class="crm-contact-header">
+              <div class="crm-contact-avatar-large" id="contact-avatar">JD</div>
+              <div class="crm-contact-header-info">
+                <h1 id="contact-name">John Doe</h1>
+                <div class="crm-contact-header-meta">
+                  <span id="contact-email">john@example.com</span>
+                  <span id="contact-type" class="badge badge-info">Prospect</span>
+                  <span id="contact-score" class="badge badge-success">Lead Score: 85</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="crm-detail-container">
+            <!-- Main Column -->
+            <div class="crm-detail-main">
+              <!-- Basic Info -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title">Contact Information</div>
+                <div class="crm-field-group">
+                  <div class="crm-field">
+                    <div class="crm-field-label">Company</div>
+                    <div class="crm-field-value" id="field-company">-</div>
+                  </div>
+                  <div class="crm-field">
+                    <div class="crm-field-label">Title</div>
+                    <div class="crm-field-value" id="field-title">-</div>
+                  </div>
+                  <div class="crm-field">
+                    <div class="crm-field-label">Phone</div>
+                    <div class="crm-field-value" id="field-phone">-</div>
+                  </div>
+                  <div class="crm-field">
+                    <div class="crm-field-label">Source</div>
+                    <div class="crm-field-value" id="field-source">-</div>
+                  </div>
+                  <div class="crm-field">
+                    <div class="crm-field-label">City</div>
+                    <div class="crm-field-value" id="field-city">-</div>
+                  </div>
+                  <div class="crm-field">
+                    <div class="crm-field-label">State</div>
+                    <div class="crm-field-value" id="field-state">-</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage History -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title">Stage History</div>
+                <div id="stage-history-container">
+                  <div class="crm-loading">Loading history...</div>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title">Notes</div>
+                <div id="field-notes" style="white-space: pre-wrap; line-height: 1.6;">-</div>
+              </div>
+            </div>
+
+            <!-- Sidebar Column -->
+            <div class="crm-detail-sidebar">
+              <!-- Current Stage -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title">Current Stage</div>
+                <div id="current-stage-info">
+                  <p id="current-stage-name" style="font-size: var(--text-lg); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">-</p>
+                  <p id="current-pipeline-name" style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">-</p>
+                  <button onclick="openMoveStageModal()" class="btn btn-secondary btn-sm" style="width: 100%;">Move to Stage</button>
+                </div>
+              </div>
+
+              <!-- Assigned To -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title">Assigned To</div>
+                <div id="assigned-info">
+                  <p id="assigned-name" style="margin-bottom: var(--space-3);">-</p>
+                  <button onclick="openAssignModal()" class="btn btn-secondary btn-sm" style="width: 100%;">Change Assignment</button>
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="crm-detail-card">
+                <div class="crm-detail-card-title">Quick Actions</div>
+                <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                  <button class="btn btn-ghost btn-sm">Send Email</button>
+                  <button class="btn btn-ghost btn-sm">Schedule Call</button>
+                  <button class="btn btn-ghost btn-sm">Add Note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="crm-modal hidden">
+    <div class="crm-modal-content">
+      <div class="crm-modal-header">
+        <h2 class="crm-modal-title">Edit Contact</h2>
+        <button class="crm-modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="crm-modal-body">
+        <form id="edit-form">
+          <div class="crm-form-group">
+            <label class="crm-form-label">Email *</label>
+            <input type="email" id="edit-email" class="crm-form-input" required>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">First Name</label>
+            <input type="text" id="edit-first-name" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Last Name</label>
+            <input type="text" id="edit-last-name" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Company</label>
+            <input type="text" id="edit-company" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Title</label>
+            <input type="text" id="edit-title" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Phone</label>
+            <input type="tel" id="edit-phone" class="crm-form-input">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Lead Score (0-100)</label>
+            <input type="number" id="edit-lead-score" class="crm-form-input" min="0" max="100">
+          </div>
+        </form>
+      </div>
+      <div class="crm-modal-footer">
+        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="handleSaveContact()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+  <script>
+    let contactId = null;
+    let currentContact = null;
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login.html'; return; }
+        loadContact();
+      } catch (err) {
+        window.location.href = '/login.html';
+      }
+    }
+
+    async function loadContact() {
+      const params = new URLSearchParams(window.location.search);
+      contactId = params.get('id');
+
+      if (!contactId) {
+        window.location.href = '/admin/crm-list.html';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/v1/crm/contacts/${contactId}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load contact');
+        const data = await response.json();
+        currentContact = data.contact;
+
+        displayContact(currentContact);
+        displayStageHistory(data.stage_history || []);
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      } catch (err) {
+        console.error('Load contact error:', err);
+        document.getElementById('loading').textContent = 'Failed to load contact';
+      }
+    }
+
+    function displayContact(contact) {
+      const initials = `${contact.first_name?.[0] || ''}${contact.last_name?.[0] || ''}`.toUpperCase() || 'C';
+      document.getElementById('contact-avatar').textContent = initials;
+      document.getElementById('contact-name').textContent = `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unnamed Contact';
+      document.getElementById('contact-email').textContent = contact.email;
+
+      const typeEl = document.getElementById('contact-type');
+      typeEl.textContent = contact.type;
+      typeEl.className = `badge ${contact.type === 'prospect' ? 'badge-info' : 'badge-success'}`;
+
+      document.getElementById('contact-score').textContent = `Lead Score: ${contact.lead_score || 0}`;
+
+      document.getElementById('field-company').textContent = contact.company || '-';
+      document.getElementById('field-title').textContent = contact.title || '-';
+      document.getElementById('field-phone').textContent = contact.phone || '-';
+      document.getElementById('field-source').textContent = contact.source || '-';
+      document.getElementById('field-city').textContent = contact.city || '-';
+      document.getElementById('field-state').textContent = contact.state || '-';
+      document.getElementById('field-notes').textContent = contact.notes || '-';
+
+      document.getElementById('current-stage-name').textContent = contact.current_stage_name || 'No stage assigned';
+      document.getElementById('current-pipeline-name').textContent = contact.current_pipeline_name || '';
+      document.getElementById('assigned-name').textContent = contact.assigned_user_first_name ?
+        `${contact.assigned_user_first_name} ${contact.assigned_user_last_name || ''}` : 'Unassigned';
+    }
+
+    function displayStageHistory(history) {
+      const container = document.getElementById('stage-history-container');
+
+      if (history.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); padding: var(--space-4);">No stage history yet.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="crm-timeline">
+          ${history.map(entry => `
+            <div class="crm-timeline-item">
+              <div class="crm-timeline-icon">${entry.exited_at ? '✓' : '→'}</div>
+              <div class="crm-timeline-content">
+                <div class="crm-timeline-header">
+                  <div class="crm-timeline-title">${entry.stage_name}</div>
+                  <div class="crm-timeline-date">${new Date(entry.entered_at).toLocaleDateString()}</div>
+                </div>
+                <div class="crm-timeline-description">
+                  Pipeline: ${entry.pipeline_name}<br>
+                  ${entry.moved_by_first_name ? `Moved by: ${entry.moved_by_first_name} ${entry.moved_by_last_name || ''}` : ''}
+                  ${entry.exited_at ? `<br>Exited: ${new Date(entry.exited_at).toLocaleDateString()}` : '<br><strong>Current Stage</strong>'}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function openEditModal() {
+      if (!currentContact) return;
+
+      document.getElementById('edit-email').value = currentContact.email || '';
+      document.getElementById('edit-first-name').value = currentContact.first_name || '';
+      document.getElementById('edit-last-name').value = currentContact.last_name || '';
+      document.getElementById('edit-company').value = currentContact.company || '';
+      document.getElementById('edit-title').value = currentContact.title || '';
+      document.getElementById('edit-phone').value = currentContact.phone || '';
+      document.getElementById('edit-lead-score').value = currentContact.lead_score || 0;
+
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.add('hidden');
+    }
+
+    async function handleSaveContact() {
+      const updates = {
+        email: document.getElementById('edit-email').value,
+        first_name: document.getElementById('edit-first-name').value,
+        last_name: document.getElementById('edit-last-name').value,
+        company: document.getElementById('edit-company').value,
+        title: document.getElementById('edit-title').value,
+        phone: document.getElementById('edit-phone').value,
+        lead_score: parseInt(document.getElementById('edit-lead-score').value)
+      };
+
+      try {
+        const response = await fetch(`/api/v1/crm/contacts/${contactId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(updates)
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to update contact');
+        }
+
+        toast.success('Contact updated successfully');
+        closeEditModal();
+        loadContact();
+      } catch (err) {
+        console.error('Update contact error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    async function deleteContact() {
+      if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return;
+
+      try {
+        const response = await fetch(`/api/v1/crm/contacts/${contactId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete contact');
+
+        toast.success('Contact deleted successfully');
+        window.location.href = '/admin/crm-list.html';
+      } catch (err) {
+        console.error('Delete contact error:', err);
+        toast.error(err.message);
+      }
+    }
+
+    function openMoveStageModal() {
+      toast.info('Move to stage feature coming in Phase 3 (Kanban Board)');
+    }
+
+    function openAssignModal() {
+      toast.info('Assignment feature coming in Phase 2');
+    }
+
+    // Init
+    checkAuth();
+  </script>
+</body>
+</html>
