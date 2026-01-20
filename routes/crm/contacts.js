@@ -30,8 +30,7 @@ router.get('/', async (req, res) => {
         s.name AS current_stage_name,
         s.color AS current_stage_color,
         p.name AS current_pipeline_name,
-        u.first_name AS assigned_user_first_name,
-        u.last_name AS assigned_user_last_name,
+        u.name AS assigned_user_name,
         u.email AS assigned_user_email,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))

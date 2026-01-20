@@ -11,8 +11,7 @@ router.get('/', async (req, res) => {
     const result = await db.query(
       `SELECT
         p.*,
-        u.first_name AS created_by_first_name,
-        u.last_name AS created_by_last_name,
+        u.name AS created_by_name,
         (SELECT COUNT(*) FROM crm_stages WHERE pipeline_id = p.id AND is_active = true) AS active_stages_count,
         (SELECT COUNT(DISTINCT cs.contact_id)
          FROM crm_contact_stages cs

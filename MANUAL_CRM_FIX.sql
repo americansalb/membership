@@ -1,16 +1,16 @@
--- CRM System Core Tables and Functions
--- Migration 011: CRM Core (Phase 1)
-
 -- ============================================
+-- MANUAL CRM TABLE CREATION
+-- ============================================
+-- Run this directly in Render PostgreSQL console
+-- This bypasses the broken migration system
+-- ============================================
+
 -- CRM CONTACTS TABLE
--- ============================================
-
-CREATE TABLE crm_contacts (
+CREATE TABLE IF NOT EXISTS crm_contacts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  member_id UUID REFERENCES members(id) ON DELETE SET NULL, -- Links to members table when converted
+  member_id UUID REFERENCES members(id) ON DELETE SET NULL,
 
-  -- Basic Information
   type VARCHAR(20) DEFAULT 'prospect' CHECK (type IN ('prospect', 'member', 'alumni')),
   email VARCHAR(255) NOT NULL,
   first_name VARCHAR(100),
@@ -19,7 +19,6 @@ CREATE TABLE crm_contacts (
   company VARCHAR(200),
   title VARCHAR(200),
 
-  -- Address
   address_line1 VARCHAR(255),
   address_line2 VARCHAR(255),
   city VARCHAR(100),
@@ -27,22 +26,15 @@ CREATE TABLE crm_contacts (
   postal_code VARCHAR(20),
   country VARCHAR(100),
 
-  -- Tracking
-  source VARCHAR(100), -- e.g., 'Website', 'Referral', 'Event', 'Import'
+  source VARCHAR(100),
   source_details TEXT,
   lead_score INTEGER DEFAULT 0 CHECK (lead_score >= 0 AND lead_score <= 100),
 
-  -- Assignment & Relationships
   assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
-
-  -- Custom Fields (JSONB for flexibility)
   custom_fields JSONB DEFAULT '{}',
-
-  -- Notes & Metadata
   notes TEXT,
   metadata JSONB DEFAULT '{}',
 
-  -- Timestamps
   last_contacted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -50,25 +42,17 @@ CREATE TABLE crm_contacts (
   UNIQUE(org_id, email)
 );
 
-CREATE INDEX idx_crm_contacts_org ON crm_contacts(org_id);
-CREATE INDEX idx_crm_contacts_member ON crm_contacts(member_id);
-CREATE INDEX idx_crm_contacts_type ON crm_contacts(type);
-CREATE INDEX idx_crm_contacts_assigned ON crm_contacts(assigned_to);
-CREATE INDEX idx_crm_contacts_email ON crm_contacts(email);
-CREATE INDEX idx_crm_contacts_source ON crm_contacts(source);
-CREATE INDEX idx_crm_contacts_custom_fields ON crm_contacts USING GIN(custom_fields);
-CREATE INDEX idx_crm_contacts_last_contacted ON crm_contacts(last_contacted_at);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_org ON crm_contacts(org_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_member ON crm_contacts(member_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_type ON crm_contacts(type);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_assigned ON crm_contacts(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_email ON crm_contacts(email);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_source ON crm_contacts(source);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_custom_fields ON crm_contacts USING GIN(custom_fields);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_last_contacted ON crm_contacts(last_contacted_at);
 
--- Auto-update trigger
-CREATE TRIGGER update_crm_contacts_updated_at
-  BEFORE UPDATE ON crm_contacts
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- ============================================
 -- CRM PIPELINES TABLE
--- ============================================
-
-CREATE TABLE crm_pipelines (
+CREATE TABLE IF NOT EXISTS crm_pipelines (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
@@ -78,8 +62,8 @@ CREATE TABLE crm_pipelines (
   is_active BOOLEAN DEFAULT TRUE,
   is_default BOOLEAN DEFAULT FALSE,
 
-  color VARCHAR(7) DEFAULT '#6366f1', -- Hex color
-  icon VARCHAR(50), -- Icon name or emoji
+  color VARCHAR(7) DEFAULT '#6366f1',
+  icon VARCHAR(50),
 
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -88,18 +72,11 @@ CREATE TABLE crm_pipelines (
   UNIQUE(org_id, name)
 );
 
-CREATE INDEX idx_crm_pipelines_org ON crm_pipelines(org_id);
-CREATE INDEX idx_crm_pipelines_active ON crm_pipelines(is_active);
+CREATE INDEX IF NOT EXISTS idx_crm_pipelines_org ON crm_pipelines(org_id);
+CREATE INDEX IF NOT EXISTS idx_crm_pipelines_active ON crm_pipelines(is_active);
 
-CREATE TRIGGER update_crm_pipelines_updated_at
-  BEFORE UPDATE ON crm_pipelines
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- ============================================
 -- CRM STAGES TABLE
--- ============================================
-
-CREATE TABLE crm_stages (
+CREATE TABLE IF NOT EXISTS crm_stages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pipeline_id UUID NOT NULL REFERENCES crm_pipelines(id) ON DELETE CASCADE,
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -115,9 +92,8 @@ CREATE TABLE crm_stages (
   is_closed_lost BOOLEAN DEFAULT FALSE,
   is_initial BOOLEAN DEFAULT FALSE,
 
-  -- Auto-actions when contact enters this stage
   auto_assign_to UUID REFERENCES users(id) ON DELETE SET NULL,
-  auto_add_tags UUID[] DEFAULT '{}', -- Array of tag IDs
+  auto_add_tags UUID[] DEFAULT '{}',
 
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -125,20 +101,13 @@ CREATE TABLE crm_stages (
   UNIQUE(pipeline_id, name)
 );
 
-CREATE INDEX idx_crm_stages_pipeline ON crm_stages(pipeline_id);
-CREATE INDEX idx_crm_stages_org ON crm_stages(org_id);
-CREATE INDEX idx_crm_stages_sort ON crm_stages(sort_order);
-CREATE INDEX idx_crm_stages_active ON crm_stages(is_active);
+CREATE INDEX IF NOT EXISTS idx_crm_stages_pipeline ON crm_stages(pipeline_id);
+CREATE INDEX IF NOT EXISTS idx_crm_stages_org ON crm_stages(org_id);
+CREATE INDEX IF NOT EXISTS idx_crm_stages_sort ON crm_stages(sort_order);
+CREATE INDEX IF NOT EXISTS idx_crm_stages_active ON crm_stages(is_active);
 
-CREATE TRIGGER update_crm_stages_updated_at
-  BEFORE UPDATE ON crm_stages
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- ============================================
 -- CRM CONTACT STAGES (Junction + History)
--- ============================================
-
-CREATE TABLE crm_contact_stages (
+CREATE TABLE IF NOT EXISTS crm_contact_stages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   contact_id UUID NOT NULL REFERENCES crm_contacts(id) ON DELETE CASCADE,
   stage_id UUID NOT NULL REFERENCES crm_stages(id) ON DELETE CASCADE,
@@ -146,7 +115,7 @@ CREATE TABLE crm_contact_stages (
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   entered_at TIMESTAMPTZ DEFAULT NOW(),
-  exited_at TIMESTAMPTZ, -- NULL = currently in this stage
+  exited_at TIMESTAMPTZ,
 
   moved_by UUID REFERENCES users(id) ON DELETE SET NULL,
   notes TEXT,
@@ -154,18 +123,15 @@ CREATE TABLE crm_contact_stages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_crm_contact_stages_contact ON crm_contact_stages(contact_id);
-CREATE INDEX idx_crm_contact_stages_stage ON crm_contact_stages(stage_id);
-CREATE INDEX idx_crm_contact_stages_pipeline ON crm_contact_stages(pipeline_id);
-CREATE INDEX idx_crm_contact_stages_org ON crm_contact_stages(org_id);
-CREATE INDEX idx_crm_contact_stages_current ON crm_contact_stages(contact_id, exited_at) WHERE exited_at IS NULL;
-CREATE INDEX idx_crm_contact_stages_entered ON crm_contact_stages(entered_at);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_stages_contact ON crm_contact_stages(contact_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_stages_stage ON crm_contact_stages(stage_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_stages_pipeline ON crm_contact_stages(pipeline_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_stages_org ON crm_contact_stages(org_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_stages_current ON crm_contact_stages(contact_id, exited_at) WHERE exited_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_crm_contact_stages_entered ON crm_contact_stages(entered_at);
 
--- ============================================
--- CRM CONTACT TAGS (Junction for tags reuse)
--- ============================================
-
-CREATE TABLE crm_contact_tags (
+-- CRM CONTACT TAGS (Junction)
+CREATE TABLE IF NOT EXISTS crm_contact_tags (
   contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE,
   tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
   added_at TIMESTAMPTZ DEFAULT NOW(),
@@ -174,8 +140,8 @@ CREATE TABLE crm_contact_tags (
   PRIMARY KEY (contact_id, tag_id)
 );
 
-CREATE INDEX idx_crm_contact_tags_contact ON crm_contact_tags(contact_id);
-CREATE INDEX idx_crm_contact_tags_tag ON crm_contact_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_tags_contact ON crm_contact_tags(contact_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contact_tags_tag ON crm_contact_tags(tag_id);
 
 -- ============================================
 -- HELPER FUNCTION: Move Contact to Stage
@@ -193,7 +159,6 @@ DECLARE
   v_stage_entry_id UUID;
   v_old_stage_id UUID;
 BEGIN
-  -- Get stage's pipeline and org
   SELECT pipeline_id, org_id INTO v_pipeline_id, v_org_id
   FROM crm_stages
   WHERE id = p_stage_id;
@@ -202,7 +167,6 @@ BEGIN
     RAISE EXCEPTION 'Stage not found: %', p_stage_id;
   END IF;
 
-  -- Exit current stage in this pipeline (if any)
   UPDATE crm_contact_stages
   SET exited_at = NOW()
   WHERE contact_id = p_contact_id
@@ -210,7 +174,6 @@ BEGIN
     AND exited_at IS NULL
   RETURNING stage_id INTO v_old_stage_id;
 
-  -- Enter new stage
   INSERT INTO crm_contact_stages (
     contact_id,
     stage_id,
@@ -228,7 +191,6 @@ BEGIN
   )
   RETURNING id INTO v_stage_entry_id;
 
-  -- Update contact's last_contacted_at
   UPDATE crm_contacts
   SET updated_at = NOW()
   WHERE id = p_contact_id;
@@ -247,16 +209,13 @@ DECLARE
   v_contact_id UUID;
   v_org_id UUID;
 BEGIN
-  -- Get org_id from member
   v_org_id := NEW.org_id;
 
-  -- Check if contact already exists
   SELECT id INTO v_contact_id
   FROM crm_contacts
   WHERE org_id = v_org_id AND member_id = NEW.id;
 
   IF FOUND THEN
-    -- Update existing contact
     UPDATE crm_contacts SET
       type = 'member',
       email = NEW.email,
@@ -266,13 +225,11 @@ BEGIN
       updated_at = NOW()
     WHERE id = v_contact_id;
   ELSE
-    -- Check if contact exists by email (prospect conversion)
     SELECT id INTO v_contact_id
     FROM crm_contacts
     WHERE org_id = v_org_id AND email = NEW.email;
 
     IF FOUND THEN
-      -- Convert prospect to member
       UPDATE crm_contacts SET
         type = 'member',
         member_id = NEW.id,
@@ -282,7 +239,6 @@ BEGIN
         updated_at = NOW()
       WHERE id = v_contact_id;
     ELSE
-      -- Create new contact
       INSERT INTO crm_contacts (
         org_id,
         member_id,
@@ -309,10 +265,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS sync_member_to_crm ON members;
+
 -- Attach trigger to members table
 CREATE TRIGGER sync_member_to_crm
   AFTER INSERT OR UPDATE ON members
   FOR EACH ROW EXECUTE FUNCTION sync_member_to_crm_contact();
+
+-- ============================================
+-- UPDATE TRIGGERS FOR TIMESTAMPS
+-- ============================================
+
+DROP TRIGGER IF EXISTS update_crm_contacts_updated_at ON crm_contacts;
+CREATE TRIGGER update_crm_contacts_updated_at
+  BEFORE UPDATE ON crm_contacts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS update_crm_pipelines_updated_at ON crm_pipelines;
+CREATE TRIGGER update_crm_pipelines_updated_at
+  BEFORE UPDATE ON crm_pipelines
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS update_crm_stages_updated_at ON crm_stages;
+CREATE TRIGGER update_crm_stages_updated_at
+  BEFORE UPDATE ON crm_stages
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================
 -- VIEW: CRM Contact Summary
@@ -338,7 +316,6 @@ SELECT
   c.created_at,
   c.updated_at,
 
-  -- Current stage info (per pipeline)
   cs.stage_id AS current_stage_id,
   cs.pipeline_id AS current_pipeline_id,
   s.name AS current_stage_name,
@@ -346,15 +323,13 @@ SELECT
   p.name AS current_pipeline_name,
   cs.entered_at AS stage_entered_at,
 
-  -- Assigned user info
   u.email AS assigned_user_email,
-  u.name AS assigned_user_name,
+  u.first_name AS assigned_user_first_name,
+  u.last_name AS assigned_user_last_name,
 
-  -- Member info (if converted)
   m.status AS member_status,
   m.subscription_status AS member_subscription_status,
 
-  -- Tags array
   COALESCE(
     (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
      FROM crm_contact_tags ct
@@ -371,15 +346,49 @@ LEFT JOIN users u ON u.id = c.assigned_to
 LEFT JOIN members m ON m.id = c.member_id;
 
 -- ============================================
--- SAMPLE DATA (Optional - for testing)
+-- MARK MIGRATIONS AS COMPLETE
 -- ============================================
 
--- Insert a default pipeline for each organization
--- This will be created via the UI in production, but useful for testing
+INSERT INTO _migrations (name, executed_at)
+VALUES
+  ('011_crm_core.sql', NOW()),
+  ('012_force_crm_tables.js', NOW())
+ON CONFLICT (name) DO NOTHING;
 
--- Note: This is commented out as organizations should create their own pipelines
--- Example:
--- INSERT INTO crm_pipelines (org_id, name, description, is_default)
--- SELECT id, 'Sales Pipeline', 'Default sales pipeline', TRUE
--- FROM organizations
--- WHERE NOT EXISTS (SELECT 1 FROM crm_pipelines WHERE org_id = organizations.id);
+-- ============================================
+-- SYNC EXISTING MEMBERS TO CRM
+-- ============================================
+
+-- This will create CRM contacts for all existing members
+INSERT INTO crm_contacts (org_id, member_id, type, email, first_name, last_name, phone, source)
+SELECT
+  org_id,
+  id,
+  'member',
+  email,
+  first_name,
+  last_name,
+  phone,
+  'LMS'
+FROM members
+WHERE NOT EXISTS (
+  SELECT 1 FROM crm_contacts WHERE member_id = members.id
+);
+
+-- ============================================
+-- VERIFICATION QUERIES
+-- ============================================
+
+-- Run these after to verify tables were created:
+
+-- Check tables exist:
+-- SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'crm_%' ORDER BY table_name;
+
+-- Check triggers exist:
+-- SELECT tgname FROM pg_trigger WHERE tgname LIKE '%crm%';
+
+-- Check how many contacts were synced:
+-- SELECT COUNT(*) FROM crm_contacts;
+
+-- Check member sync worked:
+-- SELECT email, first_name, last_name, type, source FROM crm_contacts WHERE type = 'member';

@@ -442,8 +442,8 @@ async function seedCRMTables() {
         cs.stage_id AS current_stage_id, cs.pipeline_id AS current_pipeline_id,
         s.name AS current_stage_name, s.color AS current_stage_color,
         p.name AS current_pipeline_name, cs.entered_at AS stage_entered_at,
-        u.email AS assigned_user_email, u.first_name AS assigned_user_first_name,
-        u.last_name AS assigned_user_last_name, m.status AS member_status,
+        u.email AS assigned_user_email, u.name AS assigned_user_name,
+        m.status AS member_status,
         m.subscription_status AS member_subscription_status,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
