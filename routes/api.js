@@ -439,7 +439,7 @@ router.get('/members/:id/credentials', requireUser, async (req, res) => {
         COALESCE(
           (SELECT SUM(cc.credits) FROM ceu_credits cc
            WHERE cc.member_credential_id = mc.id
-           AND cc.status = 'verified'
+           AND cc.verified = true
            AND cc.completed_at >= mc.current_period_start
            AND cc.completed_at <= mc.current_period_end),
           0

@@ -444,7 +444,6 @@ async function seedCRMTables() {
         p.name AS current_pipeline_name, cs.entered_at AS stage_entered_at,
         u.email AS assigned_user_email, u.name AS assigned_user_name,
         m.status AS member_status,
-        m.subscription_status AS member_subscription_status,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
            FROM crm_contact_tags ct JOIN tags t ON t.id = ct.tag_id WHERE ct.contact_id = c.id),
@@ -717,7 +716,7 @@ async function seedCRMSubstages() {
         ss.name AS current_substage_name, ss.color AS current_substage_color,
         p.name AS current_pipeline_name, cs.entered_at AS stage_entered_at,
         u.email AS assigned_user_email, u.name AS assigned_user_name,
-        m.status AS member_status, m.subscription_status AS member_subscription_status,
+        m.status AS member_status,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
            FROM crm_contact_tags ct JOIN tags t ON t.id = ct.tag_id WHERE ct.contact_id = c.id),
@@ -821,7 +820,7 @@ async function fixCRMContactSummaryView() {
         ss.name AS current_substage_name, ss.color AS current_substage_color,
         p.name AS current_pipeline_name, cs.entered_at AS stage_entered_at,
         u.email AS assigned_user_email, u.name AS assigned_user_name,
-        m.status AS member_status, m.subscription_status AS member_subscription_status,
+        m.status AS member_status,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
            FROM crm_contact_tags ct JOIN tags t ON t.id = ct.tag_id WHERE ct.contact_id = c.id),
