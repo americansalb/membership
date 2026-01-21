@@ -286,8 +286,7 @@ router.get('/:id', async (req, res) => {
         s.name AS stage_name,
         s.color AS stage_color,
         p.name AS pipeline_name,
-        u.first_name AS moved_by_first_name,
-        u.last_name AS moved_by_last_name
+        u.name AS moved_by_name
       FROM crm_contact_stages cs
       JOIN crm_stages s ON s.id = cs.stage_id
       JOIN crm_pipelines p ON p.id = cs.pipeline_id
