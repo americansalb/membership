@@ -99,15 +99,32 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Pipeline not found' });
     }
 
-    // Get stages with contact counts
+    // Get stages with contact counts and substages
     const stagesResult = await db.query(
       `SELECT
         s.*,
         (SELECT COUNT(DISTINCT cs.contact_id)
          FROM crm_contact_stages cs
-         WHERE cs.stage_id = s.id AND cs.exited_at IS NULL) AS contacts_count
+         WHERE cs.stage_id = s.id AND cs.exited_at IS NULL) AS contacts_count,
+        (SELECT json_agg(
+          json_build_object(
+            'id', ss.id,
+            'name', ss.name,
+            'description', ss.description,
+            'sort_order', ss.sort_order,
+            'color', ss.color,
+            'is_active', ss.is_active,
+            'contacts_count', (
+              SELECT COUNT(DISTINCT cs2.contact_id)
+              FROM crm_contact_stages cs2
+              WHERE cs2.substage_id = ss.id AND cs2.exited_at IS NULL
+            )
+          ) ORDER BY ss.sort_order ASC
+        )
+        FROM crm_stages ss
+        WHERE ss.parent_stage_id = s.id AND ss.is_active = true) AS substages
       FROM crm_stages s
-      WHERE s.pipeline_id = $1 AND s.org_id = $2
+      WHERE s.pipeline_id = $1 AND s.org_id = $2 AND s.parent_stage_id IS NULL
       ORDER BY s.sort_order ASC, s.created_at ASC`,
       [id, req.user.orgId]
     );
