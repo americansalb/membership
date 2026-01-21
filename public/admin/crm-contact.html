@@ -25,19 +25,7 @@
 </head>
 <body>
   <div class="admin-layout">
-    <!-- Sidebar (simplified for brevity - same as other pages) -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <a href="/admin/" style="color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">VillageMembers</a>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="/admin/" class="sidebar-link">Dashboard</a>
-        <div class="sidebar-section">CRM</div>
-        <a href="/admin/crm-dashboard.html" class="sidebar-link">CRM Dashboard</a>
-        <a href="/admin/crm-list.html" class="sidebar-link active">Contacts List</a>
-        <a href="/admin/crm-pipelines.html" class="sidebar-link">Pipelines</a>
-      </nav>
-    </aside>
+    <!-- Sidebar injected by navigation.js -->
 
     <!-- Main Content -->
     <main class="admin-main">
@@ -215,6 +203,7 @@
   </div>
 
   <!-- Scripts -->
+  <script src="/js/navigation.js"></script>
   <script src="/js/app.js"></script>
   <script>
     let contactId = null;
