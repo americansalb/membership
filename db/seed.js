@@ -746,6 +746,49 @@ async function seedCRMSubstages() {
   }
 }
 
+// Sync existing members to CRM contacts
+async function syncExistingMembersToCRM() {
+  console.log('[Seed] Syncing existing members to CRM...');
+
+  try {
+    // Check if crm_contacts table exists
+    const tableCheck = await db.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'crm_contacts'
+      );
+    `);
+
+    if (!tableCheck.rows[0].exists) {
+      console.log('[Seed] CRM tables not created yet, skipping member sync');
+      return;
+    }
+
+    // Find members without CRM contacts and create them
+    const result = await db.query(`
+      INSERT INTO crm_contacts (org_id, member_id, type, email, first_name, last_name, phone, source)
+      SELECT
+        m.org_id,
+        m.id,
+        'member',
+        m.email,
+        m.first_name,
+        m.last_name,
+        m.phone,
+        'LMS'
+      FROM members m
+      WHERE NOT EXISTS (
+        SELECT 1 FROM crm_contacts c WHERE c.member_id = m.id
+      )
+      RETURNING id;
+    `);
+
+    console.log(`[Seed] Synced ${result.rowCount} existing members to CRM contacts`);
+  } catch (error) {
+    console.error('[Seed] Error syncing existing members to CRM:', error.message);
+  }
+}
+
 async function runSeeds() {
   console.log('[Seed] Running database seeds...');
   await seedPlatformPlans();
@@ -754,6 +797,7 @@ async function runSeeds() {
   await seedCRMTables();
   await seedCRMActivities();
   await seedCRMSubstages();
+  await syncExistingMembersToCRM();
   console.log('[Seed] Seeding complete');
 }
 
