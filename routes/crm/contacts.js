@@ -269,16 +269,19 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("[CRM] GET /:id - Loading contact:", id, "for org:", req.user.orgId);
 
     const result = await db.query(
       `SELECT * FROM crm_contact_summary WHERE id = $1 AND org_id = $2`,
       [id, req.user.orgId]
     );
+    console.log("[CRM] GET /:id - Contact query result rows:", result.rows.length);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Contact not found' });
     }
 
+    console.log("[CRM] GET /:id - Fetching stage history for contact:", id);
     // Get stage history
     const historyResult = await db.query(
       `SELECT
@@ -295,6 +298,7 @@ router.get('/:id', async (req, res) => {
       ORDER BY cs.entered_at DESC`,
       [id, req.user.orgId]
     );
+    console.log("[CRM] GET /:id - Stage history rows:", historyResult.rows.length);
 
     res.json({
       contact: result.rows[0],
@@ -302,7 +306,12 @@ router.get('/:id', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Get contact error:', err);
+    console.error("[CRM] GET /:id - FULL ERROR:", err);
+    console.error("[CRM] GET /:id - Error message:", err.message);
+    console.error("[CRM] GET /:id - Error stack:", err.stack);
+    if (err.code) console.error("[CRM] GET /:id - SQL Error code:", err.code);
+    if (err.detail) console.error("[CRM] GET /:id - SQL Error detail:", err.detail);
+    if (err.hint) console.error("[CRM] GET /:id - SQL Error hint:", err.hint);
     res.status(500).json({ error: 'Failed to get contact' });
   }
 });
