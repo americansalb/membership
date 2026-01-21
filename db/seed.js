@@ -789,6 +789,59 @@ async function syncExistingMembersToCRM() {
   }
 }
 
+// Force recreate CRM contact summary view with correct user columns
+async function fixCRMContactSummaryView() {
+  console.log('[Seed] Fixing CRM contact summary view...');
+
+  try {
+    // Check if crm_contacts table exists
+    const tableCheck = await db.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'crm_contacts'
+      );
+    `);
+
+    if (!tableCheck.rows[0].exists) {
+      console.log('[Seed] CRM tables not created yet, skipping view fix');
+      return;
+    }
+
+    // Always recreate view with correct columns
+    await db.query(`
+      DROP VIEW IF EXISTS crm_contact_summary;
+      CREATE OR REPLACE VIEW crm_contact_summary AS
+      SELECT
+        c.id, c.org_id, c.member_id, c.type, c.email, c.first_name, c.last_name,
+        c.phone, c.company, c.title, c.source, c.lead_score, c.assigned_to,
+        c.custom_fields, c.last_contacted_at, c.created_at, c.updated_at,
+        cs.stage_id AS current_stage_id, cs.substage_id AS current_substage_id,
+        cs.pipeline_id AS current_pipeline_id,
+        s.name AS current_stage_name, s.color AS current_stage_color,
+        ss.name AS current_substage_name, ss.color AS current_substage_color,
+        p.name AS current_pipeline_name, cs.entered_at AS stage_entered_at,
+        u.email AS assigned_user_email, u.name AS assigned_user_name,
+        m.status AS member_status, m.subscription_status AS member_subscription_status,
+        COALESCE(
+          (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
+           FROM crm_contact_tags ct JOIN tags t ON t.id = ct.tag_id WHERE ct.contact_id = c.id),
+          '[]'::json
+        ) AS tags
+      FROM crm_contacts c
+      LEFT JOIN crm_contact_stages cs ON cs.contact_id = c.id AND cs.exited_at IS NULL
+      LEFT JOIN crm_stages s ON s.id = cs.stage_id
+      LEFT JOIN crm_stages ss ON ss.id = cs.substage_id
+      LEFT JOIN crm_pipelines p ON p.id = cs.pipeline_id
+      LEFT JOIN users u ON u.id = c.assigned_to
+      LEFT JOIN members m ON m.id = c.member_id;
+    `);
+
+    console.log('[Seed] CRM contact summary view fixed successfully');
+  } catch (error) {
+    console.error('[Seed] Error fixing CRM contact summary view:', error.message);
+  }
+}
+
 async function runSeeds() {
   console.log('[Seed] Running database seeds...');
   await seedPlatformPlans();
@@ -798,6 +851,7 @@ async function runSeeds() {
   await seedCRMActivities();
   await seedCRMSubstages();
   await syncExistingMembersToCRM();
+  await fixCRMContactSummaryView();
   console.log('[Seed] Seeding complete');
 }
 
