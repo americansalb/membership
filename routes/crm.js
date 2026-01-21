@@ -16,6 +16,6 @@ router.use('/pipelines', pipelinesRouter);
 router.use('/activities', require('./crm/activities'));
 
 // Automations require admin access
-router.use('/automations', requireAdmin(), automationsRouter);
+router.use('/automations', requireAdmin, automationsRouter);
 
 module.exports = router;
