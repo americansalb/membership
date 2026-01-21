@@ -58,6 +58,10 @@
             <div class="crm-stat-label">Assigned to Me</div>
             <div class="crm-stat-value" id="stat-assigned">-</div>
           </div>
+          <div class="crm-stat-card" onclick="window.location.href='/admin/crm-automations.html'" style="cursor: pointer;">
+            <div class="crm-stat-label">⚡ Active Automations</div>
+            <div class="crm-stat-value" id="stat-automations">-</div>
+          </div>
         </div>
 
         <!-- Pipeline Overview -->
@@ -178,6 +182,7 @@
     async function loadDashboard() {
       await Promise.all([
         loadStats(),
+        loadAutomationStats(),
         loadPipelines(),
         loadTasks(),
         loadRecentContacts()
@@ -197,6 +202,19 @@
         document.getElementById('stat-assigned').textContent = contacts.filter(c => c.assigned_to === currentUser.id).length;
       } catch (err) {
         console.error('Load stats error:', err);
+      }
+    }
+
+    async function loadAutomationStats() {
+      try {
+        const response = await fetch('/api/v1/crm/automations/stats/dashboard', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load automation stats');
+        const data = await response.json();
+
+        document.getElementById('stat-automations').textContent = data.total_active || 0;
+      } catch (err) {
+        console.error('Load automation stats error:', err);
+        document.getElementById('stat-automations').textContent = '0';
       }
     }
 

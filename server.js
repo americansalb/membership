@@ -10,6 +10,7 @@ const db = require('./db');
 const migrate = require('./db/migrate');
 const runSeeds = require('./db/seed');
 const { initializeSocket } = require('./lib/socket');
+const automationProcessor = require('./lib/automation-processor');
 
 const app = express();
 const server = http.createServer(app);
@@ -189,4 +190,8 @@ app.use((err, req, res, next) => {
 server.listen(PORT, () => {
   console.log(`VillageKeep running on port ${PORT}`);
   console.log(`WebSocket server ready`);
+
+  // Start automation processor
+  automationProcessor.start();
+  console.log(`Automation processor started`);
 });

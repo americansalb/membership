@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automation Builder - CRM - VillageMembers Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/crm.css">
+  <link rel="stylesheet" href="/css/crm-automation.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar injected by navigation.js -->
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="crm-header">
+        <div class="crm-header-title">
+          <span id="page-title">Create Automation Rule</span>
+        </div>
+        <div class="crm-header-actions">
+          <button onclick="window.location.href='/admin/crm-automations.html'" class="btn btn-ghost btn-sm">← Back to Rules</button>
+        </div>
+      </div>
+
+      <div class="crm-content">
+        <div class="automation-builder">
+          <!-- Basic Info -->
+          <div class="automation-step">
+            <div class="automation-step-header">
+              <span class="automation-step-number">✏️</span>
+              Rule Details
+            </div>
+            <div class="crm-form-group">
+              <label class="crm-form-label">Rule Name *</label>
+              <input type="text" id="rule-name" class="crm-form-input" placeholder="e.g., Tag New Leads" required>
+            </div>
+            <div class="crm-form-group">
+              <label class="crm-form-label">Description</label>
+              <textarea id="rule-description" class="crm-form-input" rows="2" placeholder="Optional description of what this rule does"></textarea>
+            </div>
+          </div>
+
+          <!-- Trigger -->
+          <div class="automation-step">
+            <div class="automation-step-header">
+              <span class="automation-step-number">1</span>
+              Choose Trigger
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">When should this automation run?</p>
+
+            <div class="trigger-type-grid" id="trigger-grid">
+              <div class="trigger-type-card" data-type="stage_entered" onclick="selectTrigger('stage_entered')">
+                <div class="trigger-icon">🚀</div>
+                <div class="trigger-name">Stage Entered</div>
+                <div class="trigger-description">When contact enters a stage</div>
+              </div>
+              <div class="trigger-type-card" data-type="tag_added" onclick="selectTrigger('tag_added')">
+                <div class="trigger-icon">🏷️</div>
+                <div class="trigger-name">Tag Added</div>
+                <div class="trigger-description">When tag is added</div>
+              </div>
+              <div class="trigger-type-card" data-type="activity_logged" onclick="selectTrigger('activity_logged')">
+                <div class="trigger-icon">📝</div>
+                <div class="trigger-name">Activity Logged</div>
+                <div class="trigger-description">When activity is logged</div>
+              </div>
+            </div>
+
+            <div id="trigger-config" class="trigger-config" style="display: none;"></div>
+          </div>
+
+          <!-- Actions -->
+          <div class="automation-step">
+            <div class="automation-step-header">
+              <span class="automation-step-number">2</span>
+              Define Actions
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">What should happen?</p>
+
+            <div id="actions-list" class="action-list"></div>
+
+            <div class="add-action-menu">
+              <button class="btn btn-secondary" onclick="toggleActionMenu()">+ Add Action</button>
+              <div id="action-menu" class="action-type-menu" style="display: none;">
+                <button onclick="addAction('add_tags')">🏷️ Add Tags</button>
+                <button onclick="addAction('assign_to')">👤 Assign To User</button>
+                <button onclick="addAction('move_to_stage')">🚀 Move to Stage</button>
+                <button onclick="addAction('create_activity')">📝 Create Note</button>
+                <button onclick="addAction('create_task')">✅ Create Task</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="automation-step">
+            <div class="automation-step-header">
+              <span class="automation-step-number">⚙️</span>
+              Settings
+            </div>
+            <div class="crm-form-group">
+              <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                <input type="checkbox" id="is-active" checked>
+                <span>Active (run this rule immediately)</span>
+              </label>
+            </div>
+            <div class="crm-form-group">
+              <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                <input type="checkbox" id="run-once">
+                <span>Run only once per contact</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div class="automation-step">
+            <div class="automation-step-header">
+              <span class="automation-step-number">👁️</span>
+              Preview
+            </div>
+            <div id="rule-preview" class="rule-preview">
+              <em style="color: var(--text-secondary);">Configure trigger and actions to see preview</em>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-6);">
+            <button class="btn btn-ghost" onclick="window.location.href='/admin/crm-automations.html'">Cancel</button>
+            <button class="btn btn-secondary" onclick="saveRule(false)">Save as Draft</button>
+            <button class="btn btn-primary" onclick="saveRule(true)">Save & Activate</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script>
+    let ruleState = {
+      id: null,
+      name: '',
+      description: '',
+      is_active: true,
+      run_once_per_contact: false,
+      trigger: { type: '', config: {} },
+      actions: []
+    };
+
+    let stages = [];
+    let tags = [];
+    let users = [];
+    let pipelines = [];
+
+    // Check authentication
+    async function checkAuth() {
+      try {
+        const response = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return false;
+        }
+        return true;
+      } catch (error) {
+        window.location.href = '/login.html';
+        return false;
+      }
+    }
+
+    // Load data for dropdowns
+    async function loadData() {
+      try {
+        // Load pipelines and stages
+        const pipelinesRes = await fetch('/api/v1/crm/pipelines', { credentials: 'include' });
+        if (pipelinesRes.ok) {
+          pipelines = (await pipelinesRes.json()).pipelines || [];
+        }
+
+        // Load tags
+        const tagsRes = await fetch('/api/v1/tags', { credentials: 'include' });
+        if (tagsRes.ok) {
+          tags = (await tagsRes.json()).tags || [];
+        }
+
+        // Load users
+        const usersRes = await fetch('/api/v1/org/users', { credentials: 'include' });
+        if (usersRes.ok) {
+          users = (await usersRes.json()).users || [];
+        }
+
+        // If editing, load existing automation
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        if (id) {
+          await loadExistingRule(id);
+        }
+      } catch (error) {
+        console.error('Load data error:', error);
+      }
+    }
+
+    // Load existing rule for editing
+    async function loadExistingRule(id) {
+      try {
+        const response = await fetch(`/api/v1/crm/automations/${id}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load automation');
+
+        const data = await response.json();
+        const automation = data.automation;
+
+        ruleState.id = automation.id;
+        document.getElementById('rule-name').value = automation.name;
+        document.getElementById('rule-description').value = automation.description || '';
+        document.getElementById('is-active').checked = automation.is_active;
+        document.getElementById('run-once').checked = automation.run_once_per_contact;
+        document.getElementById('page-title').textContent = 'Edit Automation Rule';
+
+        // Set trigger
+        if (automation.trigger_type) {
+          selectTrigger(automation.trigger_type);
+          ruleState.trigger.config = automation.trigger_config || {};
+          renderTriggerConfig();
+        }
+
+        // Set actions
+        ruleState.actions = automation.actions || [];
+        renderActions();
+
+        updatePreview();
+      } catch (error) {
+        console.error('Load rule error:', error);
+        toast.error('Failed to load automation');
+      }
+    }
+
+    // Select trigger
+    function selectTrigger(type) {
+      ruleState.trigger.type = type;
+
+      // Update UI
+      document.querySelectorAll('.trigger-type-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.type === type);
+      });
+
+      // Show config
+      document.getElementById('trigger-config').style.display = 'block';
+      renderTriggerConfig();
+      updatePreview();
+    }
+
+    // Render trigger configuration
+    function renderTriggerConfig() {
+      const container = document.getElementById('trigger-config');
+      const type = ruleState.trigger.type;
+
+      if (type === 'stage_entered') {
+        container.innerHTML = `
+          <div class="crm-form-group">
+            <label class="crm-form-label">Pipeline</label>
+            <select id="trigger-pipeline" class="crm-form-select" onchange="loadPipelineStages()">
+              <option value="">Select pipeline...</option>
+              ${pipelines.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Stage *</label>
+            <select id="trigger-stage" class="crm-form-select" onchange="updateTriggerConfig()">
+              <option value="">Select stage...</option>
+            </select>
+          </div>
+        `;
+      } else if (type === 'tag_added') {
+        container.innerHTML = `
+          <div class="crm-form-group">
+            <label class="crm-form-label">Tag *</label>
+            <select id="trigger-tag" class="crm-form-select" onchange="updateTriggerConfig()">
+              <option value="">Select tag...</option>
+              ${tags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else if (type === 'activity_logged') {
+        container.innerHTML = `
+          <div class="crm-form-group">
+            <label class="crm-form-label">Activity Type</label>
+            <select id="trigger-activity-type" class="crm-form-select" onchange="updateTriggerConfig()">
+              <option value="">Any activity</option>
+              <option value="call">Call</option>
+              <option value="email">Email</option>
+              <option value="meeting">Meeting</option>
+              <option value="note">Note</option>
+            </select>
+          </div>
+        `;
+      }
+
+      // Restore saved config
+      if (ruleState.trigger.config.stage_id) {
+        setTimeout(() => {
+          const stageSelect = document.getElementById('trigger-stage');
+          if (stageSelect) stageSelect.value = ruleState.trigger.config.stage_id;
+        }, 100);
+      }
+      if (ruleState.trigger.config.tag_id) {
+        setTimeout(() => {
+          const tagSelect = document.getElementById('trigger-tag');
+          if (tagSelect) tagSelect.value = ruleState.trigger.config.tag_id;
+        }, 100);
+      }
+    }
+
+    // Load stages for selected pipeline
+    async function loadPipelineStages() {
+      const pipelineSelect = document.getElementById('trigger-pipeline');
+      const stageSelect = document.getElementById('trigger-stage');
+      const pipelineId = pipelineSelect.value;
+
+      if (!pipelineId) {
+        stageSelect.innerHTML = '<option value="">Select stage...</option>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/v1/crm/pipelines/${pipelineId}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load stages');
+
+        const data = await response.json();
+        stages = data.pipeline.stages || [];
+
+        stageSelect.innerHTML = '<option value="">Select stage...</option>' +
+          stages.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      } catch (error) {
+        console.error('Load stages error:', error);
+      }
+    }
+
+    // Update trigger config
+    function updateTriggerConfig() {
+      const type = ruleState.trigger.type;
+
+      if (type === 'stage_entered') {
+        const stageId = document.getElementById('trigger-stage')?.value;
+        ruleState.trigger.config = { stage_id: stageId };
+      } else if (type === 'tag_added') {
+        const tagId = document.getElementById('trigger-tag')?.value;
+        ruleState.trigger.config = { tag_id: tagId };
+      } else if (type === 'activity_logged') {
+        const activityType = document.getElementById('trigger-activity-type')?.value;
+        ruleState.trigger.config = activityType ? { activity_type: activityType } : {};
+      }
+
+      updatePreview();
+    }
+
+    // Toggle action menu
+    function toggleActionMenu() {
+      const menu = document.getElementById('action-menu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Add action
+    function addAction(type) {
+      ruleState.actions.push({ type, config: {} });
+      renderActions();
+      toggleActionMenu();
+      updatePreview();
+    }
+
+    // Remove action
+    function removeAction(index) {
+      ruleState.actions.splice(index, 1);
+      renderActions();
+      updatePreview();
+    }
+
+    // Move action up/down
+    function moveAction(index, direction) {
+      if (direction === 'up' && index > 0) {
+        [ruleState.actions[index], ruleState.actions[index - 1]] =
+        [ruleState.actions[index - 1], ruleState.actions[index]];
+      } else if (direction === 'down' && index < ruleState.actions.length - 1) {
+        [ruleState.actions[index], ruleState.actions[index + 1]] =
+        [ruleState.actions[index + 1], ruleState.actions[index]];
+      }
+      renderActions();
+      updatePreview();
+    }
+
+    // Render actions
+    function renderActions() {
+      const container = document.getElementById('actions-list');
+
+      if (ruleState.actions.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No actions yet. Click "+ Add Action" to add one.</p>';
+        return;
+      }
+
+      container.innerHTML = ruleState.actions.map((action, index) => {
+        return `
+          <div class="action-card">
+            <div class="action-number">${index + 1}</div>
+            <div class="action-config">
+              <div class="action-config-title">${getActionTitle(action.type)}</div>
+              ${renderActionConfig(action, index)}
+            </div>
+            <div class="action-controls">
+              <button class="action-control-btn" onclick="moveAction(${index}, 'up')" ${index === 0 ? 'disabled' : ''}>↑</button>
+              <button class="action-control-btn" onclick="moveAction(${index}, 'down')" ${index === ruleState.actions.length - 1 ? 'disabled' : ''}>↓</button>
+              <button class="action-control-btn" onclick="removeAction(${index})">×</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Get action title
+    function getActionTitle(type) {
+      const titles = {
+        'add_tags': '🏷️ Add Tags',
+        'assign_to': '👤 Assign To User',
+        'move_to_stage': '🚀 Move to Stage',
+        'create_activity': '📝 Create Note',
+        'create_task': '✅ Create Task'
+      };
+      return titles[type] || type;
+    }
+
+    // Render action config
+    function renderActionConfig(action, index) {
+      if (action.type === 'add_tags') {
+        return `
+          <div class="crm-form-group" style="margin-top: var(--space-2);">
+            <label class="crm-form-label">Select tags to add:</label>
+            <select multiple id="action-${index}-tags" class="crm-form-select" onchange="updateActionConfig(${index})" style="min-height: 100px;">
+              ${tags.map(t => `
+                <option value="${t.id}" ${action.config.tag_ids?.includes(t.id) ? 'selected' : ''}>${t.name}</option>
+              `).join('')}
+            </select>
+            <small style="color: var(--text-secondary);">Hold Ctrl/Cmd to select multiple</small>
+          </div>
+        `;
+      } else if (action.type === 'assign_to') {
+        return `
+          <div class="crm-form-group" style="margin-top: var(--space-2);">
+            <label class="crm-form-label">Assign to user:</label>
+            <select id="action-${index}-user" class="crm-form-select" onchange="updateActionConfig(${index})">
+              <option value="">Select user...</option>
+              ${users.map(u => `
+                <option value="${u.id}" ${action.config.user_id === u.id ? 'selected' : ''}>${u.name || u.email}</option>
+              `).join('')}
+            </select>
+          </div>
+        `;
+      } else if (action.type === 'create_activity') {
+        return `
+          <div class="crm-form-group" style="margin-top: var(--space-2);">
+            <label class="crm-form-label">Note title:</label>
+            <input type="text" id="action-${index}-title" class="crm-form-input"
+                   value="${action.config.title || ''}"
+                   placeholder="e.g., Automated follow-up"
+                   onchange="updateActionConfig(${index})">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Note description:</label>
+            <textarea id="action-${index}-description" class="crm-form-input" rows="2"
+                      placeholder="Optional description"
+                      onchange="updateActionConfig(${index})">${action.config.description || ''}</textarea>
+          </div>
+        `;
+      } else if (action.type === 'create_task') {
+        return `
+          <div class="crm-form-group" style="margin-top: var(--space-2);">
+            <label class="crm-form-label">Task title:</label>
+            <input type="text" id="action-${index}-title" class="crm-form-input"
+                   value="${action.config.title || ''}"
+                   placeholder="e.g., Follow up with contact"
+                   onchange="updateActionConfig(${index})">
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Assign to:</label>
+            <select id="action-${index}-user" class="crm-form-select" onchange="updateActionConfig(${index})">
+              <option value="">Select user...</option>
+              ${users.map(u => `
+                <option value="${u.id}" ${action.config.assigned_to === u.id ? 'selected' : ''}>${u.name || u.email}</option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="crm-form-group">
+            <label class="crm-form-label">Due in (days):</label>
+            <input type="number" id="action-${index}-due-days" class="crm-form-input"
+                   value="${action.config.due_days || 0}"
+                   min="0"
+                   onchange="updateActionConfig(${index})">
+          </div>
+        `;
+      }
+      return '';
+    }
+
+    // Update action config
+    function updateActionConfig(index) {
+      const action = ruleState.actions[index];
+
+      if (action.type === 'add_tags') {
+        const select = document.getElementById(`action-${index}-tags`);
+        action.config.tag_ids = Array.from(select.selectedOptions).map(opt => opt.value);
+      } else if (action.type === 'assign_to') {
+        action.config.user_id = document.getElementById(`action-${index}-user`)?.value;
+      } else if (action.type === 'create_activity') {
+        action.config.type = 'note';
+        action.config.title = document.getElementById(`action-${index}-title`)?.value;
+        action.config.description = document.getElementById(`action-${index}-description`)?.value;
+      } else if (action.type === 'create_task') {
+        action.config.title = document.getElementById(`action-${index}-title`)?.value;
+        action.config.assigned_to = document.getElementById(`action-${index}-user`)?.value;
+        action.config.due_days = parseInt(document.getElementById(`action-${index}-due-days`)?.value || 0);
+        action.config.priority = 'medium';
+      }
+
+      updatePreview();
+    }
+
+    // Update preview
+    function updatePreview() {
+      const preview = document.getElementById('rule-preview');
+
+      let html = '<div class="preview-summary">';
+
+      // Trigger
+      if (ruleState.trigger.type) {
+        html += `<strong>When:</strong> ${getTriggerSummary()}<br>`;
+      }
+
+      // Actions
+      if (ruleState.actions.length > 0) {
+        html += `<strong>Then:</strong><ol style="margin-left: var(--space-4); margin-top: var(--space-2);">`;
+        ruleState.actions.forEach(action => {
+          html += `<li>${getActionSummary(action)}</li>`;
+        });
+        html += `</ol>`;
+      }
+
+      html += '</div>';
+
+      if (!ruleState.trigger.type && ruleState.actions.length === 0) {
+        preview.innerHTML = '<em style="color: var(--text-secondary);">Configure trigger and actions to see preview</em>';
+      } else {
+        preview.innerHTML = html;
+      }
+    }
+
+    // Get trigger summary
+    function getTriggerSummary() {
+      const type = ruleState.trigger.type;
+      if (type === 'stage_entered') {
+        const stage = stages.find(s => s.id === ruleState.trigger.config.stage_id);
+        return stage ? `Contact enters "${stage.name}" stage` : 'Contact enters a stage';
+      } else if (type === 'tag_added') {
+        const tag = tags.find(t => t.id === ruleState.trigger.config.tag_id);
+        return tag ? `"${tag.name}" tag is added` : 'A tag is added';
+      } else if (type === 'activity_logged') {
+        const actType = ruleState.trigger.config.activity_type;
+        return actType ? `${actType} activity is logged` : 'Any activity is logged';
+      }
+      return 'Trigger configured';
+    }
+
+    // Get action summary
+    function getActionSummary(action) {
+      if (action.type === 'add_tags') {
+        const tagNames = (action.config.tag_ids || []).map(id => {
+          const tag = tags.find(t => t.id === id);
+          return tag ? tag.name : id;
+        }).join(', ');
+        return `Add tags: ${tagNames || 'None selected'}`;
+      } else if (action.type === 'assign_to') {
+        const user = users.find(u => u.id === action.config.user_id);
+        return `Assign to ${user ? user.name || user.email : 'user'}`;
+      } else if (action.type === 'create_activity') {
+        return `Create note: "${action.config.title || 'Untitled'}"`;
+      } else if (action.type === 'create_task') {
+        return `Create task: "${action.config.title || 'Untitled'}" (due in ${action.config.due_days || 0} days)`;
+      }
+      return action.type;
+    }
+
+    // Save rule
+    async function saveRule(activate) {
+      try {
+        // Validation
+        const name = document.getElementById('rule-name').value.trim();
+        if (!name) {
+          toast.error('Rule name is required');
+          return;
+        }
+
+        if (!ruleState.trigger.type) {
+          toast.error('Please select a trigger');
+          return;
+        }
+
+        if (ruleState.actions.length === 0) {
+          toast.error('Please add at least one action');
+          return;
+        }
+
+        // Build payload
+        const payload = {
+          name,
+          description: document.getElementById('rule-description').value.trim(),
+          trigger_type: ruleState.trigger.type,
+          trigger_config: ruleState.trigger.config,
+          conditions: [],
+          actions: ruleState.actions,
+          is_active: activate,
+          run_once_per_contact: document.getElementById('run-once').checked,
+          priority: 0
+        };
+
+        const method = ruleState.id ? 'PUT' : 'POST';
+        const url = ruleState.id
+          ? `/api/v1/crm/automations/${ruleState.id}`
+          : '/api/v1/crm/automations';
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to save rule');
+        }
+
+        toast.success(activate ? 'Rule saved and activated!' : 'Rule saved as draft');
+        setTimeout(() => window.location.href = '/admin/crm-automations.html', 1000);
+
+      } catch (error) {
+        console.error('Save error:', error);
+        toast.error(error.message);
+      }
+    }
+
+    // Initialize
+    async function init() {
+      if (await checkAuth()) {
+        await loadData();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

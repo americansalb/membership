@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
+const automationEngine = require('../../lib/automation-engine');
 
 // ============================================
 // LIST CONTACTS
@@ -345,15 +346,17 @@ router.put('/:id', async (req, res) => {
       type
     } = req.body;
 
-    // Check if contact exists
+    // Check if contact exists and get current values for change tracking
     const checkResult = await db.query(
-      'SELECT id FROM crm_contacts WHERE id = $1 AND org_id = $2',
+      'SELECT * FROM crm_contacts WHERE id = $1 AND org_id = $2',
       [id, req.user.orgId]
     );
 
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: 'Contact not found' });
     }
+
+    const oldContact = checkResult.rows[0];
 
     // Check for duplicate email if email is being changed
     if (email) {
@@ -483,8 +486,31 @@ router.put('/:id', async (req, res) => {
     `;
 
     const result = await db.query(query, params);
+    const updatedContact = result.rows[0];
 
-    res.json({ contact: result.rows[0] });
+    // Trigger field_changed automations for significant fields (async, don't wait)
+    setImmediate(async () => {
+      try {
+        const significantFields = ['lead_score', 'type', 'assigned_to', 'source'];
+
+        for (const field of significantFields) {
+          if (req.body[field] !== undefined && oldContact[field] !== updatedContact[field]) {
+            await automationEngine.trigger('field_changed', {
+              org_id: req.user.orgId,
+              contact_id: id,
+              field: field,
+              old_value: oldContact[field],
+              new_value: updatedContact[field],
+              changed_by: req.user.id
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[Automation] Error triggering field_changed automations:', err);
+      }
+    });
+
+    res.json({ contact: updatedContact });
 
   } catch (err) {
     console.error('Update contact error:', err);
@@ -542,7 +568,7 @@ router.post('/:id/stage', async (req, res) => {
 
     // Verify stage exists and belongs to org
     const stageCheck = await db.query(
-      'SELECT id, org_id FROM crm_stages WHERE id = $1 AND org_id = $2',
+      'SELECT id, org_id, pipeline_id FROM crm_stages WHERE id = $1 AND org_id = $2',
       [stage_id, req.user.orgId]
     );
 
@@ -550,11 +576,49 @@ router.post('/:id/stage', async (req, res) => {
       return res.status(404).json({ error: 'Stage not found' });
     }
 
+    const newPipelineId = stageCheck.rows[0].pipeline_id;
+
+    // Get current stage before moving (for automation triggers)
+    const currentStageResult = await db.query(
+      `SELECT stage_id, pipeline_id FROM crm_contact_stages
+       WHERE contact_id = $1 AND pipeline_id = $2 AND exited_at IS NULL`,
+      [id, newPipelineId]
+    );
+
+    const oldStageId = currentStageResult.rows[0]?.stage_id || null;
+
     // Use helper function to move contact
     const result = await db.query(
       'SELECT crm_move_contact_to_stage($1, $2, $3, $4) AS stage_entry_id',
       [id, stage_id, req.user.id, notes]
     );
+
+    // Trigger automations (async, don't wait)
+    setImmediate(async () => {
+      try {
+        // Trigger stage_exited for old stage
+        if (oldStageId) {
+          await automationEngine.trigger('stage_exited', {
+            org_id: req.user.orgId,
+            contact_id: id,
+            stage_id: oldStageId,
+            pipeline_id: newPipelineId,
+            moved_by: req.user.id
+          });
+        }
+
+        // Trigger stage_entered for new stage
+        await automationEngine.trigger('stage_entered', {
+          org_id: req.user.orgId,
+          contact_id: id,
+          stage_id: stage_id,
+          pipeline_id: newPipelineId,
+          moved_by: req.user.id
+        });
+      } catch (err) {
+        console.error('[Automation] Error triggering stage automations:', err);
+      }
+    });
 
     res.json({
       message: 'Contact moved to stage successfully',
@@ -654,6 +718,22 @@ router.post('/:id/tags', async (req, res) => {
        ON CONFLICT (contact_id, tag_id) DO NOTHING`,
       params
     );
+
+    // Trigger automations for each tag added (async, don't wait)
+    setImmediate(async () => {
+      try {
+        for (const tagId of tag_ids) {
+          await automationEngine.trigger('tag_added', {
+            org_id: req.user.orgId,
+            contact_id: id,
+            tag_id: tagId,
+            added_by: req.user.id
+          });
+        }
+      } catch (err) {
+        console.error('[Automation] Error triggering tag_added automations:', err);
+      }
+    });
 
     // Return updated contact with tags
     const result = await db.query(

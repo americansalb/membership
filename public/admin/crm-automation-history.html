@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Execution History - CRM - VillageMembers Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/crm.css">
+  <link rel="stylesheet" href="/css/crm-automation.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar injected by navigation.js -->
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="crm-header">
+        <div class="crm-header-title">
+          <span id="rule-name">Execution History</span>
+        </div>
+        <div class="crm-header-actions">
+          <button onclick="window.location.href='/admin/crm-automations.html'" class="btn btn-ghost btn-sm">← Back to Rules</button>
+        </div>
+      </div>
+
+      <div class="crm-content">
+        <!-- Filters -->
+        <div class="crm-filters">
+          <div class="crm-filters-row">
+            <select id="filter-status" class="crm-filter-select" onchange="handleFilterChange()">
+              <option value="">All Status</option>
+              <option value="completed">Success</option>
+              <option value="failed">Failed</option>
+              <option value="running">Running</option>
+              <option value="skipped">Skipped</option>
+            </select>
+
+            <div class="crm-search-box">
+              <svg class="crm-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input type="text" id="search-input" placeholder="Search contact..." onkeyup="handleSearchChange()">
+            </div>
+
+            <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear Filters</button>
+          </div>
+        </div>
+
+        <!-- Executions Table -->
+        <div class="crm-table-container">
+          <div id="loading" class="crm-loading">Loading execution history...</div>
+          <div id="table-wrapper" style="display: none;">
+            <table class="crm-table">
+              <thead>
+                <tr>
+                  <th width="60">Status</th>
+                  <th>Contact</th>
+                  <th>Triggered</th>
+                  <th>Duration</th>
+                  <th width="100">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="executions-tbody">
+                <!-- Populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="crm-empty-state" style="display: none;">
+            <div class="crm-empty-icon">📊</div>
+            <h3>No executions yet</h3>
+            <p>This automation hasn't run yet</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Execution Detail Modal -->
+  <div id="detail-modal" class="crm-modal" style="display: none;" onclick="if(event.target === this) closeDetailModal()">
+    <div class="crm-modal-content" style="max-width: 700px;">
+      <div class="crm-modal-header">
+        <h2>Execution Details</h2>
+        <button onclick="closeDetailModal()" class="btn btn-sm btn-ghost">×</button>
+      </div>
+      <div class="crm-modal-body" id="detail-content">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script>
+    let executions = [];
+    let automationId = null;
+    let searchTimeout;
+
+    // Check authentication
+    async function checkAuth() {
+      try {
+        const response = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return false;
+        }
+        return true;
+      } catch (error) {
+        window.location.href = '/login.html';
+        return false;
+      }
+    }
+
+    // Load executions
+    async function loadExecutions() {
+      try {
+        const params = new URLSearchParams();
+
+        const statusFilter = document.getElementById('filter-status').value;
+        if (statusFilter) params.append('status', statusFilter);
+
+        const response = await fetch(`/api/v1/crm/automations/${automationId}/executions?${params}`, {
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to load executions');
+
+        const data = await response.json();
+        executions = data.executions;
+
+        renderExecutionsTable();
+      } catch (error) {
+        console.error('Load executions error:', error);
+        toast.error('Failed to load executions');
+      }
+    }
+
+    // Render table
+    function renderExecutionsTable() {
+      const tbody = document.getElementById('executions-tbody');
+      const loading = document.getElementById('loading');
+      const tableWrapper = document.getElementById('table-wrapper');
+      const emptyState = document.getElementById('empty-state');
+
+      // Filter by search
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      let filtered = executions;
+      if (searchTerm) {
+        filtered = executions.filter(e =>
+          e.first_name?.toLowerCase().includes(searchTerm) ||
+          e.last_name?.toLowerCase().includes(searchTerm) ||
+          e.email?.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      loading.style.display = 'none';
+
+      if (filtered.length === 0) {
+        tableWrapper.style.display = 'none';
+        emptyState.style.display = 'flex';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      tableWrapper.style.display = 'block';
+
+      tbody.innerHTML = filtered.map(e => {
+        const statusIcon = getStatusIcon(e.status);
+        const duration = e.duration_seconds ? `${Math.round(e.duration_seconds)}s` : '-';
+
+        return `
+          <tr>
+            <td>
+              <div class="execution-status-icon ${e.status}">${statusIcon}</div>
+            </td>
+            <td>
+              <div style="font-weight: var(--font-semibold);">${e.first_name} ${e.last_name}</div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);">${e.email}</div>
+            </td>
+            <td>${formatRelativeTime(new Date(e.triggered_at))}</td>
+            <td>${duration}</td>
+            <td>
+              <button class="btn btn-sm btn-ghost" onclick="viewDetail('${e.id}')">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Get status icon
+    function getStatusIcon(status) {
+      const icons = {
+        'completed': '✓',
+        'failed': '✗',
+        'running': '⊙',
+        'skipped': '⊘'
+      };
+      return icons[status] || '?';
+    }
+
+    // View detail
+    async function viewDetail(executionId) {
+      try {
+        const execution = executions.find(e => e.id === executionId);
+        if (!execution) return;
+
+        const content = document.getElementById('detail-content');
+        content.innerHTML = `
+          <div class="crm-detail-section">
+            <h3>Contact</h3>
+            <p>${execution.first_name} ${execution.last_name} (${execution.email})</p>
+          </div>
+
+          <div class="crm-detail-section">
+            <h3>Status</h3>
+            <div class="execution-status-icon ${execution.status}" style="display: inline-flex; margin-right: var(--space-2);">
+              ${getStatusIcon(execution.status)}
+            </div>
+            <span style="text-transform: capitalize;">${execution.status}</span>
+          </div>
+
+          <div class="crm-detail-section">
+            <h3>Timing</h3>
+            <p><strong>Triggered:</strong> ${new Date(execution.triggered_at).toLocaleString()}</p>
+            ${execution.started_at ? `<p><strong>Started:</strong> ${new Date(execution.started_at).toLocaleString()}</p>` : ''}
+            ${execution.completed_at ? `<p><strong>Completed:</strong> ${new Date(execution.completed_at).toLocaleString()}</p>` : ''}
+            ${execution.duration_seconds ? `<p><strong>Duration:</strong> ${Math.round(execution.duration_seconds)}s</p>` : ''}
+          </div>
+
+          ${execution.trigger_data ? `
+            <div class="crm-detail-section">
+              <h3>Trigger Data</h3>
+              <pre style="background: var(--gray-50); padding: var(--space-3); border-radius: var(--radius-md); overflow-x: auto;">${JSON.stringify(execution.trigger_data, null, 2)}</pre>
+            </div>
+          ` : ''}
+
+          ${execution.execution_result ? `
+            <div class="crm-detail-section">
+              <h3>Execution Result</h3>
+              <pre style="background: var(--gray-50); padding: var(--space-3); border-radius: var(--radius-md); overflow-x: auto;">${JSON.stringify(execution.execution_result, null, 2)}</pre>
+            </div>
+          ` : ''}
+
+          ${execution.error_message ? `
+            <div class="crm-detail-section">
+              <h3>Error</h3>
+              <div style="color: var(--error); background: var(--error-light); padding: var(--space-3); border-radius: var(--radius-md);">
+                ${execution.error_message}
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+        document.getElementById('detail-modal').style.display = 'flex';
+      } catch (error) {
+        console.error('View detail error:', error);
+      }
+    }
+
+    // Close detail modal
+    function closeDetailModal() {
+      document.getElementById('detail-modal').style.display = 'none';
+    }
+
+    // Format relative time
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (minutes > 0) return `${minutes}m ago`;
+      return 'just now';
+    }
+
+    // Search change handler
+    function handleSearchChange() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        renderExecutionsTable();
+      }, 300);
+    }
+
+    // Filter change handler
+    function handleFilterChange() {
+      loadExecutions();
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('filter-status').value = '';
+      loadExecutions();
+    }
+
+    // Initialize
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      automationId = params.get('id');
+
+      if (!automationId) {
+        toast.error('Automation ID required');
+        window.location.href = '/admin/crm-automations.html';
+        return;
+      }
+
+      if (await checkAuth()) {
+        // Load automation name
+        try {
+          const response = await fetch(`/api/v1/crm/automations/${automationId}`, { credentials: 'include' });
+          if (response.ok) {
+            const data = await response.json();
+            document.getElementById('rule-name').textContent = `Execution History: ${data.automation.name}`;
+          }
+        } catch (error) {
+          console.error('Load automation error:', error);
+        }
+
+        loadExecutions();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

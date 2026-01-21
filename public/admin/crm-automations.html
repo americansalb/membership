@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automation Rules - CRM - VillageMembers Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/typography.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/crm.css">
+  <link rel="stylesheet" href="/css/crm-automation.css">
+
+  <style>
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-main { flex: 1; margin-left: var(--sidebar-width); background-color: var(--bg-secondary); }
+    @media (max-width: 768px) { .admin-main { margin-left: 0; padding-bottom: 4rem; } }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar injected by navigation.js -->
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="crm-header">
+        <div class="crm-header-title">
+          Automation Rules
+        </div>
+        <div class="crm-header-actions">
+          <button onclick="window.location.href='/admin/crm-dashboard.html'" class="btn btn-ghost btn-sm">Dashboard</button>
+          <button onclick="window.location.href='/admin/crm-automation-builder.html'" class="btn btn-primary btn-sm">+ Create Rule</button>
+        </div>
+      </div>
+
+      <div class="crm-content">
+        <!-- Stats Cards -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+          <div class="stat-card">
+            <div class="stat-value" id="active-count">-</div>
+            <div class="stat-label">Active Rules</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="executions-today">-</div>
+            <div class="stat-label">Executions Today</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="errors-week">-</div>
+            <div class="stat-label">Errors This Week</div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="crm-filters">
+          <div class="crm-filters-row">
+            <div class="crm-search-box">
+              <svg class="crm-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input type="text" id="search-input" placeholder="Search rules..." onkeyup="handleSearchChange()">
+            </div>
+
+            <select id="filter-trigger" class="crm-filter-select" onchange="handleFilterChange()">
+              <option value="">All Triggers</option>
+              <option value="stage_entered">Stage Entered</option>
+              <option value="stage_exited">Stage Exited</option>
+              <option value="tag_added">Tag Added</option>
+              <option value="tag_removed">Tag Removed</option>
+              <option value="activity_logged">Activity Logged</option>
+              <option value="field_changed">Field Changed</option>
+            </select>
+
+            <select id="filter-active" class="crm-filter-select" onchange="handleFilterChange()">
+              <option value="">All Status</option>
+              <option value="true">Active Only</option>
+              <option value="false">Inactive Only</option>
+            </select>
+
+            <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear Filters</button>
+          </div>
+        </div>
+
+        <!-- Automations Table -->
+        <div class="crm-table-container">
+          <div id="loading" class="crm-loading">Loading automations...</div>
+          <div id="table-wrapper" style="display: none;">
+            <table class="crm-table">
+              <thead>
+                <tr>
+                  <th width="60">Active</th>
+                  <th>Name</th>
+                  <th>Trigger</th>
+                  <th>Pipeline</th>
+                  <th>Last Run</th>
+                  <th>Executions</th>
+                  <th width="200">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="automations-tbody">
+                <!-- Populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="crm-empty-state" style="display: none;">
+            <div class="crm-empty-icon">⚡</div>
+            <h3>No automations yet</h3>
+            <p>Create your first automation rule to automate contact management</p>
+            <button onclick="window.location.href='/admin/crm-automation-builder.html'" class="btn btn-primary">Create First Rule</button>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="crm-pagination" style="display: none;">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script>
+    let automations = [];
+    let stats = { total_active: 0, total_executions_today: 0, failed_this_week: 0 };
+    let searchTimeout;
+
+    // Check authentication
+    async function checkAuth() {
+      try {
+        const response = await fetch('/auth/me?type=user', { credentials: 'include' });
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return false;
+        }
+        return true;
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/login.html';
+        return false;
+      }
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/v1/crm/automations/stats/dashboard', {
+          credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Failed to load stats');
+
+        stats = await response.json();
+
+        document.getElementById('active-count').textContent = stats.total_active;
+        document.getElementById('executions-today').textContent = stats.total_executions_today;
+        document.getElementById('errors-week').textContent = stats.failed_this_week;
+      } catch (error) {
+        console.error('Load stats error:', error);
+      }
+    }
+
+    // Load automations
+    async function loadAutomations() {
+      try {
+        const params = new URLSearchParams();
+
+        const triggerFilter = document.getElementById('filter-trigger').value;
+        if (triggerFilter) params.append('trigger_type', triggerFilter);
+
+        const activeFilter = document.getElementById('filter-active').value;
+        if (activeFilter) params.append('is_active', activeFilter);
+
+        const response = await fetch(`/api/v1/crm/automations?${params}`, {
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to load automations');
+
+        const data = await response.json();
+        automations = data.automations;
+
+        renderAutomationsTable();
+      } catch (error) {
+        console.error('Load automations error:', error);
+        toast.error('Failed to load automations');
+      }
+    }
+
+    // Render table
+    function renderAutomationsTable() {
+      const tbody = document.getElementById('automations-tbody');
+      const loading = document.getElementById('loading');
+      const tableWrapper = document.getElementById('table-wrapper');
+      const emptyState = document.getElementById('empty-state');
+
+      // Filter by search
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      let filtered = automations;
+      if (searchTerm) {
+        filtered = automations.filter(a =>
+          a.name.toLowerCase().includes(searchTerm) ||
+          (a.description && a.description.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      loading.style.display = 'none';
+
+      if (filtered.length === 0) {
+        tableWrapper.style.display = 'none';
+        emptyState.style.display = 'flex';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      tableWrapper.style.display = 'block';
+
+      tbody.innerHTML = filtered.map(a => `
+        <tr>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${a.is_active ? 'checked' : ''}
+                     onchange="toggleAutomation('${a.id}')">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <div class="automation-name">${escapeHtml(a.name)}</div>
+            ${a.description ? `<div class="automation-description">${escapeHtml(a.description)}</div>` : ''}
+          </td>
+          <td>
+            <span class="automation-trigger-badge">
+              ${formatTrigger(a.trigger_type)}
+            </span>
+          </td>
+          <td>${a.pipeline_name || '<span style="color: var(--text-secondary);">All Pipelines</span>'}</td>
+          <td>${a.last_run ? formatRelativeTime(new Date(a.last_run)) : '<span style="color: var(--text-secondary);">Never</span>'}</td>
+          <td>${a.execution_count || 0}</td>
+          <td>
+            <div style="display: flex; gap: var(--space-2);">
+              <button class="btn btn-sm btn-ghost" onclick="viewHistory('${a.id}')">History</button>
+              <button class="btn btn-sm btn-ghost" onclick="editRule('${a.id}')">Edit</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteRule('${a.id}', '${escapeHtml(a.name)}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Toggle active status
+    async function toggleAutomation(id) {
+      try {
+        const response = await fetch(`/api/v1/crm/automations/${id}/toggle`, {
+          method: 'PATCH',
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to toggle automation');
+
+        toast.success('Automation updated');
+        loadAutomations();
+        loadStats();
+      } catch (error) {
+        console.error('Toggle error:', error);
+        toast.error('Failed to toggle automation');
+        loadAutomations(); // Reload to reset checkbox
+      }
+    }
+
+    // View history
+    function viewHistory(id) {
+      window.location.href = `/admin/crm-automation-history.html?id=${id}`;
+    }
+
+    // Edit rule
+    function editRule(id) {
+      window.location.href = `/admin/crm-automation-builder.html?id=${id}`;
+    }
+
+    // Delete rule
+    async function deleteRule(id, name) {
+      if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/v1/crm/automations/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete automation');
+
+        toast.success('Automation deleted');
+        loadAutomations();
+        loadStats();
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast.error('Failed to delete automation');
+      }
+    }
+
+    // Format trigger type
+    function formatTrigger(type) {
+      const triggers = {
+        'stage_entered': 'Stage Entered',
+        'stage_exited': 'Stage Exited',
+        'tag_added': 'Tag Added',
+        'tag_removed': 'Tag Removed',
+        'activity_logged': 'Activity Logged',
+        'field_changed': 'Field Changed',
+        'time_in_stage': 'Time in Stage',
+        'no_activity': 'No Activity'
+      };
+      return triggers[type] || type;
+    }
+
+    // Format relative time
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (minutes > 0) return `${minutes}m ago`;
+      return 'just now';
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Search change handler
+    function handleSearchChange() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        renderAutomationsTable();
+      }, 300);
+    }
+
+    // Filter change handler
+    function handleFilterChange() {
+      loadAutomations();
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('filter-trigger').value = '';
+      document.getElementById('filter-active').value = '';
+      loadAutomations();
+    }
+
+    // Initialize
+    async function init() {
+      if (await checkAuth()) {
+        loadStats();
+        loadAutomations();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

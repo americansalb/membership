@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
+const automationEngine = require('../../lib/automation-engine');
 
 // ============================================
 // GET ACTIVITIES FOR CONTACT (Timeline)
@@ -156,7 +157,25 @@ router.post('/', async (req, res) => {
       );
     }
 
-    res.status(201).json({ activity: result.rows[0] });
+    const activity = result.rows[0];
+
+    // Trigger activity_logged automation (async, don't wait)
+    setImmediate(async () => {
+      try {
+        await automationEngine.trigger('activity_logged', {
+          org_id: req.user.orgId,
+          contact_id: contact_id,
+          activity_type: type,
+          activity_title: title,
+          activity_id: activity.id,
+          created_by: req.user.id
+        });
+      } catch (err) {
+        console.error('[Automation] Error triggering activity_logged automation:', err);
+      }
+    });
+
+    res.status(201).json({ activity });
 
   } catch (err) {
     console.error('Create activity error:', err);
