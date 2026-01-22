@@ -679,10 +679,19 @@ router.post('/:id/assign', async (req, res) => {
 router.post('/:id/tags', async (req, res) => {
   try {
     const { id } = req.params;
-    const { tag_ids } = req.body;
+    let { tag_ids, tags } = req.body;
 
-    if (!Array.isArray(tag_ids) || tag_ids.length === 0) {
-      return res.status(400).json({ error: 'tag_ids array is required' });
+    // Support both old format (tag_ids array) and new format (tags array with values)
+    if (tags && Array.isArray(tags)) {
+      // New format: [{ tag_id: 'uuid', value: 'optional value' }]
+      if (tags.length === 0) {
+        return res.status(400).json({ error: 'tags array cannot be empty' });
+      }
+    } else if (tag_ids && Array.isArray(tag_ids)) {
+      // Old format: ['uuid1', 'uuid2'] - convert to new format
+      tags = tag_ids.map(tagId => ({ tag_id: tagId, value: null }));
+    } else {
+      return res.status(400).json({ error: 'tags or tag_ids array is required' });
     }
 
     // Verify contact exists
@@ -695,38 +704,39 @@ router.post('/:id/tags', async (req, res) => {
       return res.status(404).json({ error: 'Contact not found' });
     }
 
+    // Extract tag IDs for validation
+    const tagIds = tags.map(t => t.tag_id);
+
     // Verify all tags belong to org
     const tagsCheck = await db.query(
       'SELECT id FROM tags WHERE id = ANY($1::uuid[]) AND org_id = $2',
-      [tag_ids, req.user.orgId]
+      [tagIds, req.user.orgId]
     );
 
-    if (tagsCheck.rows.length !== tag_ids.length) {
+    if (tagsCheck.rows.length !== tagIds.length) {
       return res.status(404).json({ error: 'One or more tags not found' });
     }
 
-    // Insert tags (ignore duplicates)
-    const values = tag_ids.map((tagId, idx) =>
-      `($1, $${idx + 2}, $${idx + 2 + tag_ids.length}, NOW())`
-    ).join(', ');
-
-    const params = [id, ...tag_ids, ...tag_ids.map(() => req.user.id)];
-
-    await db.query(
-      `INSERT INTO crm_contact_tags (contact_id, tag_id, added_by, added_at)
-       VALUES ${values}
-       ON CONFLICT (contact_id, tag_id) DO NOTHING`,
-      params
-    );
+    // Insert tags with values (update value if tag already exists)
+    for (const tag of tags) {
+      await db.query(
+        `INSERT INTO crm_contact_tags (contact_id, tag_id, value, added_by, added_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT (contact_id, tag_id)
+         DO UPDATE SET value = $3, added_by = $4, added_at = NOW()`,
+        [id, tag.tag_id, tag.value || null, req.user.id]
+      );
+    }
 
     // Trigger automations for each tag added (async, don't wait)
     setImmediate(async () => {
       try {
-        for (const tagId of tag_ids) {
+        for (const tag of tags) {
           await automationEngine.trigger('tag_added', {
             org_id: req.user.orgId,
             contact_id: id,
-            tag_id: tagId,
+            tag_id: tag.tag_id,
+            value: tag.value,
             added_by: req.user.id
           });
         }
@@ -735,11 +745,16 @@ router.post('/:id/tags', async (req, res) => {
       }
     });
 
-    // Return updated contact with tags
+    // Return updated contact with tags including values
     const result = await db.query(
       `SELECT
         COALESCE(
-          (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
+          (SELECT json_agg(json_build_object(
+            'id', t.id,
+            'name', t.name,
+            'color', t.color,
+            'value', ct.value
+          ))
            FROM crm_contact_tags ct
            JOIN tags t ON t.id = ct.tag_id
            WHERE ct.contact_id = $1),
