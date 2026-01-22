@@ -491,6 +491,7 @@
     let tags = [];
     let editingStageId = null;
     let editingSubstageParentId = null;
+    let editingTagId = null;
 
     // ========================================
     // INIT & AUTH
@@ -864,6 +865,7 @@
 
     // Tag CRUD
     function openAddTagModal() {
+      editingTagId = null;
       document.getElementById('tag-modal-title').textContent = 'Create Tag';
       document.getElementById('tag-form').reset();
       document.getElementById('tag-modal').classList.remove('hidden');
@@ -873,6 +875,7 @@
       const tag = tags.find(t => t.id === tagId);
       if (!tag) return;
 
+      editingTagId = tagId;
       document.getElementById('tag-modal-title').textContent = 'Edit Tag';
       document.getElementById('tag-name').value = tag.name;
       document.getElementById('tag-description').value = tag.description || '';
@@ -895,8 +898,8 @@
       }
 
       try {
-        const method = document.getElementById('tag-modal-title').textContent.includes('Edit') ? 'PUT' : 'POST';
-        const url = '/api/v1/tags';
+        const method = editingTagId ? 'PUT' : 'POST';
+        const url = editingTagId ? `/api/v1/tags/${editingTagId}` : '/api/v1/tags';
 
         const response = await fetch(url, {
           method,

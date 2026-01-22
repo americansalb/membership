@@ -1930,7 +1930,7 @@ router.get('/tags', requireUser, async (req, res) => {
 });
 
 // Create a new tag
-router.post('/tags', requireAdmin, async (req, res) => {
+router.post('/tags', requireUser, async (req, res) => {
   try {
     const { name, color, description } = req.body;
 
@@ -1972,7 +1972,7 @@ router.post('/tags', requireAdmin, async (req, res) => {
 });
 
 // Update a tag
-router.put('/tags/:id', requireAdmin, async (req, res) => {
+router.put('/tags/:id', requireUser, async (req, res) => {
   try {
     const { name, color, description } = req.body;
 
@@ -2026,7 +2026,7 @@ router.put('/tags/:id', requireAdmin, async (req, res) => {
 });
 
 // Delete a tag
-router.delete('/tags/:id', requireAdmin, async (req, res) => {
+router.delete('/tags/:id', requireUser, async (req, res) => {
   try {
     // Check tag exists and belongs to user's org
     const existingTag = await db.query(
