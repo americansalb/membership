@@ -858,7 +858,7 @@
     </nav>
     <div class="header-actions">
       <div class="portal-dropdown">
-        <button class="btn btn-ghost portal-btn" onclick="togglePortalMenu()">
+        <button class="btn btn-ghost portal-btn" id="portal-btn">
           Sign In
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
@@ -1189,7 +1189,7 @@
 
     <!-- Compare -->
     <div class="compare-link">
-      <a onclick="document.getElementById('compare-details').classList.toggle('show')">
+      <a id="compare-toggle" href="#" style="cursor:pointer">
         Compare all features
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </a>
@@ -1362,10 +1362,16 @@
 
   <script>
     // Portal dropdown functionality
-    function togglePortalMenu() {
-      const menu = document.getElementById('portal-menu');
-      menu.classList.toggle('show');
-    }
+    document.getElementById('portal-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.getElementById('portal-menu').classList.toggle('show');
+    });
+
+    // Compare features toggle
+    document.getElementById('compare-toggle').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('compare-details').classList.toggle('show');
+    });
 
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
