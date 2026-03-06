@@ -71,18 +71,29 @@ async function runMigrations() {
     console.log(`Running migration: ${file}`);
     const filePath = path.join(migrationsDir, file);
 
-    if (file.endsWith('.sql')) {
-      // SQL migration
-      const sql = fs.readFileSync(filePath, 'utf8');
-      await db.query(sql);
-    } else if (file.endsWith('.js')) {
-      // JS migration (for complex logic like password hashing)
-      const migration = require(filePath);
-      await migration(db);
-    }
+    try {
+      if (file.endsWith('.sql')) {
+        // SQL migration
+        const sql = fs.readFileSync(filePath, 'utf8');
+        await db.query(sql);
+      } else if (file.endsWith('.js')) {
+        // JS migration (for complex logic like password hashing)
+        const migration = require(filePath);
+        await migration(db);
+      }
 
-    await db.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
-    console.log(`Completed: ${file}`);
+      await db.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
+      console.log(`Completed: ${file}`);
+    } catch (err) {
+      // If migration fails because objects already exist, record it and continue
+      if (err.message.includes('already exists') || err.code === '42P07' || err.code === '42701') {
+        console.log(`Migration ${file} skipped (objects already exist), recording as applied.`);
+        await db.query('INSERT INTO _migrations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [file]);
+      } else {
+        console.error(`Migration ${file} failed:`, err.message);
+        throw err;
+      }
+    }
   }
 }
 
