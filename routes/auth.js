@@ -2,6 +2,27 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const auth = require('../lib/auth');
+const { sendEmail } = require('../lib/email-service');
+
+const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+
+async function sendAuthEmail(to, subject, html) {
+  try {
+    const result = await sendEmail({
+      to,
+      subject,
+      body: html,
+      contact: { email: to }
+    });
+    if (!result.success) {
+      console.warn(`[Auth] Email send failed for ${to}: ${result.error}`);
+    }
+    return result;
+  } catch (err) {
+    console.warn(`[Auth] Email not configured, skipping send to ${to}: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
 
 // Cookie settings
 const COOKIE_OPTIONS = {
@@ -96,9 +117,14 @@ router.post('/signup', async (req, res) => {
         email: email.toLowerCase()
       });
 
-      // TODO: Send verification email
-      console.log(`[DEV] Email verification token for ${email}: ${verifyToken}`);
-      console.log(`[DEV] Verify URL: /auth/verify-email?token=${verifyToken}`);
+      // Send verification email
+      const verifyUrl = `${BASE_URL}/auth/verify-email?token=${verifyToken}`;
+      await sendAuthEmail(email.toLowerCase(), 'Verify your email address',
+        `<h2>Welcome to VillageMembers!</h2>
+        <p>Please verify your email address by clicking the link below:</p>
+        <p><a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#4F46E5;color:white;text-decoration:none;border-radius:6px;">Verify Email</a></p>
+        <p>Or copy this link: ${verifyUrl}</p>
+        <p>This link expires in 24 hours.</p>`);
 
       res.status(201).json({
         success: true,
@@ -424,8 +450,13 @@ router.post('/forgot-password', async (req, res) => {
       if (result.rows.length > 0) {
         const member = result.rows[0];
         const { token } = await auth.createPasswordResetToken({ memberId: member.id });
-        // TODO: Send email with reset link
-        console.log(`[DEV] Password reset token for member ${email}: ${token}`);
+        const resetUrl = `${BASE_URL}/p/${orgSlug}/reset-password?token=${token}`;
+        await sendAuthEmail(email.toLowerCase(), 'Reset your password',
+          `<h2>Password Reset Request</h2>
+          <p>Click the link below to reset your password:</p>
+          <p><a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#4F46E5;color:white;text-decoration:none;border-radius:6px;">Reset Password</a></p>
+          <p>Or copy this link: ${resetUrl}</p>
+          <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`);
       }
     } else {
       // Look up user (org admin/staff)
@@ -437,8 +468,13 @@ router.post('/forgot-password', async (req, res) => {
       if (result.rows.length > 0) {
         const user = result.rows[0];
         const { token } = await auth.createPasswordResetToken({ userId: user.id });
-        // TODO: Send email with reset link
-        console.log(`[DEV] Password reset token for user ${email}: ${token}`);
+        const resetUrl = `${BASE_URL}/reset-password?token=${token}`;
+        await sendAuthEmail(email.toLowerCase(), 'Reset your password',
+          `<h2>Password Reset Request</h2>
+          <p>Click the link below to reset your password:</p>
+          <p><a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#4F46E5;color:white;text-decoration:none;border-radius:6px;">Reset Password</a></p>
+          <p>Or copy this link: ${resetUrl}</p>
+          <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`);
       }
     }
 
@@ -570,8 +606,14 @@ router.post('/resend-verification', async (req, res) => {
       email: user.email
     });
 
-    // TODO: Send verification email
-    console.log(`[DEV] Email verification token for ${user.email}: ${verifyToken}`);
+    // Send verification email
+    const verifyUrl = `${BASE_URL}/auth/verify-email?token=${verifyToken}`;
+    await sendAuthEmail(user.email, 'Verify your email address',
+      `<h2>Email Verification</h2>
+      <p>Please verify your email address by clicking the link below:</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#4F46E5;color:white;text-decoration:none;border-radius:6px;">Verify Email</a></p>
+      <p>Or copy this link: ${verifyUrl}</p>
+      <p>This link expires in 24 hours.</p>`);
 
     res.json({ success: true, message: 'Verification email sent' });
 
