@@ -352,7 +352,6 @@ SELECT
 
   -- Member info (if converted)
   m.status AS member_status,
-  m.subscription_status AS member_subscription_status,
 
   -- Tags array
   COALESCE(
