@@ -1790,14 +1790,16 @@ router.get('/analytics/overview', requireUser, async (req, res) => {
         WHERE m.org_id = $1
       `, [orgId]),
 
-      // CEU compliance rate
+      // CEU compliance rate (derived from member_credentials + ceu_credits tables)
       db.query(`
         SELECT
-          COUNT(*) as total_with_ceu,
-          COUNT(*) FILTER (WHERE ceu_credits_earned >= ceu_credits_required) as compliant,
-          COUNT(*) FILTER (WHERE ceu_credits_earned < ceu_credits_required AND ceu_deadline < NOW() + INTERVAL '30 days') as at_risk
-        FROM members
-        WHERE org_id = $1 AND ceu_credits_required > 0
+          COUNT(DISTINCT mc.id) as total_with_ceu,
+          COUNT(DISTINCT mc.id) FILTER (WHERE COALESCE(mc.credits_earned, 0) >= COALESCE(c.total_credits_required, 0)) as compliant,
+          COUNT(DISTINCT mc.id) FILTER (WHERE COALESCE(mc.credits_earned, 0) < COALESCE(c.total_credits_required, 0) AND mc.current_period_end < NOW() + INTERVAL '30 days') as at_risk
+        FROM member_credentials mc
+        JOIN credentials c ON c.id = mc.credential_id
+        JOIN members m ON m.id = mc.member_id
+        WHERE m.org_id = $1 AND COALESCE(c.total_credits_required, 0) > 0
       `, [orgId]),
 
       // Average lifetime value
@@ -1930,7 +1932,7 @@ router.get('/tags', requireUser, async (req, res) => {
 });
 
 // Create a new tag
-router.post('/tags', requireAdmin, async (req, res) => {
+router.post('/tags', requireUser, async (req, res) => {
   try {
     const { name, color, description } = req.body;
 
@@ -1972,7 +1974,7 @@ router.post('/tags', requireAdmin, async (req, res) => {
 });
 
 // Update a tag
-router.put('/tags/:id', requireAdmin, async (req, res) => {
+router.put('/tags/:id', requireUser, async (req, res) => {
   try {
     const { name, color, description } = req.body;
 
@@ -2026,7 +2028,7 @@ router.put('/tags/:id', requireAdmin, async (req, res) => {
 });
 
 // Delete a tag
-router.delete('/tags/:id', requireAdmin, async (req, res) => {
+router.delete('/tags/:id', requireUser, async (req, res) => {
   try {
     // Check tag exists and belongs to user's org
     const existingTag = await db.query(
